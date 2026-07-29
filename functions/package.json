@@ -1,5 +1,5 @@
 {
-  "name": "photosession-ai-functions",
+  "name": "aivideomaker-functions",
   "version": "1.0.0",
   "description": "Cloud Functions for AI Video Maker",
   "main": "index.js",
