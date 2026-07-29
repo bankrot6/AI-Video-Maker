@@ -24,6 +24,21 @@ class FirebaseStorageService implements PhotosessionRemoteStorage {
     return _storage!;
   }
 
+  /// Результатом генерации может быть MP4, а не картинка: с жёстким
+  /// `image/jpeg` браузер и плеер получают неверный тип и не открывают файл.
+  static const Map<String, String> _contentTypeByExtension = {
+    '.mp4': 'video/mp4',
+    '.mov': 'video/quicktime',
+    '.webm': 'video/webm',
+    '.m4v': 'video/x-m4v',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+  };
+
+  static String _contentTypeFor(String fileName) =>
+      _contentTypeByExtension[path.extension(fileName).toLowerCase()] ??
+      'image/jpeg';
+
   @override
   Future<String?> uploadUserPhoto(File file) async {
     try {
@@ -60,7 +75,7 @@ class FirebaseStorageService implements PhotosessionRemoteStorage {
       final ref = storage.ref().child(filePath);
       
       final metadata = SettableMetadata(
-        contentType: 'image/jpeg',
+        contentType: _contentTypeFor(fileName),
         customMetadata: {'uploadedAt': DateTime.now().toIso8601String()},
       );
 
@@ -92,14 +107,15 @@ class FirebaseStorageService implements PhotosessionRemoteStorage {
           fileName = '${path.basenameWithoutExtension(fileName)}.jpg';
         }
       }
-      final fileId = '${idPrefix}_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode.abs().toRadixString(36)}';
+      final fileId = '${idPrefix}_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode.abs().toRadixString(36)}'
+          '${path.extension(fileName).toLowerCase()}';
       final filePath = 'user-photos/$fileId';
       
       final storage = _getStorage();
       final ref = storage.ref().child(filePath);
       
       final metadata = SettableMetadata(
-        contentType: 'image/jpeg',
+        contentType: _contentTypeFor(fileName),
         customMetadata: {'uploadedAt': DateTime.now().toIso8601String()},
       );
 

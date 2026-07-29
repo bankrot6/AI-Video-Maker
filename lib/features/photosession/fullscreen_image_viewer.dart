@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,7 +6,9 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 
+import '../../services/generated_media.dart';
 import '../../services/proxied_image_service.dart';
+import '../../widgets/generated_video_view.dart';
 import 'theme/photosession_palette.dart';
 
 class FullscreenImageViewer extends StatefulWidget {
@@ -32,10 +33,17 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   Uint8List? _imageBytes;
   bool _loading = true;
 
+  bool get _isVideo => GeneratedMedia.isVideo(widget.imageUrl);
+
   @override
   void initState() {
     super.initState();
-    _loadImage();
+    // Видео проигрывается плеером по ссылке, поэтому байты не нужны.
+    if (_isVideo) {
+      _loading = false;
+    } else {
+      _loadImage();
+    }
   }
 
   Future<void> _loadImage() async {
@@ -52,7 +60,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   Future<void> _saveToGallery(BuildContext context) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Загружаем изображение...')),
+        const SnackBar(content: Text('Загружаем видео...')),
       );
 
       final service = ProxiedImageService();
@@ -62,8 +70,10 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
       }
 
       final tempDir = await getTemporaryDirectory();
+      final extension =
+          _isVideo ? GeneratedMedia.videoExtension : '.jpg';
       final fileName =
-          'photosession_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          'photosession_${DateTime.now().millisecondsSinceEpoch}$extension';
       final filePath = '${tempDir.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(bytes);
@@ -73,13 +83,21 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         await Gal.requestAccess(toAlbum: true);
       }
 
-      await Gal.putImage(filePath, album: 'AI Video Maker');
+      if (_isVideo) {
+        await Gal.putVideo(filePath, album: 'AI Video Maker');
+      } else {
+        await Gal.putImage(filePath, album: 'AI Video Maker');
+      }
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Фото сохранено в галерею'),
+          content: Text(
+            _isVideo
+                ? 'Видео сохранено в галерею'
+                : 'Фото сохранено в галерею',
+          ),
           backgroundColor: _palette.success,
         ),
       );
@@ -97,6 +115,22 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
   }
 
   Widget _buildPhotoView() {
+    if (_isVideo) {
+      return GeneratedVideoView(
+        url: widget.imageUrl,
+        fit: BoxFit.contain,
+        loadingBuilder: (_) => Center(
+          child: CircularProgressIndicator(color: _palette.accent),
+        ),
+        errorBuilder: (_) => Center(
+          child: Icon(
+            Icons.broken_image,
+            color: _palette.textSecondary,
+            size: 64,
+          ),
+        ),
+      );
+    }
     if (_loading) {
       return Center(
         child: CircularProgressIndicator(color: _palette.accent),

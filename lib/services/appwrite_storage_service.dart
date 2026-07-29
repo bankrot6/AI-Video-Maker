@@ -160,8 +160,11 @@ class AppwriteStorageService implements PhotosessionRemoteStorage {
           fileName = '${path.basenameWithoutExtension(fileName)}.jpg';
         }
       }
+      // Ссылка на файл заканчивается на `/view`, поэтому расширение сохраняется
+      // в самом fileId — иначе по URL уже не определить, видео это или картинка.
       final fileId =
-          '${idPrefix}_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode.abs().toRadixString(36)}';
+          '${idPrefix}_${DateTime.now().millisecondsSinceEpoch}_${fileName.hashCode.abs().toRadixString(36)}'
+          '${path.extension(fileName).toLowerCase()}';
 
       final url = await _uploadBytes(bytes: bytes, fileName: fileName, fileId: fileId);
       if (url != null) debugPrint('AppwriteStorage: загружено $idPrefix');

@@ -10,7 +10,6 @@ import '../../services/prompt_sections.dart';
 import '../../services/proxied_image_service.dart';
 import '../../widgets/credit_counter_widget.dart';
 import '../../widgets/preset_like_chip.dart';
-import '../../widgets/proxied_network_image.dart';
 import '../../widgets/edit_text/full_screen_text_editor_screen.dart';
 import 'background_generation_provider.dart';
 import '../subscription/paid_feature_gate.dart';
@@ -25,6 +24,7 @@ import 'theme/photosession_theme_scope.dart';
 import 'tutorial/photosession_tutorial.dart';
 import 'widgets/photosession_segmented_tabs.dart';
 import 'widgets/photosession_watermark_label.dart';
+import '../../widgets/generated_media_view.dart';
 
 class PhotosessionPresetScreen extends ConsumerStatefulWidget {
   const PhotosessionPresetScreen({super.key, required this.preset});
@@ -42,7 +42,7 @@ class _PhotosessionPresetScreenState
   int _selectedTab = 0;
   bool _usageTipsExpanded = false;
   List<UserGeneration> _generations = [];
-  PhotosessionProvider _selectedProvider = PhotosessionProvider.googleFlash;
+  PhotosessionProvider _selectedProvider = PhotosessionProvider.veoFast;
   final _samplePhotoKey = GlobalKey();
   final _usageTipsSectionKey = GlobalKey();
   final _settingsSectionKey = GlobalKey();
@@ -179,7 +179,7 @@ class _PhotosessionPresetScreenState
         return AlertDialog(
           title: const Text('Удалить генерацию?'),
           content: const Text(
-            'Снимок будет удалён из истории на сервере. Отменить это нельзя.',
+            'Видео будет удалено из истории на сервере. Отменить это нельзя.',
           ),
           actions: [
             TextButton(
@@ -420,7 +420,7 @@ class _PhotosessionPresetScreenState
         id: 'preset_model',
         title: 'Выберите модель генерации',
         description:
-            'Для первых тестов удобно начать с NanoBanana: она быстрее и дешевле. Если нужен более детальный и премиальный кадр, выбирайте NanoBanana PRO.',
+            'Для первых тестов удобно начать с Veo 3.1 Lite: она быстрее и дешевле. Если нужно более детальное и качественное видео, выбирайте Veo 3.1 Fast или Pro.',
         icon: Icons.auto_awesome_mosaic_rounded,
         align: ContentAlign.top,
       ));
@@ -480,7 +480,7 @@ class _PhotosessionPresetScreenState
         foregroundColor: colors.onSurface,
         surfaceTintColor: Colors.transparent,
         title: Text(
-          widget.preset.title ?? 'Фотосессия',
+          widget.preset.title ?? 'AI-видео',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
@@ -498,7 +498,7 @@ class _PhotosessionPresetScreenState
             child: PhotosessionSegmentedTabs(
               selected: _selectedTab,
               onChanged: (index) => setState(() => _selectedTab = index),
-              segments: const ['Изображение', 'Промпт'],
+              segments: const ['Видео', 'Промпт'],
             ),
           ),
         ),
@@ -575,9 +575,13 @@ class _PhotosessionPresetScreenState
                 borderRadius: BorderRadius.circular(20),
                 child: AspectRatio(
                   aspectRatio: 3 / 4,
-                  child: ProxiedNetworkImage(
+                  child: GeneratedMediaView(
                     url: widget.preset.displayImageUrl,
                     fit: BoxFit.cover,
+                    onFullscreen: () => _openFullscreen(
+                      _fullscreenPresetImageUrl,
+                      'preset_${widget.preset.id}',
+                    ),
                     loadingBuilder: (context) => Container(
                       color: colors.surfaceContainerHighest,
                       child: const Center(
@@ -1033,7 +1037,7 @@ class _PhotosessionPresetScreenState
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          ProxiedNetworkImage(
+                          GeneratedMediaThumbnail(
                             url: generation.resultImageUrl,
                             fit: BoxFit.cover,
                             loadingBuilder: (context) => Container(
@@ -1168,7 +1172,7 @@ class _PhotosessionPresetScreenState
               canGenerate
                   ? (hasGenerations
                       ? 'Сгенерировать ещё раз'
-                      : 'Сгенерировать изображение')
+                      : 'Сгенерировать видео')
                   : isTierLocked
                       ? 'Нужен PRO'
                       : 'Купить кредиты',
@@ -1476,26 +1480,16 @@ class _PhotosessionPresetScreenState
 
   IconData _providerIcon(PhotosessionProvider p) {
     switch (p) {
-      case PhotosessionProvider.piapi:
-        return Icons.rocket_launch_rounded;
-      case PhotosessionProvider.googleFlash:
-        return Icons.bolt_rounded;
-      case PhotosessionProvider.flash:
+      case PhotosessionProvider.veoLite:
         return Icons.flash_on_rounded;
-      case PhotosessionProvider.qwen:
-        return Icons.grain_rounded;
-      case PhotosessionProvider.gptImage15:
+      case PhotosessionProvider.veoFast:
+        return Icons.bolt_rounded;
+      case PhotosessionProvider.veoPro:
+        return Icons.rocket_launch_rounded;
+      case PhotosessionProvider.veoFastPreview:
         return Icons.auto_awesome_rounded;
-      case PhotosessionProvider.gptImage2:
+      case PhotosessionProvider.veoPro4k:
         return Icons.diamond_rounded;
-      case PhotosessionProvider.grokImage:
-        return Icons.blur_on_rounded;
-      case PhotosessionProvider.apibostPro:
-        return Icons.workspace_premium_rounded;
-      case PhotosessionProvider.apibostStandard:
-        return Icons.speed_rounded;
-      case PhotosessionProvider.apibostFlash:
-        return Icons.electric_bolt_rounded;
     }
   }
 

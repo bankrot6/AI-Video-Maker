@@ -5,8 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'generated_media.dart';
+
 /// Управляет хранением изображений генераций на устройстве.
-/// Все файлы хранятся в <documents>/gen_images/
+/// Все файлы хранятся в `<documents>/gen_images/`
 class LocalGenerationStorage {
   LocalGenerationStorage._();
   static final LocalGenerationStorage instance = LocalGenerationStorage._();
@@ -27,7 +29,8 @@ class LocalGenerationStorage {
 
   Future<String> saveImageBytes(Uint8List bytes, {String? id}) async {
     final dir = await _imagesDir();
-    final fileName = '${id ?? DateTime.now().millisecondsSinceEpoch}.jpg';
+    final fileName = '${id ?? DateTime.now().millisecondsSinceEpoch}'
+        '${GeneratedMedia.extensionForBytes(bytes)}';
     final file = File(p.join(dir.path, fileName));
     await file.writeAsBytes(bytes, flush: true);
     debugPrint('LocalGenerationStorage: сохранено ${file.path}');

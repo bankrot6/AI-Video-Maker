@@ -15,7 +15,6 @@ import 'package:image/image.dart' as img;
 
 import '../../models/generation_task.dart';
 import '../../services/proxied_image_service.dart';
-import '../../widgets/proxied_network_image.dart';
 import '../home/home_navigation_screen.dart';
 import 'background_generation_provider.dart';
 import 'photosession_providers.dart';
@@ -29,6 +28,8 @@ import '../subscription/post_generation_offer_sheet.dart';
 import '../subscription/paid_feature_gate.dart';
 import '../subscription/purchase_routes.dart';
 import 'photosession_support_error.dart';
+import '../../services/generated_media.dart';
+import '../../widgets/generated_media_view.dart';
 
 class PhotosessionGenerationScreen extends ConsumerStatefulWidget {
   const PhotosessionGenerationScreen({
@@ -206,27 +207,45 @@ class _PhotosessionGenerationScreenState
     }
   }
 
-  Future<void> _saveToGallery(String imageUrl) async {
+  /// Клиентская генерация видео возвращает путь к локальному файлу, а не ссылку,
+  /// поэтому загрузка через прокси годится только для удалённых результатов.
+  Future<Uint8List?> _loadMediaBytes(String url) async {
+    final trimmed = url.trim();
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      final file = File(trimmed);
+      if (!await file.exists()) return null;
+      return file.readAsBytes();
+    }
+    return ProxiedImageService().downloadImage(trimmed);
+  }
+
+  Future<void> _saveToGallery(String mediaUrl) async {
+    final isVideo = GeneratedMedia.isVideo(mediaUrl);
     setState(() => _saving = true);
     try {
-      final service = ProxiedImageService();
-      var bytes = await service.downloadImage(imageUrl);
-      if (bytes == null) throw Exception('Не удалось загрузить изображение');
+      var bytes = await _loadMediaBytes(mediaUrl);
+      if (bytes == null) {
+        throw Exception(
+          isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить изображение',
+        );
+      }
 
-      // Проверяем, нужен ли watermark (для free/trial пользователей)
-      final creditUsage = ref.read(creditUsageNotifierProvider).valueOrNull;
-      final shouldAddWatermark = creditUsage != null &&
-          (creditUsage.isFreeUser || creditUsage.isTrialUser);
-
-      // Накладываем watermark если нужно
-      if (shouldAddWatermark) {
-        debugPrint('🔍 SAVE: Пользователь free/trial - накладываем watermark');
-        bytes = await _addWatermarkToImage(bytes);
+      // Watermark накладывается только на картинки: наложение на видео требует
+      // перекодирования, которого на клиенте нет.
+      if (!isVideo) {
+        final creditUsage = ref.read(creditUsageNotifierProvider).valueOrNull;
+        final shouldAddWatermark = creditUsage != null &&
+            (creditUsage.isFreeUser || creditUsage.isTrialUser);
+        if (shouldAddWatermark) {
+          debugPrint('🔍 SAVE: Пользователь free/trial - накладываем watermark');
+          bytes = await _addWatermarkToImage(bytes);
+        }
       }
 
       final tempDir = await getTemporaryDirectory();
+      final extension = isVideo ? GeneratedMedia.videoExtension : '.jpg';
       final fileName =
-          'photosession_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          'aivideomaker_${DateTime.now().millisecondsSinceEpoch}$extension';
       final filePath = '${tempDir.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(bytes);
@@ -234,13 +253,21 @@ class _PhotosessionGenerationScreenState
       final hasAccess = await Gal.hasAccess(toAlbum: true);
       if (!hasAccess) await Gal.requestAccess(toAlbum: true);
 
-      await Gal.putImage(filePath, album: 'AI Video Maker');
+      if (isVideo) {
+        await Gal.putVideo(filePath, album: 'AI Video Maker');
+      } else {
+        await Gal.putImage(filePath, album: 'AI Video Maker');
+      }
 
       if (!mounted) return;
       final palette = PhotosessionPalette.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Фото сохранено в галерею'),
+          content: Text(
+            isVideo
+                ? 'Видео сохранено в галерею'
+                : 'Изображение сохранено в галерею',
+          ),
           backgroundColor: palette.success,
         ),
       );
@@ -252,7 +279,11 @@ class _PhotosessionGenerationScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            kDebugMode ? 'Ошибка: $e' : 'Не удалось сохранить фото',
+            kDebugMode
+                ? 'Ошибка: $e'
+                : (isVideo
+                    ? 'Не удалось сохранить видео'
+                    : 'Не удалось сохранить изображение'),
           ),
           backgroundColor: palette.danger,
         ),
@@ -262,36 +293,46 @@ class _PhotosessionGenerationScreenState
     }
   }
 
-  Future<void> _shareImage(String imageUrl) async {
+  Future<void> _shareImage(String mediaUrl) async {
+    final isVideo = GeneratedMedia.isVideo(mediaUrl);
     setState(() => _saving = true);
     File? tempFile;
     try {
-      final service = ProxiedImageService();
-      var bytes = await service.downloadImage(imageUrl);
-      if (bytes == null) throw Exception('Не удалось загрузить изображение');
+      var bytes = await _loadMediaBytes(mediaUrl);
+      if (bytes == null) {
+        throw Exception(
+          isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить изображение',
+        );
+      }
 
-      // Проверяем, нужен ли watermark (для free/trial пользователей)
-      final creditUsage = ref.read(creditUsageNotifierProvider).valueOrNull;
-      final shouldAddWatermark = creditUsage != null &&
-          (creditUsage.isFreeUser || creditUsage.isTrialUser);
-
-      // Накладываем watermark если нужно
-      if (shouldAddWatermark) {
-        debugPrint('🔍 SHARE: Пользователь free/trial - накладываем watermark');
-        bytes = await _addWatermarkToImage(bytes);
+      if (!isVideo) {
+        final creditUsage = ref.read(creditUsageNotifierProvider).valueOrNull;
+        final shouldAddWatermark = creditUsage != null &&
+            (creditUsage.isFreeUser || creditUsage.isTrialUser);
+        if (shouldAddWatermark) {
+          debugPrint('🔍 SHARE: Пользователь free/trial - накладываем watermark');
+          bytes = await _addWatermarkToImage(bytes);
+        }
       }
 
       final tempDir = await getTemporaryDirectory();
+      final extension = isVideo ? GeneratedMedia.videoExtension : '.jpg';
       final fileName =
-          'photosession_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          'aivideomaker_${DateTime.now().millisecondsSinceEpoch}$extension';
       tempFile = File('${tempDir.path}/$fileName');
       await tempFile.writeAsBytes(bytes);
 
       if (mounted) setState(() => _saving = false);
 
       await Share.shareXFiles(
-        [XFile(tempFile.path, mimeType: 'image/jpeg', name: fileName)],
-        subject: 'Моё AI-изображение',
+        [
+          XFile(
+            tempFile.path,
+            mimeType: isVideo ? 'video/mp4' : 'image/jpeg',
+            name: fileName,
+          ),
+        ],
+        subject: isVideo ? 'Моё AI-видео' : 'Моё AI-изображение',
       );
 
       _scheduleFileDeletion(tempFile);
@@ -439,8 +480,8 @@ class _PhotosessionGenerationScreenState
         id: 'generation_image',
         title: task.isActive ? 'Генерация идёт в фоне' : 'Ваш результат',
         description: task.isActive
-            ? 'Пока изображение создаётся, можно спокойно вернуться назад: задача продолжит выполняться в фоне и появится на витрине.'
-            : 'Нажмите на изображение, чтобы открыть его крупно и проверить детали лица, одежды и света перед сохранением.',
+            ? 'Пока видео создаётся, можно спокойно вернуться назад: задача продолжит выполняться в фоне и появится на витрине.'
+            : 'Нажмите на видео, чтобы открыть его крупно и проверить детали кадра, движения и света перед сохранением.',
         icon: task.isActive ? Icons.hourglass_top_rounded : Icons.photo_rounded,
         align: ContentAlign.bottom,
         paddingFocus: 10,
@@ -454,9 +495,9 @@ class _PhotosessionGenerationScreenState
         steps.add((
           key: _saveButtonKey,
           id: 'generation_save',
-          title: 'Сохраните фото',
+          title: 'Сохраните видео',
           description:
-              'Если вариант получился удачным, сохраняйте его в галерею. Так вы сможете вернуться к лучшим кадрам позже и сравнить разные генерации.',
+              'Если вариант получился удачным, сохраняйте его в галерею. Так вы сможете вернуться к лучшим клипам позже и сравнить разные генерации.',
           icon: Icons.download_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -470,7 +511,7 @@ class _PhotosessionGenerationScreenState
           id: 'generation_share',
           title: 'Поделитесь результатом',
           description:
-              'Отправьте фото друзьям, клиенту или в соцсети прямо отсюда. Это удобно, если хотите быстро показать идею и собрать обратную связь.',
+              'Отправьте видео друзьям, клиенту или в соцсети прямо отсюда. Это удобно, если хотите быстро показать идею и собрать обратную связь.',
           icon: Icons.share_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -485,7 +526,7 @@ class _PhotosessionGenerationScreenState
           id: 'generation_community',
           title: 'Поделитесь с сообществом',
           description:
-              'Откройте изображение для сообщества — другие смогут создать своё по этой идее. За каждый лайк вы получите 1 кредит (максимум 50).',
+              'Откройте видео для сообщества — другие смогут создать своё по этой идее. За каждый лайк вы получите 1 кредит (максимум 50).',
           icon: Icons.public_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -847,8 +888,12 @@ class _PhotosessionGenerationScreenState
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        ProxiedNetworkImage(
+                        GeneratedMediaView(
                           url: resultUrl,
+                          onFullscreen: () => _openFullscreen(
+                            resultUrl,
+                            'result_${task.presetId}',
+                          ),
                           // Форматов кадра теперь много (квадрат, сторис,
                           // альбом), поэтому показываем результат целиком.
                           fit: isUserImage ? BoxFit.contain : BoxFit.cover,

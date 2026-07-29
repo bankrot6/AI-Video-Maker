@@ -23,7 +23,6 @@ import '../../services/proxied_image_service.dart';
 import '../../services/preset_reward_service.dart';
 import '../../widgets/magic_shimmer.dart';
 import '../../widgets/preset_like_chip.dart';
-import '../../widgets/proxied_network_image.dart';
 import '../../widgets/showcase_credits_earnings_menu.dart';
 import '../earnings/preset_earnings_screen.dart';
 import '../subscription/purchase_routes.dart';
@@ -39,6 +38,7 @@ import 'theme/photosession_palette.dart';
 import 'theme/photosession_theme_scope.dart';
 import 'tutorial/photosession_tutorial.dart';
 import 'widgets/photosession_theme_toggle.dart';
+import '../../widgets/generated_media_view.dart';
 
 const _kSpacing = 6.0;
 const _kPadding = 12.0;
@@ -942,7 +942,7 @@ class _PhotosessionShowcaseScreenState
         id: 'showcase_filters',
         title: 'Что такое пресеты',
         description:
-            'Пресеты - это готовые идеи фотосессий с уже продуманными сценами, стилем и настроением. Теги помогают быстро сузить подборку: "Все", "В тренде", "Лайки" или "Мои".',
+            'Пресеты - это готовые идеи видео с уже продуманными сценами, стилем и настроением. Теги помогают быстро сузить подборку: "Все", "В тренде", "Лайки" или "Мои".',
         icon: Icons.grid_view_rounded,
         align: ContentAlign.bottom,
       ));
@@ -966,7 +966,7 @@ class _PhotosessionShowcaseScreenState
         id: 'showcase_create',
         title: 'Создайте свою идею',
         description:
-            'Нажмите "+", если хотите не брать готовую идею, а собрать фотосессию под себя: по текстовому описанию или по референсу.',
+            'Нажмите "+", если хотите не брать готовую идею, а собрать видео под себя: по текстовому описанию или по референсу.',
         icon: Icons.auto_awesome_rounded,
         align: ContentAlign.top,
       ));
@@ -982,7 +982,7 @@ class _PhotosessionShowcaseScreenState
         id: 'showcase_preset',
         title: 'Готовые пресеты',
         description:
-            'Здесь уже есть готовые идеи фотосессий. Откройте любую карточку, чтобы посмотреть пример, добавить своё фото, выбрать модель и при желании поправить описание сцены.',
+            'Здесь уже есть готовые идеи видео. Откройте любую карточку, чтобы посмотреть пример, добавить своё фото, выбрать модель и при желании поправить описание сцены.',
         icon: Icons.style_rounded,
         align: ContentAlign.bottom,
       ),
@@ -1248,9 +1248,9 @@ class _PhotosessionShowcaseScreenState
             child: FloatingActionButton(
               onPressed: _openCreateScreen,
               backgroundColor: palette.accent,
-              foregroundColor: palette.background,
+              foregroundColor: palette.onAccent,
               elevation: 4,
-              tooltip: 'Создать изображение',
+              tooltip: 'Создать видео',
               child: const Icon(Icons.add_rounded, size: 28),
             ),
           ),
@@ -1475,7 +1475,7 @@ class _PhotosessionShowcaseScreenState
                                                 tag.icon,
                                                 size: 16,
                                                 color: isSelected
-                                                    ? palette.background
+                                                    ? palette.onAccent
                                                     : colors.onSurface
                                                         .withOpacity(0.55),
                                               ),
@@ -1488,7 +1488,7 @@ class _PhotosessionShowcaseScreenState
                                                       ? FontWeight.w600
                                                       : FontWeight.w500,
                                                   color: isSelected
-                                                      ? palette.background
+                                                      ? palette.onAccent
                                                       : colors.onSurface
                                                           .withOpacity(0.75),
                                                 ),
@@ -1743,7 +1743,7 @@ class _PhotosessionShowcaseScreenState
                     ? 'Пресетов не загружено.\nПотяните список вниз для обновления.'
                     : hasSearch
                         ? 'По запросу "${_searchQuery.trim()}" ничего не найдено.\nПопробуйте другое слово или закройте поиск.'
-                        : 'В этой категории пока нет фотосессий.',
+                        : 'В этой категории пока нет видео.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colors.onSurface.withOpacity(0.8)),
               ),
@@ -1900,7 +1900,7 @@ class _PresetCardState extends ConsumerState<_PresetCard> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              ProxiedNetworkImage(
+              GeneratedMediaThumbnail(
                 url: imageUrl,
                 fit: BoxFit.cover,
                 cacheWidth: 400,
@@ -1952,7 +1952,7 @@ class _PresetCardState extends ConsumerState<_PresetCard> {
                     ),
                   ),
                   child: Text(
-                    preset.title ?? 'Фотосессия',
+                    preset.title ?? 'AI-видео',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -2014,7 +2014,7 @@ class _GenerationTaskCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      task.presetTitle ?? 'Фотосессия',
+                      task.presetTitle ?? 'AI-видео',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -2038,7 +2038,7 @@ class _GenerationTaskCard extends StatelessWidget {
 
   Widget _buildThumbnail(ColorScheme colors, PhotosessionPalette palette) {
     if (task.isCompleted && task.resultImageUrl != null) {
-      return ProxiedNetworkImage(
+      return GeneratedMediaThumbnail(
         url: task.resultImageUrl!,
         fit: BoxFit.cover,
         loadingBuilder: (_) => Container(color: colors.surfaceContainerHighest),
@@ -2076,7 +2076,7 @@ class _GenerationTaskCard extends StatelessWidget {
         if (thumbnailWidget != null)
           thumbnailWidget
         else if (thumbnailUrl != null)
-          ProxiedNetworkImage(
+          GeneratedMediaThumbnail(
             url: thumbnailUrl,
             fit: BoxFit.cover,
             loadingBuilder: (_) =>
@@ -2293,7 +2293,7 @@ class _SubscriptionBannerState extends ConsumerState<_SubscriptionBanner> {
     if (isFree) {
       startColor = palette.accent;
       endColor = palette.accentMuted;
-      foreground = palette.background;
+      foreground = palette.onAccent;
       title = 'Бесплатная версия';
       subtitle = _displayedText.isEmpty ? _promoText : _displayedText;
       buttonText = 'PRO';
@@ -2311,7 +2311,7 @@ class _SubscriptionBannerState extends ConsumerState<_SubscriptionBanner> {
     } else {
       startColor = palette.warning;
       endColor = palette.danger;
-      foreground = palette.background;
+      foreground = palette.depth;
       title = 'Кредиты заканчиваются';
       subtitle = 'Осталось $remaining кредитов';
       buttonText = 'Купить';
