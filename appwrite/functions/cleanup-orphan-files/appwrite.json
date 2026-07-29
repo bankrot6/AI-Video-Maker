@@ -1,0 +1,35 @@
+{
+  "functionId": "cleanup-orphan-files",
+  "name": "cleanup-orphan-files",
+  "runtime": "node-18.0",
+  "entrypoint": "src/main.js",
+  "execute": [],
+  "events": [],
+  "schedule": "0 */4 * * *",
+  "timeout": 900,
+  "enabled": true,
+  "logging": true,
+  "scopes": [
+    "files.read",
+    "files.write",
+    "documents.read"
+  ],
+  "vars": [
+    {
+      "key": "KEEP_HOURS",
+      "value": "24"
+    },
+    {
+      "key": "MAX_FILES_PER_RUN",
+      "value": "5000"
+    },
+    {
+      "key": "BUCKET_ID",
+      "value": "user-photos"
+    },
+    {
+      "key": "DATABASE_ID",
+      "value": "main"
+    }
+  ]
+}

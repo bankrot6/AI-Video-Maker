@@ -1,0 +1,715 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'dart:async';
+import 'package:uuid/uuid.dart';
+
+import '../../models/meal_model.dart';
+import '../../models/user_model.dart';
+import '../history/history_screen.dart';
+import '../analytics/analytics_screen.dart';
+import 'home_providers.dart';
+import '../settings/settings_screen.dart';
+import '../../services/providers.dart' as services;
+import '../notification_debug/notification_debug_screen.dart';
+import '../../widgets/date_selector_header.dart';
+import '../share/share_screen_manager.dart';
+import '../share/share_provider.dart';
+import '../../widgets/screenshot_container.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  DateTime _selectedDate = DateTime.now();
+  final bool _isBottomSheetOpen = false;
+  final int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Инициализируем локализацию
+    initializeDateFormatting();
+    _checkOnboarding();
+    _loadUserData();
+
+    // Если через 1 секунду нет данных пользователя, создаем дефолтные
+    Future.delayed(const Duration(seconds: 1), () {
+      if (ref.read(currentUserProvider) == null) {
+        _createDefaultUser();
+      }
+    });
+
+    // Удаляем автоматический запрос разрешений через 5 секунд
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Загружаем данные здесь, когда зависимости (включая ScaffoldMessenger) уже доступны
+    _loadDailyMeals();
+
+    // Запрашиваем разрешения на уведомления после загрузки главного экрана
+    _requestNotificationPermissions();
+  }
+
+  // Создает дефолтного пользователя с базовыми целями по питанию
+  void _createDefaultUser() {
+    // Создаем базовые цели питания
+    final nutritionGoals = NutritionGoals(
+        dailyCalories: 2000, dailyProtein: 75, dailyFat: 65, dailyCarbs: 250);
+
+    // Создаем дефолтного пользователя
+    final defaultUser = UserModel(
+      id: const Uuid().v4(),
+      name: "Пользователь",
+      age: 30,
+      gender: Gender.male,
+      height: 175.0,
+      weight: 70.0,
+      activityLevel: ActivityLevel.moderatelyActive,
+      goal: Goal.maintain,
+      nutritionGoals: nutritionGoals,
+    );
+
+    // Устанавливаем пользователя
+    ref.read(currentUserProvider.notifier).setUser(defaultUser);
+
+    // Создаем пустые нутриенты за день
+    final emptyNutrients = NutrientsModel(
+      calories: 0,
+      proteins: 0,
+      fats: 0,
+      carbs: 0,
+    );
+
+    // Устанавливаем нутриенты
+    ref.read(dailyNutrientsProvider.notifier).setNutrients(emptyNutrients);
+
+    print(
+        'Создан пользователь по умолчанию с целями: ${nutritionGoals.dailyCalories} ккал');
+  }
+
+  Future<void> _checkOnboarding() async {
+    // Временно отключаем проверку онбординга
+    // Вернемся к этому позже
+    /*
+    final userRepository = ref.read(userRepositoryProvider);
+    final hasCompletedOnboarding =
+        await userRepository.hasCompletedOnboarding();
+
+    if (!hasCompletedOnboarding && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    }
+    */
+  }
+
+  Future<void> _loadUserData() async {
+    final userRepository = ref.read(userRepositoryProvider);
+    final user = await userRepository.getCurrentUser();
+
+    if (user != null) {
+      ref.read(currentUserProvider.notifier).setUser(user);
+
+      // Устанавливаем дневные нутриенты на основе целей пользователя
+      final emptyNutrients = NutrientsModel(
+        calories: 0,
+        proteins: 0,
+        fats: 0,
+        carbs: 0,
+      );
+
+      // Инициализируем дневные нутриенты
+      ref.read(dailyNutrientsProvider.notifier).setNutrients(emptyNutrients);
+
+      print(
+          'Данные пользователя загружены. Цели: ${user.nutritionGoals.dailyCalories} ккал, '
+          '${user.nutritionGoals.dailyProtein}г белков, ${user.nutritionGoals.dailyFat}г жиров, '
+          '${user.nutritionGoals.dailyCarbs}г углеводов');
+    } else {
+      print('Пользователь не найден, будет создан дефолтный пользователь');
+      // Если пользователь не найден, создаем дефолтного
+      _createDefaultUser();
+    }
+  }
+
+  void _loadDailyMeals() async {
+    try {
+      if (!mounted) return;
+
+      // Сначала сбрасываем данные через Future
+      Future(() {
+        if (mounted) {
+          ref.read(dailyMealsProvider.notifier).setMeals([]);
+          ref.read(dailyNutrientsProvider.notifier).setNutrients(
+                NutrientsModel(
+                  calories: 0,
+                  proteins: 0,
+                  fats: 0,
+                  carbs: 0,
+                ),
+              );
+        }
+      });
+
+      // Делаем небольшую паузу для обновления UI
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final mealRepository = ref.read(mealRepositoryProvider);
+
+      // Загружаем данные
+      final meals = await mealRepository.getMealsForDay(_selectedDate);
+      final dailyNutrients =
+          await mealRepository.getDailyNutrientsTotal(_selectedDate);
+
+      if (!mounted) return;
+
+      // Обновляем состояние через Future, чтобы избежать ошибки модификации провайдера во время сборки
+      Future(() {
+        if (mounted) {
+          ref.read(dailyMealsProvider.notifier).setMeals(meals);
+          ref
+              .read(dailyNutrientsProvider.notifier)
+              .setNutrients(dailyNutrients);
+        }
+      });
+
+      print(
+          '✅ Загружены данные для ${DateFormat('dd.MM.yyyy').format(_selectedDate)}: ${meals.length} приемов пищи');
+    } catch (e) {
+      print('❌ Ошибка при загрузке данных: $e');
+
+      if (mounted) {
+        // Используем Future, чтобы избежать обращения к ScaffoldMessenger во время build
+        Future.microtask(() {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Ошибка при загрузке данных: $e'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Получаем данные пользователя и приемов пищи
+    final user = ref.watch(currentUserProvider);
+    final meals = ref.watch(dailyMealsProvider);
+    final dailyNutrients = ref.watch(dailyNutrientsProvider);
+
+    // Получаем менеджер скриншотов
+    final shareManager = ref.read(shareScreenManagerProvider(ref));
+    final screenshotKey = shareManager.getKeyForType(ScreenshotType.home);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: RefreshIndicator(
+          displacement: 40,
+          onRefresh: () async {
+            // Используем Future для небольшой паузы, чтобы показать индикатор загрузки
+            await Future.delayed(const Duration(milliseconds: 300));
+            _loadDailyMeals();
+          },
+          child: CustomScrollView(
+            slivers: [
+              // Шапка с логотипом и селектором даты
+              SliverToBoxAdapter(
+                child: ScreenshotContainer(
+                  boundaryKey: screenshotKey,
+                  child: Column(
+                    children: [
+                      // Добавляем отступ сверху
+                      const SizedBox(height: 16),
+                      DateSelectorHeader(
+                        showLogo: true,
+                        onDateSelected: (date) {
+                          setState(() {
+                            _selectedDate = date;
+                          });
+                          _loadDailyMeals();
+                        },
+                      ),
+
+                      // Отступ после календаря
+                      const SizedBox(height: 12),
+
+                      // Показываем прогресс по питанию в скриншоте
+                      dailyNutrients != null && user != null
+                          ? _buildNutritionSummary(
+                              _calculateRemainingCalories(
+                                  dailyNutrients, user.nutritionGoals),
+                              _calculateRemainingProtein(
+                                  dailyNutrients, user.nutritionGoals),
+                              _calculateRemainingFat(
+                                  dailyNutrients, user.nutritionGoals),
+                              _calculateRemainingCarbs(
+                                  dailyNutrients, user.nutritionGoals),
+                              user.nutritionGoals,
+                            )
+                          : const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+      floatingActionButton: _buildAddButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  Widget _buildNutritionSummary(
+    int remainingCalories,
+    int remainingProtein,
+    int remainingFat,
+    int remainingCarbs,
+    NutritionGoals goals,
+  ) {
+    // Получаем потребленные калории и питательные вещества
+    int consumedCalories = goals.dailyCalories - remainingCalories;
+
+    // Отладочный вывод для проверки значений
+    print(
+        'Целевые калории: ${goals.dailyCalories}, потреблено: $consumedCalories');
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Заголовок
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Text(
+              'Ваш прогресс на сегодня',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+          // Калории
+          _buildNutrientIndicatorHorizontal(
+            'Калории',
+            remainingCalories,
+            goals.dailyCalories,
+            Theme.of(context).primaryColor,
+            isCal: true,
+          ),
+          const SizedBox(height: 16),
+          // Макронутриенты
+          _buildNutrientIndicatorHorizontal(
+            'Белки',
+            remainingProtein,
+            goals.dailyProtein,
+            Colors.blue,
+          ),
+          const SizedBox(height: 12),
+          _buildNutrientIndicatorHorizontal(
+            'Жиры',
+            remainingFat,
+            goals.dailyFat,
+            Colors.red,
+          ),
+          const SizedBox(height: 12),
+          _buildNutrientIndicatorHorizontal(
+            'Углеводы',
+            remainingCarbs,
+            goals.dailyCarbs,
+            Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNutrientIndicatorHorizontal(
+    String label,
+    int remaining,
+    int goal,
+    Color color, {
+    bool isCal = false,
+  }) {
+    final consumed = goal - remaining;
+    final percentage = consumed / goal;
+    final suffix = isCal ? 'ккал' : 'г';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: isCal ? 18 : 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '$consumed / $goal $suffix',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: isCal ? 16 : 14,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: isCal ? 24 : 20,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Stack(
+            children: [
+              // Прогресс-бар
+              FractionallySizedBox(
+                widthFactor: percentage.clamp(0.0, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              // Текстовый процент внутри
+              Center(
+                child: Text(
+                  '${(percentage * 100).toInt()}%',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isCal ? 14 : 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Widget _buildEmptyMealsView() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.restaurant,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Нет приемов пищи',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Добавьте приемы пищи, чтобы отслеживать питание',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              // Используем общий сервис для добавления еды
+              final foodInputService =
+                  ref.read(services.foodInputServiceProvider)(ref, context);
+              foodInputService.showAddFoodOptions();
+            },
+            child: const Text('Добавить прием пищи'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    // Определяем цвет активной иконки и неактивных иконок
+    final Color activeColor = Colors.blue;
+    final Color inactiveColor = Colors.grey;
+
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          IconButton(
+            icon: Icon(Icons.home, color: activeColor),
+            onPressed: () {
+              // Уже на главном экране
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.history, color: inactiveColor),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const HistoryScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 40), // Место для FAB
+          IconButton(
+            icon: Icon(Icons.bar_chart, color: inactiveColor),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AnalyticsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.share, color: inactiveColor),
+            onPressed: () {
+              // Создаем скриншот и делимся им
+              _shareScreenshot();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Метод для отображения меню настроек
+  void _showSettingsMenu() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Настройки приложения'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.notifications, color: Colors.blue),
+                title: const Text('Разрешить уведомления'),
+                subtitle: const Text('Получать напоминания о приемах пищи'),
+                onTap: () async {
+                  Navigator.pop(context); // Закрываем меню
+
+                  // Запрашиваем разрешения
+                  final mealRemindersService =
+                      ref.read(services.mealRemindersServiceProvider);
+
+                  // Сначала проверяем текущий статус разрешений
+                  final bool hasExistingPermissions =
+                      await mealRemindersService.areNotificationsEnabled();
+
+                  // Если разрешения уже есть, просто настраиваем напоминания
+                  if (hasExistingPermissions) {
+                    debugPrint('✅ Разрешения на уведомления уже предоставлены');
+
+                    // Настраиваем напоминания о приемах пищи
+                    await mealRemindersService.setupAllMealReminders();
+                    return;
+                  }
+
+                  // Запрашиваем разрешение (поскольку ранее выяснили, что их нет)
+                  final bool hasPermissions = await mealRemindersService
+                      .requestNotificationPermissions();
+
+                  if (hasPermissions && mounted) {
+                    // Настраиваем напоминания о приемах пищи
+                    await mealRemindersService.setupAllMealReminders();
+                    debugPrint(
+                        '✅ Разрешения на уведомления получены автоматически');
+                  } else if (mounted) {
+                    debugPrint(
+                        '❌ Не удалось получить разрешения на уведомления автоматически');
+                  }
+                },
+              ),
+              ListTile(
+                leading:
+                    const Icon(Icons.notifications_active, color: Colors.red),
+                title: const Text(
+                  'Отладка уведомлений 🔔',
+                  style: TextStyle(color: Colors.red),
+                ),
+                tileColor: Colors.red.shade50,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationDebugScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAddButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        // Используем общий сервис для добавления еды
+        final foodInputService =
+            ref.read(services.foodInputServiceProvider)(ref, context);
+        foodInputService.showAddFoodOptions(onFoodAdded: () {
+          if (mounted) {
+            _loadDailyMeals();
+          }
+        });
+      },
+      child: const Icon(Icons.add),
+    );
+  }
+
+  // Метод для запроса разрешений на уведомления
+  Future<void> _requestNotificationPermissions() async {
+    try {
+      // Получаем сервис уведомлений
+      final mealRemindersService =
+          ref.read(services.mealRemindersServiceProvider);
+
+      // Сначала проверяем текущий статус разрешений
+      final bool hasExistingPermissions =
+          await mealRemindersService.areNotificationsEnabled();
+
+      // Если разрешения уже есть, просто настраиваем напоминания без уведомления пользователя
+      if (hasExistingPermissions) {
+        debugPrint('✅ Разрешения на уведомления уже предоставлены');
+
+        // Настраиваем напоминания о приемах пищи
+        await mealRemindersService.setupAllMealReminders();
+        return;
+      }
+
+      // Запрашиваем разрешение (поскольку ранее выяснили, что их нет)
+      final bool hasPermissions =
+          await mealRemindersService.requestNotificationPermissions();
+
+      if (hasPermissions && mounted) {
+        // Настраиваем напоминания о приемах пищи
+        await mealRemindersService.setupAllMealReminders();
+        debugPrint('✅ Разрешения на уведомления получены автоматически');
+      } else if (mounted) {
+        debugPrint(
+            '❌ Не удалось получить разрешения на уведомления автоматически');
+      }
+    } catch (e) {
+      debugPrint('❌ Ошибка при автоматическом запросе разрешений: $e');
+    }
+  }
+
+  // Расчет оставшихся калорий
+  int _calculateRemainingCalories(
+      NutrientsModel dailyNutrients, NutritionGoals goals) {
+    return goals.dailyCalories - dailyNutrients.calories;
+  }
+
+  // Расчет оставшегося белка
+  int _calculateRemainingProtein(
+      NutrientsModel dailyNutrients, NutritionGoals goals) {
+    return goals.dailyProtein - dailyNutrients.proteins.round();
+  }
+
+  // Расчет оставшегося жира
+  int _calculateRemainingFat(
+      NutrientsModel dailyNutrients, NutritionGoals goals) {
+    return goals.dailyFat - dailyNutrients.fats.round();
+  }
+
+  // Расчет оставшихся углеводов
+  int _calculateRemainingCarbs(
+      NutrientsModel dailyNutrients, NutritionGoals goals) {
+    return goals.dailyCarbs - dailyNutrients.carbs.round();
+  }
+
+  // Добавляем метод для создания и распространения скриншота
+  Future<void> _shareScreenshot() async {
+    try {
+      // Получаем менеджер скриншотов
+      final shareManager = ref.read(shareScreenManagerProvider(ref));
+
+      // Делимся скриншотом главного экрана
+      await shareManager.shareScreenshot(ScreenshotType.home);
+    } catch (e) {
+      debugPrint('❌ Ошибка при создании или отправке скриншота: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось поделиться скриншотом')),
+        );
+      }
+    }
+  }
+}

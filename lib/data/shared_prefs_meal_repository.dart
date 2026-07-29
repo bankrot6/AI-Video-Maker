@@ -1,0 +1,345 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter/foundation.dart';
+import '../models/meal_model.dart';
+import 'meal_repository.dart';
+
+class SharedPrefsMealRepository implements MealRepository {
+  // Префикс для ключей приемов пищи в SharedPreferences
+  static const String _mealPrefix = 'meal_';
+  static const String _mealListPrefix = 'meal_list_';
+
+  final SharedPreferences _prefs;
+  final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
+
+  // Конструктор с внедрением зависимости - SharedPreferences
+  SharedPrefsMealRepository(this._prefs) {
+    // Инициализируем локализацию
+    initializeDateFormatting();
+
+    // Запускаем проверку консистентности данных
+    verifyDataConsistency();
+  }
+
+  // Фабричный метод для создания репозитория
+  static Future<SharedPrefsMealRepository> create() async {
+    final prefs = await SharedPreferences.getInstance();
+    return SharedPrefsMealRepository(prefs);
+  }
+
+  // Метод для проверки и исправления консистентности данных
+  Future<void> verifyDataConsistency() async {
+    try {
+      debugPrint('🔍 Starting data consistency verification...');
+
+      // Получаем все ключи из SharedPreferences
+      final allKeys = _prefs.getKeys();
+
+      // Получаем список всех ключей для списков приемов пищи
+      final mealListKeys =
+          allKeys.where((key) => key.startsWith(_mealListPrefix)).toList();
+
+      int totalMealLists = 0;
+      int totalMealIds = 0;
+      int missingMeals = 0;
+
+      // Проверяем каждый список приемов пищи
+      for (final listKey in mealListKeys) {
+        totalMealLists++;
+        final mealIds = _prefs.getStringList(listKey) ?? [];
+        totalMealIds += mealIds.length;
+
+        // Создаем новый список, который будет содержать только валидные ID
+        final validMealIds = <String>[];
+
+        // Проверяем существование каждого приема пищи
+        for (final id in mealIds) {
+          final mealExists = _prefs.containsKey(_getMealKey(id));
+          if (mealExists) {
+            validMealIds.add(id);
+          } else {
+            missingMeals++;
+            debugPrint('⚠️ Found missing meal with ID: $id in list $listKey');
+          }
+        }
+
+        // Если есть различия, обновляем список
+        if (validMealIds.length != mealIds.length) {
+          await _prefs.setStringList(listKey, validMealIds);
+          debugPrint(
+              '✅ Updated meal list $listKey: removed ${mealIds.length - validMealIds.length} invalid references');
+        }
+      }
+
+      // Получаем все ключи приемов пищи
+      final mealKeys = allKeys
+          .where((key) =>
+              key.startsWith(_mealPrefix) && !key.startsWith(_mealListPrefix))
+          .toList();
+
+      // Выводим статистику
+      debugPrint('📊 Data consistency check completed:');
+      debugPrint('  - Total meal lists: $totalMealLists');
+      debugPrint('  - Total meal IDs in lists: $totalMealIds');
+      debugPrint('  - Missing meals removed: $missingMeals');
+      debugPrint('  - Total meal objects: ${mealKeys.length}');
+    } catch (e) {
+      debugPrint('❌ Error during data consistency verification: $e');
+    }
+  }
+
+  // Генерация ключа для списка приемов пищи за день
+  String _getMealListKey(DateTime date) {
+    return '$_mealListPrefix${_dateFormatter.format(date)}';
+  }
+
+  // Генерация ключа для конкретного приема пищи
+  String _getMealKey(String id) {
+    return '$_mealPrefix$id';
+  }
+
+  @override
+  Future<List<MealModel>> getMealsForDay(DateTime date) async {
+    final List<MealModel> meals = [];
+
+    try {
+      // Получаем список ID приемов пищи за день
+      final mealIds = _prefs.getStringList(_getMealListKey(date)) ?? [];
+
+      // Для каждого ID получаем данные о приеме пищи
+      for (final id in mealIds) {
+        final meal = await getMealById(id);
+        if (meal != null) {
+          meals.add(meal);
+        } else {
+          // Если данные о приеме пищи отсутствуют, удаляем ID из списка
+          await _cleanupMissingMealId(date, id);
+        }
+      }
+
+      // Сортировка по времени
+      meals.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    } catch (e) {
+      print('Error getting meals for day: $e');
+      // В случае ошибки возвращаем пустой список
+    }
+
+    return meals;
+  }
+
+  // Метод для очистки отсутствующих ID приемов пищи из списка
+  Future<void> _cleanupMissingMealId(DateTime date, String id) async {
+    try {
+      final mealListKey = _getMealListKey(date);
+      final mealIds = _prefs.getStringList(mealListKey) ?? [];
+      if (mealIds.contains(id)) {
+        mealIds.remove(id);
+        await _prefs.setStringList(mealListKey, mealIds);
+        print(
+            'Removed missing meal ID $id from list for date ${_dateFormatter.format(date)}');
+      }
+    } catch (e) {
+      print('Error cleaning up missing meal ID: $e');
+    }
+  }
+
+  @override
+  Future<MealModel?> getMealById(String id) async {
+    try {
+      final mealJson = _prefs.getString(_getMealKey(id));
+      if (mealJson == null) {
+        return null;
+      }
+
+      final Map<String, dynamic> mealMap = json.decode(mealJson);
+      return MealModel.fromJson(mealMap);
+    } catch (e) {
+      print('Error deserializing meal data: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<void> saveMeal(MealModel meal) async {
+    try {
+      // Сохраняем данные приема пищи
+      final mealJson = json.encode(meal.toJson());
+      await _prefs.setString(_getMealKey(meal.id), mealJson);
+
+      // Добавляем ID приема пищи в список за день
+      final date = DateTime(
+        meal.dateTime.year,
+        meal.dateTime.month,
+        meal.dateTime.day,
+      );
+      final mealListKey = _getMealListKey(date);
+
+      final mealIds = _prefs.getStringList(mealListKey) ?? [];
+      if (!mealIds.contains(meal.id)) {
+        mealIds.add(meal.id);
+        await _prefs.setStringList(mealListKey, mealIds);
+      }
+    } catch (e) {
+      print('Error saving meal: $e');
+      throw Exception('Failed to save meal data');
+    }
+  }
+
+  @override
+  Future<void> updateMeal(MealModel meal) async {
+    try {
+      // Получаем существующий прием пищи для проверки даты
+      final existingMeal = await getMealById(meal.id);
+
+      if (existingMeal != null) {
+        // Если дата изменилась, обновляем списки приемов пищи
+        final oldDate = DateTime(
+          existingMeal.dateTime.year,
+          existingMeal.dateTime.month,
+          existingMeal.dateTime.day,
+        );
+
+        final newDate = DateTime(
+          meal.dateTime.year,
+          meal.dateTime.month,
+          meal.dateTime.day,
+        );
+
+        if (oldDate != newDate) {
+          // Удаляем из старого списка
+          final oldMealListKey = _getMealListKey(oldDate);
+          final oldMealIds = _prefs.getStringList(oldMealListKey) ?? [];
+          oldMealIds.remove(meal.id);
+          await _prefs.setStringList(oldMealListKey, oldMealIds);
+
+          // Добавляем в новый список
+          final newMealListKey = _getMealListKey(newDate);
+          final newMealIds = _prefs.getStringList(newMealListKey) ?? [];
+          if (!newMealIds.contains(meal.id)) {
+            newMealIds.add(meal.id);
+            await _prefs.setStringList(newMealListKey, newMealIds);
+          }
+        }
+      }
+
+      // Сохраняем обновленные данные приема пищи
+      final mealJson = json.encode(meal.toJson());
+      await _prefs.setString(_getMealKey(meal.id), mealJson);
+    } catch (e) {
+      print('Error updating meal: $e');
+      throw Exception('Failed to update meal data');
+    }
+  }
+
+  @override
+  Future<void> deleteMeal(String id) async {
+    try {
+      // Получаем прием пищи для определения даты
+      final meal = await getMealById(id);
+
+      if (meal != null) {
+        // Удаляем из списка за день
+        final date = DateTime(
+          meal.dateTime.year,
+          meal.dateTime.month,
+          meal.dateTime.day,
+        );
+
+        final mealListKey = _getMealListKey(date);
+        final mealIds = _prefs.getStringList(mealListKey) ?? [];
+        mealIds.remove(id);
+        await _prefs.setStringList(mealListKey, mealIds);
+      }
+
+      // Удаляем данные приема пищи
+      await _prefs.remove(_getMealKey(id));
+    } catch (e) {
+      print('Error deleting meal: $e');
+    }
+  }
+
+  @override
+  Future<MealNutrientsModel> getDailyNutrientsTotal(DateTime date) async {
+    try {
+      // Нормализуем дату до начала дня для корректного сравнения
+      final normalizedDate = DateTime(date.year, date.month, date.day);
+
+      final meals = await getMealsForDay(normalizedDate);
+
+      // Отладочная информация
+      print(
+          'Получение данных за день: ${normalizedDate.toIso8601String().substring(0, 10)}');
+      print('Найдено приемов пищи: ${meals.length}');
+
+      int totalCalories = 0;
+      double totalProteins = 0;
+      double totalFats = 0;
+      double totalCarbs = 0;
+      double totalFiber = 0;
+      double totalSugar = 0;
+
+      for (final meal in meals) {
+        // Отладочная информация по каждому приему пищи
+        print('Прием пищи: ${meal.name}, калорий: ${meal.nutrients.calories}');
+
+        totalCalories += meal.nutrients.calories;
+        totalProteins += meal.nutrients.proteins;
+        totalFats += meal.nutrients.fats;
+        totalCarbs += meal.nutrients.carbs;
+        totalFiber += meal.nutrients.fiber ?? 0;
+        totalSugar += meal.nutrients.sugar ?? 0;
+      }
+
+      // Итоговые значения для отладки
+      print(
+          'Итого за день: калорий $totalCalories, БЖУ: $totalProteins/$totalFats/$totalCarbs');
+
+      return MealNutrientsModel(
+        calories: totalCalories,
+        proteins: totalProteins,
+        fats: totalFats,
+        carbs: totalCarbs,
+        fiber: totalFiber,
+        sugar: totalSugar,
+        dateTime:
+            normalizedDate, // Всегда устанавливаем нормализованную дату для корректной идентификации
+      );
+    } catch (e) {
+      print('Error calculating daily nutrients: $e');
+      // В случае ошибки возвращаем пустой объект с указанием нормализованной даты
+      final normalizedDate = DateTime(date.year, date.month, date.day);
+      return MealNutrientsModel.empty().copyWith(dateTime: normalizedDate);
+    }
+  }
+
+  @override
+  Future<List<MealModel>> getMealHistory(
+      DateTime startDate, DateTime endDate) async {
+    final List<MealModel> allMeals = [];
+
+    try {
+      // Для каждого дня в диапазоне получаем приемы пищи
+      DateTime currentDate = startDate;
+
+      while (currentDate.isBefore(endDate) ||
+          currentDate.isAtSameMomentAs(endDate)) {
+        final dayMeals = await getMealsForDay(currentDate);
+        allMeals.addAll(dayMeals);
+
+        // Переходим к следующему дню
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+
+      // Сортировка по времени
+      allMeals
+          .sort((a, b) => b.dateTime.compareTo(a.dateTime)); // Сначала новые
+    } catch (e) {
+      print('Error getting meal history: $e');
+      // В случае ошибки возвращаем пустой список
+    }
+
+    return allMeals;
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "user_generations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deviceId", "order": "ASCENDING" },
+        { "fieldPath": "presetId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "presets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "isPublic", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "preset_earnings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "creditsEarned", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

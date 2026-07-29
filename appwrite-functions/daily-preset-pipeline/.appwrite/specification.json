@@ -1,0 +1,14 @@
+{
+  "$id": "daily-preset-pipeline",
+  "name": "Daily Preset Pipeline",
+  "runtime": "node-18.0",
+  "execute": [],
+  "events": [],
+  "schedule": "0 */4 * * *",
+  "timeout": 900,
+  "enabled": true,
+  "logging": true,
+  "entrypoint": "src/index.js",
+  "commands": "npm install",
+  "scopes": ["databases.write", "storage.write"]
+}

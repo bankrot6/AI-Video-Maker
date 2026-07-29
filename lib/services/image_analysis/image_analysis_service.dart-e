@@ -1,0 +1,28 @@
+import 'dart:io';
+import '../../models/meal_model.dart';
+
+/// Абстрактный интерфейс для сервисов анализа изображений
+abstract class ImageAnalysisService {
+  /// Метод для анализа изображения и получения информации о еде
+  ///
+  /// [imageFile] - файл изображения для анализа
+  ///
+  /// Возвращает Future с набором распознанных ингредиентов и ориентировочной
+  /// информацией о питательной ценности
+  Future<ImageAnalysisResult> analyzeFood(File imageFile);
+}
+
+/// Результат анализа изображения еды
+class ImageAnalysisResult {
+  final List<String> detectedLabels;
+  final List<IngredientModel> inferredIngredients;
+  final NutrientsModel estimatedNutrients;
+  final String? foodName;
+
+  ImageAnalysisResult({
+    required this.detectedLabels,
+    required this.inferredIngredients,
+    required this.estimatedNutrients,
+    this.foodName,
+  });
+}

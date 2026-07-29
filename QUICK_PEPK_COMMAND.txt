@@ -1,0 +1,31 @@
+================================================================
+СОЗДАНИЕ PEPK АРХИВА ДЛЯ RUSTORE
+================================================================
+
+✅ Сертификат УЖЕ СОЗДАН: android/upload-cert.pem (1.3 KB)
+
+Теперь нужен PEPK архив. Выполните в Terminal.app:
+
+================================================================
+
+cd /Volumes/External_Storage/Projects/Photosession-AI
+
+java -jar pepk.jar --keystore upload-keystore.jks --alias upload --output android/pepk_out.zip --encryptionkey=000087b97df54de973a38193a23d61553c6f52cfe12bc4703b424aa514157443618a9b8c148176f7916f261dae02efd3a3250fc7ee92a482423674af00dbac25df9575c0 --include-cert
+
+================================================================
+
+Когда попросят пароли (скопируйте из этого файла):
+
+Store password: PhotoAI2026RuStoreSecureProd9xK8mL2n
+Key password:   UploadKey2026PhotoAI7wQ5bN4pSecure
+
+================================================================
+
+После успешного создания у вас будут два файла:
+
+1. android/pepk_out.zip       (Шаг 3 в RuStore Console)
+2. android/upload-cert.pem     (Шаг 4 в RuStore Console)
+
+Загрузите оба файла в RuStore Console и нажмите "Отправить подпись".
+
+================================================================

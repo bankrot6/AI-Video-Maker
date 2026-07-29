@@ -1,0 +1,162 @@
+[
+  {
+    "id": "ru_male_01",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_02",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_03",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_04",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_05",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_06",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_07",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_08",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_09",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_male_10",
+    "gender": "male",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_01",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_02",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_03",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_04",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_05",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_06",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_07",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_08",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_09",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  },
+  {
+    "id": "ru_female_10",
+    "gender": "female",
+    "age_group": "adult",
+    "ref_audio_url": "asset:assets/tts_voices/ru_book_dataset/preset.wav",
+    "ref_text": "Привет! Это тестовый голос для озвучки сообщений.",
+    "language": "ru-RU"
+  }
+]

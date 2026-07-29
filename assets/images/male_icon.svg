@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="none" />
+  <!-- Голова -->
+  <circle cx="60" cy="45" r="25" fill="#FFD1A9" stroke="#000000" stroke-width="2" />
+  <!-- Волосы -->
+  <path d="M40 35 Q60 20 80 35 L80 40 Q60 25 40 40 Z" fill="#964B00" />
+  <!-- Тело с галстуком -->
+  <rect x="45" y="70" width="30" height="40" rx="5" fill="#4682B4" stroke="#000000" stroke-width="2" />
+  <!-- Галстук -->
+  <polygon points="60 75 65 75 63 95 60 100 57 95 55 75" fill="#FF5555" stroke="#000000" stroke-width="1" />
+  <!-- Воротник -->
+  <path d="M45 75 L55 75 L55 70 M65 75 L75 75 L65 70" fill="none" stroke="#000000" stroke-width="2" />
+</svg> 

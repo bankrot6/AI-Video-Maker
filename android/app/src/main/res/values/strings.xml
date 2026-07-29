@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Video Maker</string>
+
+    <!-- RuStore Pay SDK -->
+    <string name="CONSOLE_APPLICATION_ID">2063737207</string>
+    <string name="SDK_PAY_SCHEME">aivideomaker</string>
+
+    <!-- VK ID App ID - получите его на https://id.vk.com/business/go -->
+    <!-- После регистрации приложения замените YOUR_VK_APP_ID на реальный ID -->
+    <integer name="com_vk_sdk_AppId">0</integer>
+</resources>

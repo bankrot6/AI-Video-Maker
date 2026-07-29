@@ -1,0 +1,14 @@
+{
+  "$id": "apibost-proxy",
+  "name": "ApiBost Proxy",
+  "runtime": "node-18.0",
+  "execute": ["any"],
+  "events": [],
+  "schedule": "",
+  "timeout": 600,
+  "enabled": true,
+  "logging": true,
+  "entrypoint": "src/index.js",
+  "commands": "npm install",
+  "scopes": ["storage.write"]
+}

@@ -1,0 +1,219 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/token_usage_model.dart';
+
+import '../services/subscription_service.dart';
+
+/// Сервис для управления токенами пользователя
+class TokenUsageService {
+  // Синглтон
+  static final TokenUsageService _instance = TokenUsageService._internal();
+  factory TokenUsageService() => _instance;
+  TokenUsageService._internal();
+
+  // Ключи для SharedPreferences
+  static const String _tokenUsageKey = 'token_usage_data';
+  static const String _lastResetCheckKey = 'last_reset_check';
+
+  /// Получает текущую статистику использования токенов
+  Future<TokenUsageModel> getTokenUsage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_tokenUsageKey);
+
+      if (jsonString != null) {
+        final json = jsonDecode(jsonString) as Map<String, dynamic>;
+        final tokenUsage = TokenUsageModel.fromJson(json);
+
+        // Проверяем, нужно ли сбросить токены подписки
+        return await _checkAndResetSubscriptionTokens(tokenUsage);
+      }
+
+      // Если данных нет, создаем новую модель на основе подписки
+      return await _createInitialTokenUsage();
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка получения данных токенов: $e');
+      return await _createInitialTokenUsage();
+    }
+  }
+
+  /// Создает начальную модель токенов на основе подписки
+  Future<TokenUsageModel> _createInitialTokenUsage() async {
+    try {
+      final subscriptionService = SubscriptionService(
+        // Здесь нужно передать репозиторий, используем null для простоты
+        // В реальном коде нужно инжектить зависимости
+        null as dynamic,
+      );
+
+      final hasSubscription = await subscriptionService.hasActiveSubscription();
+
+      if (hasSubscription) {
+        return TokenUsageModel.defaultModel();
+      } else {
+        return TokenUsageModel.freeUser();
+      }
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка проверки подписки: $e');
+      return TokenUsageModel.freeUser();
+    }
+  }
+
+  /// Проверяет и сбрасывает токены подписки при необходимости
+  Future<TokenUsageModel> _checkAndResetSubscriptionTokens(
+      TokenUsageModel tokenUsage) async {
+    final now = DateTime.now();
+    final lastReset = tokenUsage.lastResetDate;
+
+    // Проверяем, прошел ли месяц с последнего сброса
+    final monthsPassed =
+        (now.year - lastReset.year) * 12 + now.month - lastReset.month;
+
+    if (monthsPassed >= 1) {
+      debugPrint('💎 TOKEN_SERVICE: Сброс токенов подписки - прошел месяц');
+
+      // Определяем количество токенов на основе текущей подписки
+      final subscriptionTokens = await _getSubscriptionTokens();
+      final updatedUsage =
+          tokenUsage.resetSubscriptionTokens(subscriptionTokens);
+
+      // Сохраняем обновленные данные
+      await _saveTokenUsage(updatedUsage);
+      return updatedUsage;
+    }
+
+    return tokenUsage;
+  }
+
+  /// Получает количество токенов для текущей подписки
+  Future<int> _getSubscriptionTokens() async {
+    try {
+      final subscriptionService = SubscriptionService(null as dynamic);
+      final hasSubscription = await subscriptionService.hasActiveSubscription();
+
+      if (hasSubscription) {
+        // Можно в будущем добавить разные уровни подписки с разным количеством токенов
+        return 50000; // 50k токенов для платной подписки
+      } else {
+        return 10000; // 10k токенов для бесплатного использования
+      }
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка получения токенов подписки: $e');
+      return 10000;
+    }
+  }
+
+  /// Сохраняет данные об использовании токенов
+  Future<void> _saveTokenUsage(TokenUsageModel tokenUsage) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = jsonEncode(tokenUsage.toJson());
+      await prefs.setString(_tokenUsageKey, jsonString);
+
+      debugPrint(
+          '💾 TOKEN_SERVICE: Данные токенов сохранены: ${tokenUsage.toString()}');
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка сохранения данных токенов: $e');
+    }
+  }
+
+  /// Использует токены для AI запроса
+  Future<bool> useTokens(int tokenCount) async {
+    try {
+      final currentUsage = await getTokenUsage();
+
+      if (!currentUsage.hasEnoughTokens(tokenCount)) {
+        debugPrint(
+            '❌ TOKEN_SERVICE: Недостаточно токенов: требуется $tokenCount, доступно ${currentUsage.remainingTokens}');
+        return false;
+      }
+
+      final updatedUsage = currentUsage.useTokens(tokenCount);
+      await _saveTokenUsage(updatedUsage);
+
+      debugPrint(
+          '✅ TOKEN_SERVICE: Использовано $tokenCount токенов, осталось ${updatedUsage.remainingTokens}');
+      return true;
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка использования токенов: $e');
+      return false;
+    }
+  }
+
+  /// Добавляет купленные токены
+  Future<void> addPurchasedTokens(int tokenCount) async {
+    try {
+      final currentUsage = await getTokenUsage();
+      final updatedUsage = currentUsage.addPurchasedTokens(tokenCount);
+      await _saveTokenUsage(updatedUsage);
+
+      debugPrint('💰 TOKEN_SERVICE: Добавлено $tokenCount купленных токенов');
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка добавления купленных токенов: $e');
+    }
+  }
+
+  /// Проверяет, достаточно ли токенов для запроса
+  Future<bool> hasEnoughTokens(int requiredTokens) async {
+    try {
+      final tokenUsage = await getTokenUsage();
+      return tokenUsage.hasEnoughTokens(requiredTokens);
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка проверки токенов: $e');
+      return false;
+    }
+  }
+
+  /// Оценивает количество токенов для текста (приблизительно)
+  int estimateTokensForText(String text) {
+    // Приблизительная оценка: 1 токен ≈ 4 символа для английского текста
+    // Для русского текста может быть немного больше
+    // Добавляем небольшой буфер для безопасности
+    return (text.length / 3.5).ceil() + 50;
+  }
+
+  /// Получает список доступных пакетов токенов для покупки
+  List<TokenPackageModel> getAvailablePackages() {
+    return [
+      TokenPackageModel(
+        type: TokenPackageType.small,
+        title: 'Стартовый пакет',
+        description: '25,000 токенов\n~50 подробных запросов',
+        tokens: TokenPackageType.small.tokens,
+        price: TokenPackageType.small.priceRub.toDouble(),
+        currency: 'RUB',
+      ),
+      TokenPackageModel(
+        type: TokenPackageType.medium,
+        title: 'Популярный пакет',
+        description: '75,000 токенов\n~150 подробных запросов',
+        tokens: TokenPackageType.medium.tokens,
+        price: TokenPackageType.medium.priceRub.toDouble(),
+        currency: 'RUB',
+        badge: 'Лучшее предложение',
+      ),
+      TokenPackageModel(
+        type: TokenPackageType.large,
+        title: 'Максимальный пакет',
+        description: '200,000 токенов\n~400 подробных запросов',
+        tokens: TokenPackageType.large.tokens,
+        price: TokenPackageType.large.priceRub.toDouble(),
+        currency: 'RUB',
+      ),
+    ];
+  }
+
+  /// Сбрасывает все данные токенов (для тестирования)
+  Future<void> resetTokenUsage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenUsageKey);
+      await prefs.remove(_lastResetCheckKey);
+
+      debugPrint('🔄 TOKEN_SERVICE: Данные токенов сброшены');
+    } catch (e) {
+      debugPrint('🔴 TOKEN_SERVICE: Ошибка сброса данных токенов: $e');
+    }
+  }
+}

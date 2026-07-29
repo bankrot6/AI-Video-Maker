@@ -1,0 +1,286 @@
+import '../models/meal_model.dart';
+import '../models/user_model.dart';
+import '../utils/food_nutrients_database.dart';
+import 'nutrients_repository.dart';
+import 'user_repository.dart';
+
+class NutrientsRepositoryImpl implements NutrientsRepository {
+  final UserRepository _userRepository;
+  final FoodNutrientsDatabase _database;
+
+  NutrientsRepositoryImpl({
+    required UserRepository userRepository,
+    FoodNutrientsDatabase? database,
+  })  : _userRepository = userRepository,
+        _database = database ?? FoodNutrientsDatabase();
+
+  @override
+  Future<MealNutrientsModel?> getNutrientsByFoodName(String foodName) async {
+    if (!_database.isFoodItem(foodName)) return null;
+
+    return await _database.getNutritionData(foodName);
+  }
+
+  @override
+  bool isFoodItem(String foodName) {
+    return _database.isFoodItem(foodName);
+  }
+
+  @override
+  List<String> getFoodSuggestions(String partial) {
+    if (partial.isEmpty) return [];
+
+    partial = partial.toLowerCase();
+    // Создаем список доступных продуктов, проверяя их через метод isFoodItem
+    List<String> foodItems = [];
+    for (var food in [
+      'apple',
+      'banana',
+      'chicken',
+      'rice',
+      'bread',
+      'egg',
+      'milk',
+      'carrot',
+      'tomato',
+      'cheese',
+      'potato',
+      'beef',
+      'pasta',
+      'cucumber',
+      'orange'
+    ]) {
+      if (_database.isFoodItem(food)) {
+        foodItems.add(food);
+      }
+    }
+
+    return foodItems
+        .where((food) => food.toLowerCase().contains(partial))
+        .toList();
+  }
+
+  @override
+  String? getFoodCategory(String foodName) {
+    if (!_database.isFoodItem(foodName)) return null;
+
+    // Категории продуктов
+    final Map<String, List<String>> categories = {
+      'fruit': ['apple', 'banana', 'orange'],
+      'vegetable': ['carrot', 'tomato', 'potato', 'cucumber'],
+      'meat': ['chicken', 'beef'],
+      'dairy': ['milk', 'cheese'],
+      'grain': ['rice', 'bread', 'pasta'],
+    };
+
+    for (var category in categories.keys) {
+      if (categories[category]!.contains(foodName.toLowerCase())) {
+        return category;
+      }
+    }
+    return null;
+  }
+
+  @override
+  List<String> getFoodSynonyms(String foodName) {
+    if (!_database.isFoodItem(foodName)) return [];
+
+    // Синонимы продуктов
+    final Map<String, List<String>> synonyms = {
+      'apple': ['яблоко', 'fruit', 'фрукт'],
+      'banana': ['банан', 'fruit', 'фрукт'],
+      'chicken': ['курица', 'chicken breast', 'куриная грудка', 'meat', 'мясо'],
+      'rice': [
+        'рис',
+        'brown rice',
+        'white rice',
+        'бурый рис',
+        'белый рис',
+        'grain',
+        'зерно'
+      ],
+      'bread': [
+        'хлеб',
+        'white bread',
+        'wheat bread',
+        'белый хлеб',
+        'пшеничный хлеб'
+      ],
+      'egg': ['яйцо', 'eggs', 'яйца', 'boiled egg', 'вареное яйцо'],
+      'milk': ['молоко', 'dairy', 'молочное'],
+      'carrot': ['морковь', 'морковка', 'vegetable', 'овощ'],
+      'tomato': ['помидор', 'томат', 'vegetable', 'овощ'],
+      'cheese': ['сыр', 'dairy', 'молочное'],
+      'potato': ['картофель', 'картошка', 'vegetable', 'овощ'],
+      'beef': ['говядина', 'beef steak', 'говяжий стейк', 'meat', 'мясо'],
+      'pasta': ['макароны', 'спагетти', 'паста', 'grain', 'зерно'],
+      'cucumber': ['огурец', 'vegetable', 'овощ'],
+      'orange': ['апельсин', 'fruit', 'фрукт'],
+    };
+
+    return synonyms[foodName.toLowerCase()] ?? [];
+  }
+
+  @override
+  MealNutrientsModel calculateNutrientsForIngredients(
+      List<IngredientModel> ingredients) {
+    int totalCalories = 0;
+    double totalProteins = 0;
+    double totalFats = 0;
+    double totalCarbs = 0;
+    double totalFiber = 0;
+    double totalSugar = 0;
+
+    // Поскольку метод не может быть асинхронным, а getNutritionData асинхронный,
+    // мы упрощаем логику и используем статические данные для расчета
+    final defaultNutrients = {
+      'apple': {
+        'calories': 52,
+        'proteins': 0.3,
+        'fats': 0.2,
+        'carbs': 14.0,
+        'fiber': 2.4,
+        'sugar': 10.3
+      },
+      'banana': {
+        'calories': 89,
+        'proteins': 1.1,
+        'fats': 0.3,
+        'carbs': 22.8,
+        'fiber': 2.6,
+        'sugar': 12.2
+      },
+      'chicken': {
+        'calories': 165,
+        'proteins': 31.0,
+        'fats': 3.6,
+        'carbs': 0.0,
+        'fiber': 0.0,
+        'sugar': 0.0
+      },
+      'rice': {
+        'calories': 130,
+        'proteins': 2.7,
+        'fats': 0.3,
+        'carbs': 28.0,
+        'fiber': 0.4,
+        'sugar': 0.0
+      },
+      'bread': {
+        'calories': 265,
+        'proteins': 9.0,
+        'fats': 3.2,
+        'carbs': 49.0,
+        'fiber': 2.7,
+        'sugar': 5.0
+      },
+    };
+
+    for (var ingredient in ingredients) {
+      final name = ingredient.name.toLowerCase();
+      final nutrients = defaultNutrients[name];
+
+      if (nutrients == null) continue;
+
+      double weightRatio =
+          ingredient.quantity / 100; // Расчет для веса в граммах
+
+      totalCalories += (nutrients['calories']! * weightRatio).round();
+      totalProteins += nutrients['proteins']! * weightRatio;
+      totalFats += nutrients['fats']! * weightRatio;
+      totalCarbs += nutrients['carbs']! * weightRatio;
+      totalFiber += (nutrients['fiber'] ?? 0) * weightRatio;
+      totalSugar += (nutrients['sugar'] ?? 0) * weightRatio;
+    }
+
+    return MealNutrientsModel(
+      calories: totalCalories,
+      proteins: totalProteins,
+      fats: totalFats,
+      carbs: totalCarbs,
+      fiber: totalFiber,
+      sugar: totalSugar,
+    );
+  }
+
+  @override
+  Future<MealNutrientsModel> getRecommendedDailyNutrients() async {
+    // Получаем данные пользователя
+    UserModel? user = await _userRepository.getCurrentUser();
+
+    // Значения по умолчанию, если профиль пользователя не доступен
+    int recommendedCalories = 2000;
+    double recommendedProteins = 50;
+    double recommendedFats = 70;
+    double recommendedCarbs = 260;
+    double recommendedFiber = 28;
+    double recommendedSugar = 25;
+
+    if (user != null) {
+      // Расчет нормы калорий с учетом данных пользователя
+      double bmr = 0;
+
+      if (user.gender == Gender.male) {
+        // Формула Харриса-Бенедикта для мужчин
+        bmr = 88.362 +
+            (13.397 * user.weight) +
+            (4.799 * user.height) -
+            (5.677 * user.age);
+      } else {
+        // Формула Харриса-Бенедикта для женщин
+        bmr = 447.593 +
+            (9.247 * user.weight) +
+            (3.098 * user.height) -
+            (4.330 * user.age);
+      }
+
+      // Корректировка с учетом активности
+      double activityFactor = 1.2; // Малоподвижный образ жизни по умолчанию
+      switch (user.activityLevel) {
+        case ActivityLevel.sedentary:
+          activityFactor = 1.2;
+          break;
+        case ActivityLevel.lightlyActive:
+          activityFactor = 1.375;
+          break;
+        case ActivityLevel.moderatelyActive:
+          activityFactor = 1.55;
+          break;
+        case ActivityLevel.veryActive:
+          activityFactor = 1.725;
+          break;
+        case ActivityLevel.extraActive:
+          activityFactor = 1.9;
+          break;
+      }
+
+      recommendedCalories = (bmr * activityFactor).round();
+
+      // Расчет макронутриентов на основе калорий
+      recommendedProteins = recommendedCalories *
+          0.15 /
+          4; // 15% от калорий, 4 калории в 1г белка
+      recommendedFats =
+          recommendedCalories * 0.3 / 9; // 30% от калорий, 9 калорий в 1г жира
+      recommendedCarbs = recommendedCalories *
+          0.55 /
+          4; // 55% от калорий, 4 калории в 1г углеводов
+
+      // Фиксированные рекомендации для клетчатки и сахара
+      recommendedFiber = user.gender == Gender.male
+          ? 38
+          : 25; // Разные рекомендации для мужчин и женщин
+      recommendedSugar =
+          recommendedCalories * 0.1 / 4; // Максимум 10% калорий из сахара
+    }
+
+    return MealNutrientsModel(
+      calories: recommendedCalories,
+      proteins: recommendedProteins,
+      fats: recommendedFats,
+      carbs: recommendedCarbs,
+      fiber: recommendedFiber,
+      sugar: recommendedSugar,
+    );
+  }
+}

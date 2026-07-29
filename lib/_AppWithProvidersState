@@ -1,0 +1,92 @@
+// marker file to patch build method is not applicable
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
+import 'services/localization/app_localization_service.dart';
+import 'services/providers.dart' as services;
+import 'utils/app_logger.dart';
+
+class _AppWithProvidersState extends ConsumerState<_AppWithProviders> {
+  final _logger = Logger();
+
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем настройки приложения при инициализации
+    _loadAppSettings();
+    // Инициализируем напоминания о приемах пищи
+    _initializeMealReminders();
+    // Инициализируем сервис локализации
+    _initializeLocalizationService();
+  }
+
+  Future<void> _initializeLocalizationService() async {
+    try {
+      _logger.i('🌐 Инициализация сервиса локализации');
+      
+      // Получаем сервис локализации
+      final localizationService = ref.read(appLocalizationServiceProvider);
+      
+      _logger.i('🌐 Сервис получен: $localizationService');
+      
+      // Загружаем сохраненные настройки языка
+      await localizationService.loadSavedLanguage();
+      
+      _logger.i('🌐 Текущий язык: ${localizationService.getCurrentLanguage().name}');
+      
+      // Обновляем состояние провайдера языка
+      ref.read(currentLanguageProvider.notifier).state = localizationService.getCurrentLanguage();
+      
+      _logger.i('🌐 Провайдер языка обновлен');
+      
+      appLog('Сервис локализации инициализирован',
+          tag: 'LOCALIZATION', level: LogLevel.info);
+    } catch (e, stack) {
+      _logger.e('🌐 Ошибка при инициализации сервиса локализации', error: e, stackTrace: stack);
+      appLog('Ошибка при инициализации сервиса локализации: $e',
+          tag: 'LOCALIZATION', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _loadAppSettings() async {
+    final settingsRepository = ref.read(services.settingsRepositoryProvider);
+    final settings = await settingsRepository.getSettings();
+
+    // Обновляем состояние провайдера настроек
+    ref.read(services.appSettingsProvider.notifier).state = settings;
+
+    appLog('Настройки приложения загружены: useGoogleVision=${settings.useGoogleVision}',
+        tag: 'SETTINGS', level: LogLevel.info);
+  }
+
+  Future<void> _initializeMealReminders() async {
+    try {
+      // Получаем сервис уведомлений о приемах пищи
+      final mealRemindersService =
+          ref.read(services.mealRemindersServiceProvider);
+
+      // Только инициализируем сервис без запроса разрешений
+      await mealRemindersService.initialize();
+
+      appLog('Сервис напоминаний о приемах пищи инициализирован',
+          tag: 'NOTIFICATIONS', level: LogLevel.info);
+    } catch (e) {
+      appLog('Ошибка при инициализации сервиса напоминаний: $e',
+          tag: 'NOTIFICATIONS', level: LogLevel.error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Предварительно инициализируем провайдеры DeepSeek
+    final deepSeekService =
+        ref.watch(services.deepSeekNutritionServiceProvider);
+    final integrator = ref.watch(services.visionDeepSeekIntegratorProvider);
+
+    // Явно мониторим изменения в языке
+    final currentLanguage = ref.watch(currentLanguageProvider);
+    _logger.i('🌐 Текущий язык (в build): ${currentLanguage.name}');
+
+    return const MyApp();
+  }
+} 

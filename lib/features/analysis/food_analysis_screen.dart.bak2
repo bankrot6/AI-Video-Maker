@@ -1,0 +1,1937 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
+import '../../models/nutrition_info.dart';
+import '../../models/meal_model.dart';
+import '../../services/providers.dart' as services;
+import 'analysis_providers.dart' as analysis;
+import '../../features/home/home_providers.dart' as home;
+import 'package:flutter/foundation.dart';
+import 'dart:ui';
+import '../../widgets/loading/loading_manager.dart';
+import 'package:flutter/scheduler.dart';
+import 'dart:async';
+import '../../models/dish_type.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+
+/// Экран анализа питательной ценности блюда
+class FoodAnalysisScreen extends ConsumerStatefulWidget {
+  const FoodAnalysisScreen({super.key});
+
+  @override
+  ConsumerState<FoodAnalysisScreen> createState() => _FoodAnalysisScreenState();
+}
+
+class _FoodAnalysisScreenState extends ConsumerState<FoodAnalysisScreen> {
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  bool _isMockService = false;
+  bool _isDirectDeepSeekAnalysis = false;
+  bool _isSaving = false;
+  final bool _isLoadingScreenShown = false;
+  final TextEditingController _dishNameController = TextEditingController();
+  bool _isAnalysisInProgress =
+      false; // Флаг для предотвращения дублирования анализа
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      debugPrint('🚀 FoodAnalysisScreen инициализирован');
+
+      // Получаем изображение, выбранное на предыдущем экране
+      final selectedImage = ref.read(analysis.selectedImageProvider);
+      if (selectedImage != null) {
+        setState(() {
+          _imageFile = selectedImage;
+        });
+        debugPrint(
+            '🖼️ Изображение получено из провайдера: ${selectedImage.path}');
+      } else {
+        debugPrint('⚠️ Изображение отсутствует в провайдере.');
+      }
+
+      // Проверяем, есть ли сохраненные результаты анализа
+      final savedResults = ref.read(analysis.lastAnalysisResultsProvider);
+
+      if (savedResults != null && savedResults.info.dishName.isNotEmpty) {
+        // Устанавливаем последнее известное имя блюда в контроллер
+        setState(() {
+          _dishNameController.text = savedResults.info.dishName;
+        });
+        debugPrint(
+            '💾 Загружены сохраненные результаты для блюда: ${savedResults.info.dishName}');
+
+        // Если изображение отсутствует, но у нас есть результаты анализа,
+        // создаем программное изображение на основе результатов
+        if (_imageFile == null && savedResults.info.dishName.isNotEmpty) {
+          debugPrint(
+              '🎨 Создаем программное изображение для: ${savedResults.info.dishName}');
+          await _generateImageForDish(savedResults.info);
+          // Не запускаем анализ, так как у нас уже есть результаты
+          return;
+        }
+      }
+
+      // Проверяем, нужен ли новый анализ
+      final needsNewAnalysis = _isNewAnalysisSession();
+
+      if (needsNewAnalysis && _imageFile != null) {
+        debugPrint('🔄 Запуск нового анализа изображения');
+        _analyzeImage();
+      } else {
+        debugPrint(
+            '⏸️ Нет необходимости в новом анализе: needsNewAnalysis=$needsNewAnalysis, изображение=${_imageFile != null}');
+      }
+    });
+  }
+
+  /// Проверяет, является ли изображение новым для существующих результатов
+  bool _isNewAnalysisSession() {
+    // Проверяем, используется ли то же изображение, что было при предыдущем анализе
+    // Если это новое изображение в новой сессии, нужно выполнить новый анализ
+    final analysisState = ref.read(analysis.nutritionAnalysisStateProvider);
+
+    if (analysisState is AsyncData<NutritionInfo>) {
+      // Проверяем, есть ли у нас действительные результаты анализа
+      bool hasValidResults = analysisState.value.dishName.isNotEmpty &&
+          analysisState.value.calories > 0 &&
+          (analysisState.value.proteins > 0 ||
+              analysisState.value.fats > 0 ||
+              analysisState.value.carbs > 0);
+
+      // Получаем текущее изображение
+      final selectedImage = _imageFile;
+
+      // Если нет выбранного изображения, новый анализ не требуется
+      if (selectedImage == null) {
+        return false;
+      }
+
+      // Если у нас есть домашнее изображение, но также есть действительные
+      // результаты анализа, НЕ запускаем новый анализ
+      if (selectedImage.path.contains('food_home_') && hasValidResults) {
+        debugPrint(
+            '🔍 Обнаружено новое изображение из домашнего экрана, но у нас уже есть действительные результаты: ${analysisState.value.dishName}');
+        return false;
+      }
+
+      // В противном случае, если это домашнее изображение и у нас нет
+      // действительных результатов, запускаем новый анализ
+      if (selectedImage.path.contains('food_home_')) {
+        debugPrint(
+            '🔍 Обнаружено новое изображение из домашнего экрана, запускаем новый анализ');
+        return true;
+      }
+
+      // Если это программно созданное изображение (dish_), не запускаем повторный анализ
+      if (selectedImage.path.contains('dish_') && hasValidResults) {
+        debugPrint(
+            '🔍 Обнаружено программное изображение, пропускаем повторный анализ');
+        return false;
+      }
+    }
+
+    // По умолчанию считаем, что нужен новый анализ
+    return true;
+  }
+
+  @override
+  void dispose() {
+    _dishNameController.dispose();
+    // Скрываем экран загрузки при уничтожении экрана, если он был показан
+    LoadingManager().hideLoadingScreen();
+
+    // Очищаем состояние анализа при выходе с экрана
+    ref.read(analysis.resetAnalysisStateProvider)();
+
+    // Явно очищаем выбранное изображение (хотя это также делается в resetAnalysisStateProvider)
+    ref.read(analysis.selectedImageProvider.notifier).state = null;
+
+    super.dispose();
+  }
+
+  void _checkApiKey() {
+    setState(() {
+      _isMockService = false;
+    });
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      debugPrint('📷 Запуск камеры для съемки...');
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+      if (image != null) {
+        debugPrint('📷 Получено изображение с камеры: ${image.path}');
+
+        // Сбрасываем предыдущие результаты анализа перед установкой нового изображения
+        ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+            const AsyncValue.loading();
+
+        // Обновляем состояние с новым изображением
+        setState(() {
+          _imageFile = File(image.path);
+        });
+
+        debugPrint(
+            '📷 Состояние приложения обновлено с новым изображением: ${_imageFile!.path}');
+
+        // Используем SchedulerBinding чтобы гарантировать, что экран загрузки показывается
+        // после полного обновления UI и вне цикла рендеринга
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          debugPrint(
+              '📷 PostFrameCallback: Отображение экрана загрузки для анализа...');
+          // Показываем экран загрузки через PostFrameCallback
+          LoadingManager().showLoadingScreen(
+            context,
+            text: 'Анализ фотографии...',
+            animationPath: 'assets/animations/road.json',
+            animationHeight: MediaQuery.of(context).size.height * 0.4,
+            backgroundColor: Colors.white,
+            processingStepText: 'Подготовка фотографии к анализу',
+            progressValue: 0.1,
+          );
+
+          // Используем еще один отложенный запуск для анализа изображения
+          Future.delayed(const Duration(milliseconds: 500), () async {
+            if (!mounted) return;
+
+            debugPrint('📷 Начало процесса анализа изображения с камеры');
+
+            // Устанавливаем состояние загрузки
+            ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+                const AsyncValue.loading();
+
+            try {
+              debugPrint(
+                  '📷 Начало анализа изображения с камеры через Vision и DeepSeek');
+              debugPrint('📷 Путь к изображению: ${_imageFile!.path}');
+              debugPrint(
+                  '📷 Размер изображения: ${await _imageFile!.length()} байт');
+
+              // Обновляем информацию о процессе - Cloud Vision
+              LoadingManager().updateProcessingInfo(
+                context,
+                newText: 'Распознавание объектов на фотографии...',
+                newProcessingStep:
+                    'Отправка изображения в Google Vision API для распознавания объектов',
+                newProgressValue: 0.25,
+                animationPath: 'assets/animations/road.json',
+                animationHeight: MediaQuery.of(context).size.height * 0.4,
+              );
+
+              // Даем время для обновления UI
+              await Future.delayed(const Duration(milliseconds: 500));
+
+              if (!mounted) return;
+              debugPrint('📷 Экран загрузки обновлен для этапа Vision');
+
+              // Получаем интегратор
+              final integrator =
+                  ref.read(services.visionDeepSeekIntegratorProvider);
+              debugPrint('📷 Получен экземпляр интегратора');
+
+              // Имитация получения данных от Google Vision
+              await Future.delayed(const Duration(seconds: 2));
+
+              if (!mounted) return;
+
+              // Обновляем информацию о процессе - DeepSeek
+              LoadingManager().updateProcessingInfo(
+                context,
+                newText: 'Анализ питательной ценности блюда...',
+                newProcessingStep:
+                    'Искусственный интеллект анализирует распознанные объекты',
+                newProgressValue: 0.6,
+                animationPath: 'assets/animations/road.json',
+                animationHeight: MediaQuery.of(context).size.height * 0.4,
+              );
+
+              debugPrint('📷 Экран загрузки обновлен для этапа DeepSeek');
+
+              // Анализируем изображение
+              debugPrint('📷 Отправка изображения в Vision + DeepSeek API...');
+
+              // Выполняем анализ напрямую (без отдельного потока)
+              final nutritionInfo = await integrator
+                  .analyzeImageWithVisionAndDeepSeek(_imageFile!);
+
+              debugPrint(
+                  '📷 Анализ завершен. Результат: ${nutritionInfo.dishName}');
+
+              if (!mounted) return;
+
+              // Проверяем, не вернулись ли пустые данные
+              bool isEmpty = nutritionInfo.dishName.isEmpty &&
+                  nutritionInfo.calories == 0 &&
+                  nutritionInfo.proteins == 0 &&
+                  nutritionInfo.fats == 0 &&
+                  nutritionInfo.carbs == 0;
+
+              if (isEmpty) {
+                debugPrint('📷 Получены пустые данные анализа');
+
+                // Обновляем информацию о процессе при ошибке
+                LoadingManager().updateProcessingInfo(
+                  context,
+                  newText: 'Не удалось распознать блюдо',
+                  newProcessingStep:
+                      'К сожалению, ИИ не смог идентифицировать блюдо на фотографии',
+                  newProgressValue: 1.0,
+                  animationPath: 'assets/animations/road.json',
+                  animationHeight: MediaQuery.of(context).size.height * 0.4,
+                );
+
+                // Вместо ошибки, обновляем состояние
+                ref
+                    .read(analysis.nutritionAnalysisStateProvider.notifier)
+                    .state = AsyncValue.data(nutritionInfo);
+
+                // Задержка перед скрытием экрана загрузки
+                await Future.delayed(const Duration(seconds: 3));
+
+                if (mounted) {
+                  LoadingManager().hideLoadingScreen();
+                  debugPrint('📷 Загрузочный экран скрыт после ошибки');
+                }
+              } else {
+                // Обновляем информацию о процессе при успехе
+                LoadingManager().updateProcessingInfo(
+                  context,
+                  newText: 'Анализ успешно завершен!',
+                  newProcessingStep:
+                      'Ваше блюдо "${nutritionInfo.dishName}" успешно проанализировано',
+                  newProgressValue: 1.0,
+                  animationPath: 'assets/animations/road.json',
+                  animationHeight: MediaQuery.of(context).size.height * 0.4,
+                );
+
+                debugPrint('📷 Экран загрузки обновлен с результатами');
+
+                // Обновляем состояние с результатами
+                ref
+                    .read(analysis.nutritionAnalysisStateProvider.notifier)
+                    .state = AsyncValue.data(nutritionInfo);
+
+                debugPrint('📷 Состояние обновлено с результатами анализа');
+
+                // Небольшая задержка перед скрытием экрана загрузки
+                await Future.delayed(const Duration(seconds: 2));
+
+                if (mounted) {
+                  LoadingManager().hideLoadingScreen();
+                  debugPrint(
+                      '📷 Загрузочный экран скрыт после успешного анализа');
+                }
+              }
+            } catch (error) {
+              debugPrint('📷 Ошибка при анализе: $error');
+
+              if (!mounted) return;
+
+              // Обновляем информацию о процессе при ошибке
+              LoadingManager().updateProcessingInfo(
+                context,
+                newText: 'Ошибка при анализе фотографии',
+                newProcessingStep:
+                    'Произошла ошибка при обработке изображения: $error',
+                newProgressValue: 1.0,
+                animationPath: 'assets/animations/road.json',
+                animationHeight: MediaQuery.of(context).size.height * 0.4,
+              );
+
+              // Возвращаем пустой объект
+              final emptyInfo = NutritionInfo.empty();
+              ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+                  AsyncValue.data(emptyInfo);
+
+              // Задержка перед скрытием экрана загрузки
+              await Future.delayed(const Duration(seconds: 3));
+
+              if (mounted) {
+                LoadingManager().hideLoadingScreen();
+                debugPrint('📷 Загрузочный экран скрыт после ошибки');
+              }
+            }
+          });
+        });
+      } else {
+        debugPrint('📷 Выбор изображения с камеры отменен');
+      }
+    } catch (e) {
+      debugPrint('📷 Ошибка при работе с камерой: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка при работе с камерой: $e')),
+        );
+      }
+    }
+  }
+
+  /// Анализирует изображение в фоновом режиме и заполняет completer результатом
+  void _analyzeImageInBackground(File imageFile, dynamic integrator,
+      Completer<NutritionInfo> completer) async {
+    try {
+      debugPrint('🔄 Запуск анализа в фоновом режиме...');
+      final nutritionInfo =
+          await integrator.analyzeImageWithVisionAndDeepSeek(imageFile);
+      debugPrint('🔄 Получен результат анализа: ${nutritionInfo.dishName}');
+      completer.complete(nutritionInfo);
+    } catch (e) {
+      debugPrint('🔄 Ошибка при фоновом анализе: $e');
+      completer.completeError(e);
+    }
+  }
+
+  Future<void> _pickImage() async {
+    // Получаем изображение из галереи
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Сбрасываем предыдущие результаты анализа перед установкой нового изображения
+      ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+          const AsyncValue.loading();
+
+      // Обновляем состояние с новым изображением
+      setState(() {
+        _imageFile = File(image.path);
+      });
+
+      // Показываем экран загрузки перед началом анализа
+      LoadingManager().showLoadingScreen(
+        context,
+        text: 'Анализ изображения...',
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+        backgroundColor: Colors.white,
+        processingStepText: 'Подготовка изображения из галереи для анализа',
+        progressValue: 0.1,
+      );
+
+      // Даем немного времени для отображения экрана загрузки
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Запускаем анализ изображения
+      await _analyzeImage(skipLoadingScreen: true);
+    }
+  }
+
+  Future<void> _saveMeal() async {
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Нет изображения для сохранения')),
+      );
+      return;
+    }
+
+    final analysisState = ref.read(analysis.nutritionAnalysisStateProvider);
+
+    if (analysisState is! AsyncData<NutritionInfo>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Дождитесь окончания анализа')),
+      );
+      return;
+    }
+
+    final nutritionInfo = analysisState.value;
+
+    if (nutritionInfo.dishName.isEmpty && nutritionInfo.calories == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Нет данных для сохранения. Анализ не дал результатов')),
+      );
+      return;
+    }
+
+    // Показываем экран загрузки с полным размером анимации и начальным этапом
+    LoadingManager().showLoadingScreen(
+      context,
+      text: 'Сохранение блюда...',
+      animationPath: 'assets/animations/road.json',
+      animationHeight: MediaQuery.of(context).size.height * 0.4,
+      backgroundColor: Colors.white,
+      processingStepText: 'Подготовка данных о блюде для сохранения',
+      progressValue: 0.1,
+    );
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      // Если в контроллере есть текст, используем его как название блюда
+      final dishName = _dishNameController.text.isNotEmpty
+          ? _dishNameController.text
+          : nutritionInfo.dishName;
+
+      // Преобразуем ингредиенты из модели NutritionInfo в IngredientModel
+      final ingredients = nutritionInfo.ingredients
+          .map((ingredient) => IngredientModel(
+                name: ingredient.name,
+                quantity: ingredient.weight,
+              ))
+          .toList();
+
+      // Обновляем информацию о процессе сохранения
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Обработка данных о блюде...',
+        newProcessingStep:
+            'Обработка информации о блюде "$dishName" с ${ingredients.length} ингредиентами',
+        newProgressValue: 0.25,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Создаем объект питательных веществ
+      final nutrients = NutrientsModel(
+        calories: nutritionInfo.calories.round(),
+        proteins: nutritionInfo.proteins,
+        fats: nutritionInfo.fats,
+        carbs: nutritionInfo.carbs,
+      );
+
+      // Создаем объект приема пищи
+      final meal = MealModel(
+        id: const Uuid().v4(),
+        name: dishName,
+        dateTime: DateTime.now(),
+        imagePath: _imageFile!.path,
+        ingredients: ingredients,
+        nutrients: nutrients,
+      );
+
+      // Обновляем информацию о процессе сохранения
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Сохранение данных...',
+        newProcessingStep:
+            'Сохранение блюда и его питательной ценности в базу данных приложения',
+        newProgressValue: 0.5,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Сохраняем прием пищи в репозиторий
+      final mealRepository = ref.read(home.mealRepositoryProvider);
+      await mealRepository.saveMeal(meal);
+
+      // Добавляем прием пищи в список дневных приемов пищи
+      ref.read(home.dailyMealsProvider.notifier).addMeal(meal);
+
+      // Обновляем информацию о процессе сохранения
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Обновление дневной статистики...',
+        newProcessingStep: 'Обновление суммарной питательной ценности за день',
+        newProgressValue: 0.75,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Обновляем суммарные нутриенты за день
+      final dailyNutrients = ref.read(home.dailyNutrientsProvider);
+      if (dailyNutrients != null) {
+        final updatedNutrients = NutrientsModel(
+          calories: dailyNutrients.calories + nutrients.calories,
+          proteins: dailyNutrients.proteins + nutrients.proteins,
+          fats: dailyNutrients.fats + nutrients.fats,
+          carbs: dailyNutrients.carbs + nutrients.carbs,
+        );
+        ref
+            .read(home.dailyNutrientsProvider.notifier)
+            .setNutrients(updatedNutrients);
+      }
+
+      // Обновляем информацию о процессе сохранения
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Блюдо успешно сохранено!',
+        newProcessingStep:
+            'Блюдо "$dishName" добавлено в дневник питания. Питательная ценность обновлена.',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Добавляем задержку перед скрытием экрана загрузки
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Скрываем экран загрузки
+      if (mounted) {
+        LoadingManager().hideLoadingScreen();
+      }
+
+      // Показываем уведомление об успешном сохранении
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Прием пищи сохранен')),
+        );
+
+        // Возвращаемся на главный экран
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      // Обновляем информацию о процессе при ошибке
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Ошибка при сохранении блюда',
+        newProcessingStep:
+            'Произошла ошибка при сохранении данных: $e\nПожалуйста, попробуйте еще раз',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Добавляем задержку, чтобы пользователь увидел сообщение об ошибке
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Скрываем экран загрузки
+      if (mounted) {
+        LoadingManager().hideLoadingScreen();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка при сохранении: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  /// Метод для принудительного анализа с DeepSeek
+  Future<void> _forceDeepSeekAnalysis() async {
+    if (!mounted) return;
+
+    // Показываем экран загрузки для принудительного анализа
+    LoadingManager().showLoadingScreen(
+      context,
+      text: 'Анализ блюда с помощью DeepSeek...',
+      processingStepText:
+          'Инициализация прямого анализа через искусственный интеллект',
+      progressValue: 0.1,
+      animationPath: 'assets/animations/road.json',
+      animationHeight: MediaQuery.of(context).size.height * 0.4,
+      backgroundColor: Colors.white,
+    );
+
+    debugPrint('🔥 Начало принудительного анализа - загрузочный экран показан');
+
+    // Устанавливаем состояние загрузки
+    setState(() {
+      _isDirectDeepSeekAnalysis = true;
+    });
+    ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+        const AsyncValue.loading();
+
+    try {
+      debugPrint('🔥 ПРИНУДИТЕЛЬНЫЙ АНАЛИЗ С DEEPSEEK: начало анализа');
+      debugPrint('🔥 Путь к изображению: ${_imageFile!.path}');
+
+      // Даем немного времени для отображения начального экрана загрузки
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // 1. Сначала получаем данные из Google Vision для использования в запросе к DeepSeek
+      debugPrint(
+          '🔍 Получение данных из Google Vision для обогащения запроса...');
+
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Идентификация объектов на изображении...',
+        newProcessingStep:
+            'Анализ изображения с помощью компьютерного зрения для распознавания блюда и ингредиентов',
+        newProgressValue: 0.25,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      debugPrint('🔥 Обновлен экран загрузки для этапа Google Vision');
+
+      // Проверяем, что загрузочный экран отображается перед вызовом API
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final imageAnalysisService =
+          ref.read(services.imageAnalysisServiceProvider);
+      final visionResult = await imageAnalysisService.analyzeFood(_imageFile!);
+
+      final detectedLabels = visionResult.detectedLabels.join(', ');
+      final dishName = visionResult.foodName ?? "неизвестное блюдо";
+      final estimatedNutrients = visionResult.estimatedNutrients;
+
+      debugPrint('✅ Данные из Vision получены:');
+      debugPrint('✅ Распознанное блюдо: $dishName');
+      debugPrint('✅ Распознанные метки: $detectedLabels');
+
+      // Обновляем информацию для пользователя о промежуточных результатах
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Предварительное распознание успешно',
+        newProcessingStep:
+            'Распознано блюдо: $dishName\nОбнаружены метки: $detectedLabels',
+        newProgressValue: 0.4,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      debugPrint('🔥 Обновлен экран загрузки с промежуточными результатами');
+
+      // Проверяем состояние загрузочного экрана
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Получаем информацию о региональных предпочтениях на основе языка
+      final deviceLocale = PlatformDispatcher.instance.locale.languageCode;
+      String regionInfo = '';
+
+      switch (deviceLocale) {
+        case 'ru':
+          regionInfo =
+              'Пользователь находится в русскоговорящем регионе, поэтому блюдо вероятнее всего относится к русской, украинской, белорусской кухне или кухням стран СНГ.';
+          break;
+        case 'en':
+          regionInfo =
+              'User is in an English-speaking region, so the dish is likely from American, British, Canadian or Australian cuisine.';
+          break;
+        // Можно добавить другие языки при необходимости
+        default:
+          regionInfo =
+              'Consider regional preferences based on user language: $deviceLocale';
+      }
+
+      // 2. Создаем обогащенный запрос к DeepSeek с использованием данных от Vision
+      String prompt = "Проанализируй питательную ценность блюда '$dishName'. ";
+      prompt += "Распознаны следующие объекты: $detectedLabels. ";
+      prompt += "$regionInfo ";
+
+      // Добавляем информацию об ингредиентах, если они есть
+      if (visionResult.inferredIngredients.isNotEmpty) {
+        final ingredients =
+            visionResult.inferredIngredients.map((i) => i.name).join(', ');
+        prompt += "Распознаны следующие ингредиенты: $ingredients. ";
+        debugPrint('✅ Распознанные ингредиенты: $ingredients');
+
+        // Обновляем информацию о найденных ингредиентах
+        LoadingManager().updateProcessingInfo(
+          context,
+          newText: 'Формирование запроса к DeepSeek...',
+          newProcessingStep: 'Обнаружены ингредиенты: $ingredients',
+          newProgressValue: 0.5,
+          animationPath: 'assets/animations/road.json',
+          animationHeight: MediaQuery.of(context).size.height * 0.4,
+        );
+
+        debugPrint('🔥 Обновлен экран загрузки с информацией об ингредиентах');
+      }
+
+      // Проверяем состояние загрузочного экрана
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Добавляем информацию о предполагаемой питательной ценности
+      if (estimatedNutrients.calories > 0 ||
+          estimatedNutrients.proteins > 0 ||
+          estimatedNutrients.fats > 0 ||
+          estimatedNutrients.carbs > 0) {
+        prompt += "Предварительная оценка питательной ценности: ";
+        if (estimatedNutrients.calories > 0) {
+          prompt += "калории: ${estimatedNutrients.calories} ккал, ";
+        }
+        if (estimatedNutrients.proteins > 0) {
+          prompt += "белки: ${estimatedNutrients.proteins} г, ";
+        }
+        if (estimatedNutrients.fats > 0) {
+          prompt += "жиры: ${estimatedNutrients.fats} г, ";
+        }
+        if (estimatedNutrients.carbs > 0) {
+          prompt += "углеводы: ${estimatedNutrients.carbs} г. ";
+        }
+
+        debugPrint('✅ Добавлена предварительная оценка питательной ценности');
+      }
+
+      prompt +=
+          "Определи точное название блюда и его нутриционную ценность, используя все предоставленные данные.";
+
+      // 3. Отправляем запрос напрямую в DeepSeek
+      debugPrint(
+          '🔥 Отправка запроса в DeepSeek с обогащенными данными из Vision');
+
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Получение нутриционной информации о блюде...',
+        newProcessingStep:
+            'Отправка запроса в DeepSeek AI с данными распознавания. Ожидание детального анализа питательной ценности...',
+        newProgressValue: 0.7,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      debugPrint('🔥 Обновлен экран загрузки перед запросом к DeepSeek');
+
+      // Проверяем состояние загрузочного экрана
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final nutritionService =
+          ref.read(services.deepSeekNutritionServiceProvider);
+      final nutritionInfo = await nutritionService.analyzeDishByName(prompt);
+
+      debugPrint('✅ Результат ПРИНУДИТЕЛЬНОГО анализа DeepSeek получен!');
+      debugPrint('✅ Название блюда: ${nutritionInfo.dishName}');
+      debugPrint(
+          '✅ Калории: ${nutritionInfo.calories}, Белки: ${nutritionInfo.proteins}, Жиры: ${nutritionInfo.fats}, Углеводы: ${nutritionInfo.carbs}');
+
+      // Сообщаем пользователю о успешном анализе
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Анализ блюда успешно завершен!',
+        newProcessingStep:
+            'Определена питательная ценность блюда\nКалории: ${nutritionInfo.calories} ккал, Белки: ${nutritionInfo.proteins.toStringAsFixed(1)}г, Жиры: ${nutritionInfo.fats.toStringAsFixed(1)}г, Углеводы: ${nutritionInfo.carbs.toStringAsFixed(1)}г',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Обновляем состояние
+      ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+          AsyncValue.data(nutritionInfo);
+
+      // Используем SchedulerBinding чтобы дождаться обновления UI
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        debugPrint('🔥 PostFrameCallback после обновления состояния');
+
+        // Добавляем задержку перед скрытием экрана загрузки
+        if (mounted) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              LoadingManager().hideLoadingScreen();
+              debugPrint('🔥 Загрузочный экран скрыт после успешного анализа');
+            }
+          });
+        }
+      });
+    } catch (error) {
+      debugPrint('❌ Ошибка при ПРИНУДИТЕЛЬНОМ анализе DeepSeek: $error');
+      // Возвращаем пустой объект вместо ошибки
+      final emptyInfo = NutritionInfo.empty();
+
+      // Показываем сообщение об ошибке
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Ошибка при анализе блюда',
+        newProcessingStep:
+            'При выполнении анализа произошла ошибка: $error\nПожалуйста, попробуйте еще раз или выберите другое изображение',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      debugPrint('🔥 Обновлен экран загрузки после ошибки');
+
+      ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+          AsyncValue.data(emptyInfo);
+
+      // Добавляем задержку, чтобы пользователь увидел сообщение об ошибке
+      await Future.delayed(const Duration(seconds: 3));
+    } finally {
+      setState(() {
+        _isDirectDeepSeekAnalysis = false;
+      });
+
+      // Скрываем экран загрузки
+      if (mounted) {
+        // Проверяем, не скрыл ли уже его SchedulerBinding
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            LoadingManager().hideLoadingScreen();
+            debugPrint('🔥 Загрузочный экран скрыт в блоке finally');
+          }
+        });
+      }
+    }
+  }
+
+  /// Анализирует текущее выбранное изображение
+  Future<void> _analyzeImage({bool skipLoadingScreen = false}) async {
+    // Предотвращаем дублирование анализа
+    if (_isAnalysisInProgress) {
+      debugPrint(
+          '🔍 FOOD_ANALYSIS_SCREEN: Анализ уже выполняется, пропускаем дублирующий вызов');
+      return;
+    }
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    if (_imageFile == null) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Нет изображения для анализа')),
+      );
+      return;
+    }
+
+    // Устанавливаем флаг анализа в процессе
+    setState(() {
+      _isAnalysisInProgress = true;
+    });
+
+    try {
+      // Показываем экран загрузки, если он еще не показан
+      if (!skipLoadingScreen) {
+        debugPrint('🔍 Начало процесса анализа - загрузочный экран показан');
+        LoadingManager().showLoadingScreen(
+          context,
+          text: 'Анализ изображения...',
+          animationPath: 'assets/animations/road.json',
+          animationHeight: MediaQuery.of(context).size.height * 0.4,
+          backgroundColor: Colors.white,
+          processingStepText: 'Подготовка изображения для анализа',
+          progressValue: 0.1,
+        );
+      }
+
+      // Устанавливаем состояние загрузки
+      ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+          const AsyncValue.loading();
+
+      try {
+        debugPrint(
+            '🔍 Начало анализа изображения с интеграцией Google Vision и DeepSeek...');
+        debugPrint('🔍 Путь к изображению: ${_imageFile!.path}');
+        debugPrint('🔍 Размер изображения: ${await _imageFile!.length()} байт');
+
+        // Обновляем информацию о процессе с этапами - Cloud Vision
+        LoadingManager().updateProcessingInfo(
+          context,
+          newText: 'Распознавание объектов на изображении...',
+          newProcessingStep:
+              'Отправка изображения в Google Vision API для классификации и распознавания объектов',
+          newProgressValue: 0.25,
+          animationPath: 'assets/animations/road.json',
+          animationHeight: MediaQuery.of(context).size.height * 0.4,
+        );
+
+        debugPrint('🔍 Обновлен экран загрузки для этапа Google Vision');
+
+        // Используем интегратор Google Vision и DeepSeek вместо только DeepSeek
+        debugPrint(
+            '🔍 Получение интегратора visionDeepSeekIntegratorProvider...');
+        final integrator = ref.read(services.visionDeepSeekIntegratorProvider);
+        debugPrint(
+            '🔍 Получен экземпляр интегратора visionDeepSeekIntegratorProvider');
+
+        // Имитация получения данных от Google Vision
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Проверяем, что загрузочный экран все еще отображается
+        debugPrint(
+            '🔍 Проверка наличия загрузочного экрана после первого этапа...');
+
+        // Обновляем информацию о процессе с этапами - DeepSeek
+        LoadingManager().updateProcessingInfo(
+          context,
+          newText: 'Анализ питательной ценности блюда...',
+          newProcessingStep:
+              'Искусственный интеллект анализирует распознанные объекты и рассчитывает нутриционный состав',
+          newProgressValue: 0.6,
+          animationPath: 'assets/animations/road.json',
+          animationHeight: MediaQuery.of(context).size.height * 0.4,
+        );
+
+        debugPrint('🔍 Обновлен экран загрузки для этапа DeepSeek');
+
+        // Читаем и анализируем изображение с использованием Vision и DeepSeek
+        debugPrint(
+            '🔍 Отправка изображения ${_imageFile!.path} в Vision + DeepSeek API...');
+        debugPrint('🔍 Timestamp начала: ${DateTime.now().toIso8601String()}');
+
+        // Даем немного времени для обновления UI загрузки перед отправкой запроса в API
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        final nutritionInfo =
+            await integrator.analyzeImageWithVisionAndDeepSeek(_imageFile!);
+
+        debugPrint(
+            '🔍 Timestamp завершения: ${DateTime.now().toIso8601String()}');
+
+        debugPrint(
+            '✅ Анализ изображения с Vision и DeepSeek завершен. Результат: ${nutritionInfo.dishName}');
+        debugPrint(
+            '✅ Калории: ${nutritionInfo.calories}, Белки: ${nutritionInfo.proteins}, Жиры: ${nutritionInfo.fats}, Углеводы: ${nutritionInfo.carbs}');
+        debugPrint('✅ Ингредиенты: ${nutritionInfo.ingredients.length}');
+
+        // Проверяем, что загрузочный экран все еще отображается
+        debugPrint(
+            '🔍 Проверка наличия загрузочного экрана после завершения анализа...');
+
+        // Проверяем, не вернулись ли пустые данные
+        bool isEmpty = nutritionInfo.dishName.isEmpty &&
+            nutritionInfo.calories == 0 &&
+            nutritionInfo.proteins == 0 &&
+            nutritionInfo.fats == 0 &&
+            nutritionInfo.carbs == 0;
+
+        if (isEmpty) {
+          debugPrint('⚠️ Vision и DeepSeek вернули пустые данные');
+
+          // Обновляем информацию о процессе с завершающим этапом при ошибке
+          LoadingManager().updateProcessingInfo(
+            context,
+            newText: 'Не удалось распознать блюдо',
+            newProcessingStep:
+                'К сожалению, ИИ не смог идентифицировать блюдо на изображении. Попробуйте сделать другое фото или ввести название блюда вручную',
+            newProgressValue: 1.0,
+            animationPath: 'assets/animations/road.json',
+            animationHeight: MediaQuery.of(context).size.height * 0.4,
+          );
+
+          // Вместо выбрасывания ошибки, обновляем состояние
+          ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+              AsyncValue.data(nutritionInfo);
+
+          // Задержка перед скрытием экрана загрузки, чтобы пользователь увидел сообщение об ошибке
+          await Future.delayed(const Duration(seconds: 3));
+          if (mounted) {
+            LoadingManager().hideLoadingScreen();
+            debugPrint('🔍 Загрузочный экран скрыт после ошибки распознавания');
+          }
+        } else {
+          // Обновляем информацию о процессе с завершающим этапом при успехе
+          LoadingManager().updateProcessingInfo(
+            context,
+            newText: 'Анализ успешно завершен!',
+            newProcessingStep:
+                'Ваше блюдо "${nutritionInfo.dishName}" успешно проанализировано. Анализ содержит информацию о ${nutritionInfo.ingredients.length} ингредиентах и питательной ценности',
+            newProgressValue: 1.0,
+            animationPath: 'assets/animations/road.json',
+            animationHeight: MediaQuery.of(context).size.height * 0.4,
+          );
+
+          debugPrint('🔍 Обновлен экран загрузки для завершающего этапа');
+
+          // Обновляем состояние с результатами
+          ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+              AsyncValue.data(nutritionInfo);
+
+          // Сохраняем результаты в lastAnalysisResultsProvider для восстановления при необходимости
+          ref.read(analysis.lastAnalysisResultsProvider.notifier).state =
+              analysis.AnalysisResults(
+            info: nutritionInfo,
+            timestamp: DateTime.now(),
+          );
+          debugPrint('💾 Результаты сохранены в lastAnalysisResultsProvider');
+
+          // Обновляем название блюда в текстовом поле
+          if (nutritionInfo.dishName.isNotEmpty) {
+            setState(() {
+              _dishNameController.text = nutritionInfo.dishName;
+            });
+          }
+
+          debugPrint('🔍 Состояние обновлено с результатами анализа');
+
+          // Используем SchedulerBinding чтобы дождаться обновления UI после обновления состояния
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            debugPrint(
+                '🔍 Вызов Post Frame Callback после обновления состояния');
+
+            // Скрываем экран загрузки только после того, как UI отрисован
+            if (mounted) {
+              // Добавляем небольшую задержку, чтобы пользователь успел увидеть сообщение об успехе
+              Future.delayed(const Duration(seconds: 2), () {
+                if (mounted) {
+                  LoadingManager().hideLoadingScreen();
+                  debugPrint(
+                      '🔍 Загрузочный экран скрыт после успешного анализа');
+                }
+              });
+            }
+          });
+        }
+      } catch (error) {
+        debugPrint('❌ Ошибка при анализе изображения: $error');
+        debugPrint('❌ Тип ошибки: ${error.runtimeType}');
+        debugPrint('❌ Стек вызовов: ${StackTrace.current}');
+
+        // Обновляем информацию о процессе с завершающим этапом при критической ошибке
+        LoadingManager().updateProcessingInfo(
+          context,
+          newText: 'Ошибка при анализе изображения',
+          newProcessingStep:
+              'Произошла ошибка при обработке изображения. Пожалуйста, попробуйте еще раз или выберите другое изображение',
+          newProgressValue: 1.0,
+          animationPath: 'assets/animations/road.json',
+          animationHeight: MediaQuery.of(context).size.height * 0.4,
+        );
+
+        debugPrint('🔍 Обновлен экран загрузки после ошибки');
+
+        // Возвращаем пустой объект вместо ошибки
+        final emptyInfo = NutritionInfo.empty();
+        ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+            AsyncValue.data(emptyInfo);
+
+        // Отображаем сообщение об ошибке немного дольше перед скрытием экрана загрузки
+        await Future.delayed(const Duration(seconds: 3));
+        if (mounted) {
+          LoadingManager().hideLoadingScreen();
+          debugPrint('🔍 Загрузочный экран скрыт после обработки ошибки');
+        }
+      }
+    } finally {
+      // Сбрасываем флаг анализа в процессе
+      if (mounted) {
+        setState(() {
+          _isAnalysisInProgress = false;
+        });
+      }
+    }
+  }
+
+  /// Генерирует изображение для блюда на основе его названия и типа
+  Future<void> _generateImageForDish(NutritionInfo info) async {
+    if (_imageFile != null) {
+      return; // Если изображение уже есть, не генерируем новое
+    }
+
+    try {
+      debugPrint('🍽️ Создание изображения для блюда: ${info.dishName}');
+
+      // Устанавливаем флаг для предотвращения повторного анализа
+      setState(() {
+        _isAnalysisInProgress = true;
+      });
+
+      // Получаем директорию документов приложения
+      final directory = await getApplicationDocumentsDirectory();
+      final String sanitizedName = info.dishName
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^а-яёa-z0-9]'), '_')
+          .replaceAll(RegExp(r'_+'), '_');
+      final fileName =
+          'dish_${sanitizedName}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final savedPath = path.join(directory.path, fileName);
+
+      // Создаем программное изображение с текстом и градиентным фоном
+      await _createDishImage(savedPath, info.dishName);
+
+      // Получаем созданное изображение
+      final imageFile = File(savedPath);
+      if (imageFile.existsSync()) {
+        debugPrint(
+            '🍽️ Программное изображение создано успешно: ${imageFile.path}');
+
+        // Устанавливаем созданное изображение в провайдер и в состояние
+        // без запуска повторного анализа (важно сохранять флаг _isAnalysisInProgress)
+        setState(() {
+          _imageFile = imageFile;
+        });
+
+        // Устанавливаем изображение в провайдер
+        ref.read(analysis.selectedImageProvider.notifier).state = imageFile;
+
+        debugPrint(
+            '✅ Изображение установлено после генерации БЕЗ запуска повторного анализа: $savedPath');
+      }
+    } catch (e) {
+      debugPrint('❌ Общая ошибка при создании изображения для блюда: $e');
+      // Если все способы не сработали, создаем заглушку с текстом
+      try {
+        final directory = await getApplicationDocumentsDirectory();
+        final String sanitizedName =
+            'placeholder_${DateTime.now().millisecondsSinceEpoch}';
+        final fileName = 'dish_$sanitizedName.png';
+        final savedPath = path.join(directory.path, fileName);
+
+        // Создаем пустое изображение
+        await _createEmptyImage(savedPath, info.dishName);
+
+        // Теперь после создания изображения нужно вручную установить его
+        final imageFile = File(savedPath);
+        if (imageFile.existsSync()) {
+          debugPrint('✅ Создана заглушка: ${imageFile.path}');
+
+          // Устанавливаем созданное изображение в провайдер и в состояние
+          // без запуска повторного анализа
+          setState(() {
+            _imageFile = imageFile;
+          });
+
+          // Устанавливаем изображение в провайдер
+          ref.read(analysis.selectedImageProvider.notifier).state = imageFile;
+
+          debugPrint(
+              '✅ Заглушка установлена БЕЗ запуска повторного анализа: $savedPath');
+        }
+      } catch (fallbackError) {
+        debugPrint('❌ Критическая ошибка создания изображения: $fallbackError');
+      }
+    } finally {
+      // Сбрасываем флаг анализа в процессе, когда все операции завершены
+      setState(() {
+        _isAnalysisInProgress = false;
+      });
+    }
+  }
+
+  /// Создает красивое программное изображение с текстом названия блюда
+  Future<void> _createDishImage(String filePath, String dishName) async {
+    try {
+      // Создаем изображение с градиентным фоном и текстом
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      const size = Size(400, 300);
+
+      // Рисуем градиентный фон
+      final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+      final gradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.blue.shade100,
+          Colors.green.shade100,
+        ],
+      );
+      final paint = Paint()..shader = gradient.createShader(rect);
+      canvas.drawRect(rect, paint);
+
+      // Добавляем декоративный элемент (круг)
+      final circlePaint = Paint()
+        ..color = Colors.white.withOpacity(0.2)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.2),
+          size.width * 0.15, circlePaint);
+
+      // Рисуем текст блюда с тенью
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: dishName,
+          style: TextStyle(
+            color: Colors.grey.shade800,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.3),
+                offset: const Offset(2, 2),
+                blurRadius: 3,
+              ),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      textPainter.layout(maxWidth: size.width - 40);
+      textPainter.paint(
+        canvas,
+        Offset(
+          (size.width - textPainter.width) / 2,
+          (size.height - textPainter.height) / 2,
+        ),
+      );
+
+      // Добавляем небольшое описание под названием
+      final descriptionPainter = TextPainter(
+        text: TextSpan(
+          text: 'Автоматически созданное изображение',
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 14,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      descriptionPainter.layout(maxWidth: size.width - 40);
+      descriptionPainter.paint(
+        canvas,
+        Offset(
+          (size.width - descriptionPainter.width) / 2,
+          (size.height - textPainter.height) / 2 + textPainter.height + 8,
+        ),
+      );
+
+      // Получаем изображение из рекордера
+      final picture = recorder.endRecording();
+      final img =
+          await picture.toImage(size.width.toInt(), size.height.toInt());
+      final byteData = await img.toByteData(format: ImageByteFormat.png);
+
+      if (byteData == null) {
+        debugPrint('❌ Не удалось создать данные изображения');
+        return;
+      }
+
+      // Записываем созданное изображение в файл
+      final imageFile = File(filePath);
+      await imageFile.parent.create(recursive: true);
+      await imageFile.writeAsBytes(
+          byteData.buffer
+              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+          flush: true);
+
+      debugPrint('✅ Создано программное изображение блюда: $filePath');
+
+      // Важно: не устанавливаем созданное изображение в провайдер или в состояние
+      // Это должен делать вызывающий метод - _generateImageForDish
+      // Такой подход предотвращает повторный запуск анализа из этого метода
+    } catch (e) {
+      debugPrint('❌ Ошибка при создании программного изображения: $e');
+    }
+  }
+
+  /// Создает пустое изображение с текстом, когда не удается найти или сгенерировать реальное изображение
+  Future<void> _createEmptyImage(String filePath, String dishName) async {
+    try {
+      // Создаем простое PNG изображение
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      const size = Size(400, 300);
+
+      // Рисуем серый фон
+      final background = Paint()..color = Colors.grey.shade300;
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), background);
+
+      // Добавляем текст "Нет изображения"
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: 'Нет изображения\n$dishName',
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      textPainter.layout(maxWidth: size.width - 20);
+      textPainter.paint(
+          canvas,
+          Offset((size.width - textPainter.width) / 2,
+              (size.height - textPainter.height) / 2));
+
+      // Создаем картинку из записи Canvas
+      final picture = recorder.endRecording();
+      final img =
+          await picture.toImage(size.width.toInt(), size.height.toInt());
+      final byteData = await img.toByteData(format: ImageByteFormat.png);
+
+      if (byteData == null) {
+        debugPrint('❌ Не удалось создать данные изображения');
+        return;
+      }
+
+      // Записываем созданное изображение в файл
+      final imageFile = File(filePath);
+      await imageFile.parent.create(recursive: true);
+      await imageFile.writeAsBytes(
+          byteData.buffer
+              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+          flush: true);
+
+      debugPrint('✅ Создана простая заглушка изображения: $filePath');
+
+      // Важно: не устанавливаем созданное изображение в провайдер или в состояние
+      // Это должен делать вызывающий метод
+      // Такой подход предотвращает повторный запуск анализа из этого метода
+    } catch (e) {
+      debugPrint('❌ Ошибка при создании пустого изображения: $e');
+    }
+  }
+
+  /// Анализирует блюдо по введенному пользователем названию
+  Future<void> _analyzeByDishName() async {
+    final dishName = _dishNameController.text.trim();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    if (dishName.isEmpty) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Введите название блюда')),
+      );
+      return;
+    }
+
+    // Показываем экран загрузки с полным размером анимации и начальным этапом
+    LoadingManager().showLoadingScreen(
+      context,
+      text: 'Анализ блюда по названию...',
+      animationPath: 'assets/animations/road.json',
+      animationHeight: MediaQuery.of(context).size.height * 0.4,
+      backgroundColor: Colors.white,
+      processingStepText: 'Подготовка к анализу блюда "$dishName"',
+      progressValue: 0.1,
+    );
+
+    // Устанавливаем состояние загрузки
+    ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+        const AsyncValue.loading();
+
+    try {
+      debugPrint('🔍 Начало ТЕКСТОВОГО анализа блюда по названию: $dishName');
+
+      // Получаем сервис DeepSeek
+      final nutritionService =
+          ref.read(services.deepSeekNutritionServiceProvider);
+
+      // Обновляем сообщение о загрузке
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Получение данных о питательной ценности блюда...',
+        newProcessingStep:
+            'Запрос к DeepSeek AI для определения питательной ценности блюда "$dishName"',
+        newProgressValue: 0.4,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Устанавливаем флаг анализа в процессе, чтобы предотвратить повторный анализ
+      setState(() {
+        _isAnalysisInProgress = true;
+      });
+
+      // Отправляем запрос к DeepSeek напрямую, только текстовый запрос
+      debugPrint(
+          '🔍 Отправка ТЕКСТОВОГО запроса к DeepSeek с названием блюда: $dishName');
+      final nutritionInfo = await nutritionService.analyzeDishByName(dishName);
+
+      debugPrint('✅ Анализ блюда по названию завершен');
+      debugPrint('✅ Название блюда: ${nutritionInfo.dishName}');
+      debugPrint(
+          '✅ Калории: ${nutritionInfo.calories}, Белки: ${nutritionInfo.proteins}, Жиры: ${nutritionInfo.fats}, Углеводы: ${nutritionInfo.carbs}');
+      debugPrint('✅ Ингредиенты: ${nutritionInfo.ingredients.length}');
+
+      // Формируем строку с ингредиентами для отображения
+      String ingredientsText = '';
+      if (nutritionInfo.ingredients.isNotEmpty) {
+        final ingredientsList = nutritionInfo.ingredients
+            .map((i) => '${i.name} (${i.weight.toStringAsFixed(1)}г)')
+            .toList();
+        // Ограничиваем количество отображаемых ингредиентов для экрана загрузки
+        if (ingredientsList.length > 5) {
+          ingredientsText =
+              '${ingredientsList.sublist(0, 5).join(', ')} и еще ${ingredientsList.length - 5}';
+        } else {
+          ingredientsText = ingredientsList.join(', ');
+        }
+      }
+
+      // Обновляем сообщение о загрузке
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Анализ успешно завершен!',
+        newProcessingStep:
+            'Определено блюдо: "${nutritionInfo.dishName}"\nКалории: ${nutritionInfo.calories} ккал, Белки: ${nutritionInfo.proteins.toStringAsFixed(1)}г, Жиры: ${nutritionInfo.fats.toStringAsFixed(1)}г, Углеводы: ${nutritionInfo.carbs.toStringAsFixed(1)}г\n${ingredientsText.isNotEmpty ? 'Основные ингредиенты: $ingredientsText' : ''}',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Генерируем изображение для блюда, если его еще нет, но НЕ запускаем повторный анализ
+      if (_imageFile == null) {
+        await _generateImageForDish(nutritionInfo);
+      }
+
+      // Обновляем состояние с результатами
+      ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+          AsyncValue.data(nutritionInfo);
+
+      // Сохраняем результаты в lastAnalysisResultsProvider для восстановления при необходимости
+      ref.read(analysis.lastAnalysisResultsProvider.notifier).state =
+          analysis.AnalysisResults(
+        info: nutritionInfo,
+        timestamp: DateTime.now(),
+      );
+      debugPrint('💾 Результаты сохранены в lastAnalysisResultsProvider');
+
+      // Добавляем задержку перед скрытием экрана загрузки
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Скрываем экран загрузки
+      if (mounted) {
+        LoadingManager().hideLoadingScreen();
+      }
+
+      // Показываем уведомление об успешном анализе
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('Анализ блюда успешно обновлен')),
+        );
+      }
+    } catch (error) {
+      debugPrint('❌ Ошибка при ТЕКСТОВОМ анализе блюда по названию: $error');
+
+      // Обновляем сообщение о загрузке
+      LoadingManager().updateProcessingInfo(
+        context,
+        newText: 'Ошибка при анализе блюда',
+        newProcessingStep:
+            'При выполнении анализа произошла ошибка. Возможно, название блюда не распознано или введено неправильно. Попробуйте другое название.',
+        newProgressValue: 1.0,
+        animationPath: 'assets/animations/road.json',
+        animationHeight: MediaQuery.of(context).size.height * 0.4,
+      );
+
+      // Добавляем задержку, чтобы пользователь увидел сообщение об ошибке
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Скрываем экран загрузки
+      if (mounted) {
+        LoadingManager().hideLoadingScreen();
+      }
+
+      // Показываем уведомление об ошибке
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Ошибка анализа: $error')),
+        );
+      }
+
+      // Возвращаем предыдущее состояние, чтобы не терять данные
+      final previousState = ref.read(analysis.nutritionAnalysisStateProvider);
+      if (previousState is AsyncData<NutritionInfo>) {
+        ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+            previousState;
+      } else {
+        // Если предыдущего состояния нет, возвращаем пустой объект
+        ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+            AsyncValue.data(NutritionInfo.empty());
+      }
+    } finally {
+      // Сбрасываем флаг анализа в процессе
+      if (mounted) {
+        setState(() {
+          _isAnalysisInProgress = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Получаем состояние анализа питательной ценности
+    final analysisState = ref.watch(analysis.nutritionAnalysisStateProvider);
+
+    // Получаем выбранное изображение
+    final selectedImage = ref.watch(analysis.selectedImageProvider);
+
+    // Логирование для отладки
+    debugPrint('🔍 FOOD_ANALYSIS_SCREEN: Построение UI:');
+    debugPrint(
+        '🔍 FOOD_ANALYSIS_SCREEN: Изображение из state: ${_imageFile?.path}');
+    debugPrint(
+        '🔍 FOOD_ANALYSIS_SCREEN: Изображение из провайдера: ${selectedImage?.path}');
+    debugPrint(
+        '🔍 FOOD_ANALYSIS_SCREEN: Состояние анализа: ${analysisState.toString()}');
+
+    // Если изображение еще не установлено в state, но есть в провайдере
+    if (_imageFile == null && selectedImage != null && !_isAnalysisInProgress) {
+      // Проверяем, изменилось ли изображение по сравнению с предыдущим анализом
+      final analysisState = ref.read(analysis.nutritionAnalysisStateProvider);
+      final needsNewAnalysis = analysisState is! AsyncData<NutritionInfo> ||
+          analysisState.hasError ||
+          analysisState.value.dishName.isEmpty;
+
+      // Отложенный вызов через Future для избежания изменения состояния во время построения
+      Future.microtask(() {
+        // Устанавливаем изображение без запуска анализа, если dishName уже заполнен
+        setState(() {
+          _imageFile = selectedImage;
+        });
+
+        // Запускаем анализ только если нет валидных результатов или изображение новое
+        if (needsNewAnalysis) {
+          // Если нужен новый анализ, сначала сбрасываем состояние
+          ref.read(analysis.nutritionAnalysisStateProvider.notifier).state =
+              const AsyncValue.loading();
+
+          // Запускаем анализ только если это действительно необходимо
+          _analyzeImage();
+        } else {
+          debugPrint(
+              '🔍 FOOD_ANALYSIS_SCREEN: Пропуск повторного анализа в build, так как результаты уже есть: ${analysisState.value.dishName}');
+        }
+      });
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Анализ пищи'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          // Кнопка обновления для повторного анализа текущего изображения
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _imageFile != null ? _analyzeImage : null,
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Отображаем изображение блюда
+            if (_imageFile != null)
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                  ),
+                  child: Image.file(
+                    _imageFile!,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: Text('Выберите или сделайте фото блюда'),
+                  ),
+                ),
+              ),
+
+            // Поле для ввода названия блюда
+            if (_imageFile != null && analysisState is! AsyncLoading)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _dishNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Название блюда',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _analyzeByDishName,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'Изменить',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Отображаем результаты анализа
+            Expanded(
+              flex: 7,
+              child: Container(
+                color: Colors.grey[50],
+                child: SingleChildScrollView(
+                  child: analysisState.when(
+                    data: (nutritionInfo) {
+                      if (nutritionInfo.dishName.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text('Выберите изображение для анализа'),
+                          ),
+                        );
+                      }
+
+                      return _buildAnalysisResults(nutritionInfo);
+                    },
+                    loading: () {
+                      // Возвращаем пустой контейнер, так как загрузка отображается через LoadingManager
+                      return Container();
+                    },
+                    error: (error, stack) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          'Ошибка анализа: ${error.toString()}',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _imageFile != null && analysisState is! AsyncLoading
+          ? Container(
+              height: 80,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, -1),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _isSaving ? null : _saveMeal,
+                icon: Icon(
+                  Icons.save,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  _isSaving ? 'Сохранение...' : 'Сохранить прием пищи',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildAnalysisResults(NutritionInfo info) {
+    // Проверяем, не являются ли все значения нулевыми - это признак ошибки распознавания
+    bool isEmptyAnalysis = info.calories == 0 &&
+        info.proteins == 0 &&
+        info.fats == 0 &&
+        info.carbs == 0 &&
+        info.ingredients.isEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Название блюда
+          Text(
+            isEmptyAnalysis ? "Пища не распознана" : info.dishName,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            isEmptyAnalysis
+                ? 'К сожалению, не удалось распознать блюдо или оценить его питательную ценность. Попробуйте другое изображение или введите название блюда вручную.'
+                : 'Результаты анализа с использованием Google Vision и DeepSeek AI.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          if (isEmptyAnalysis)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Распознавание не удалось. Убедитесь, что на изображении четко видно блюдо, и попробуйте еще раз.',
+                      style: TextStyle(color: Colors.red[700]),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Нутриционная карточка
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildNutrientItem(
+                              "Калории",
+                              "${info.calories.toStringAsFixed(1)} ккал",
+                              Colors.red),
+                          _buildNutrientItem(
+                              "Белки",
+                              "${info.proteins.toStringAsFixed(1)} г",
+                              Colors.green),
+                          _buildNutrientItem(
+                              "Жиры",
+                              "${info.fats.toStringAsFixed(1)} г",
+                              Colors.yellow.shade800),
+                          _buildNutrientItem(
+                              "Углеводы",
+                              "${info.carbs.toStringAsFixed(1)} г",
+                              Colors.purple),
+                        ],
+                      ),
+                      if (info.ingredients.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Ингредиенты:",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: info.ingredients.length,
+                          itemBuilder: (context, index) {
+                            final ingredient = info.ingredients[index];
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    ingredient.name,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    "${ingredient.weight.toStringAsFixed(1)} г",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Информация о процессе анализа
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Информация об анализе:",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "• Изображение обработано Google Cloud Vision API\n• Распознанные данные проанализированы DeepSeek AI\n• Результаты являются приблизительными",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNutrientItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withAlpha(50),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.pie_chart,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+}

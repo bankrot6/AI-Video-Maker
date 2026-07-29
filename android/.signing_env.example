@@ -1,0 +1,5 @@
+# Скопируйте в android/.signing_env (файл в git не попадает).
+# Нужно только если не хотите, чтобы pepk брал пароли из key.properties.
+
+export STORE_PASSWORD=
+export KEY_PASSWORD=

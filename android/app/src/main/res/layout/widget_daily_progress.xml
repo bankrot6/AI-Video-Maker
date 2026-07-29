@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dp_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card_bg"
+    android:padding="12dp">
+
+    <!-- Полупрозрачный логотип на заднем плане -->
+    <ImageView
+        android:id="@+id/chatcoach_watermark"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/row_calories"
+        android:layout_marginTop="1dp"
+        android:src="@drawable/chatcoach_round"
+        android:alpha="0.12"
+        android:contentDescription="AI Video Maker watermark"
+        android:scaleType="fitCenter" />
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/dp_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Прогресс дня"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="#0F172A" />
+
+        <TextView
+            android:id="@+id/dp_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сегодня"
+            android:textSize="12sp"
+            android:textColor="#64748B" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_calories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/header"
+        android:layout_marginTop="9dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:id="@+id/dp_cal_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Калории"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/dp_cal_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 / 0 ккал"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+            <ProgressBar
+                android:id="@+id/dp_cal_progress"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_bar_purple" />
+            <TextView
+                android:id="@+id/dp_cal_inside"
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="0 ккал"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_macros"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/row_calories"
+        android:layout_marginTop="9dp"
+        android:orientation="vertical">
+
+        <!-- Белки -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="6dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/dp_p_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Белки"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+                <TextView
+                    android:id="@+id/dp_p_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0 / 0 г"
+                    android:textSize="12sp"
+                    android:textColor="#0F172A"
+                    android:gravity="end" />
+            </LinearLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <ProgressBar
+                    android:id="@+id/dp_p_progress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/progress_bar_blue" />
+                <TextView
+                    android:id="@+id/dp_p_inside"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="0 г"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Жиры -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="6dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/dp_f_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Жиры"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+                <TextView
+                    android:id="@+id/dp_f_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0 / 0 г"
+                    android:textSize="12sp"
+                    android:textColor="#0F172A"
+                    android:gravity="end" />
+            </LinearLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <ProgressBar
+                    android:id="@+id/dp_f_progress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/progress_bar_red" />
+                <TextView
+                    android:id="@+id/dp_f_inside"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="0 г"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Углеводы -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/dp_c_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Углеводы"
+                    android:textSize="12sp"
+                    android:textColor="#64748B" />
+                <TextView
+                    android:id="@+id/dp_c_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0 / 0 г"
+                    android:textSize="12sp"
+                    android:textColor="#0F172A"
+                    android:gravity="end" />
+            </LinearLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                <ProgressBar
+                    android:id="@+id/dp_c_progress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/progress_bar_green" />
+                <TextView
+                    android:id="@+id/dp_c_inside"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="0 г"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_water"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/row_macros"
+        android:layout_marginTop="9dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/dp_water_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Вода (мл)"
+                android:textSize="12sp"
+                android:textColor="#64748B" />
+            <TextView
+                android:id="@+id/dp_water_value"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 / 0 мл"
+                android:textSize="12sp"
+                android:textColor="#0F172A"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+            <ProgressBar
+                android:id="@+id/dp_water_progress"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_bar_blue" />
+            <TextView
+                android:id="@+id/dp_water_inside"
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="0 мл"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/row_water"
+        android:layout_marginTop="18dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <!-- Фото -->
+        <LinearLayout
+            android:id="@+id/btn_photo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <LinearLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/widget_option_bg"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:tint="#655BBB"
+                    android:src="@drawable/ic_camera_alt_svg" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Фото"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:textColor="#0F172A"
+                android:layout_marginTop="4dp"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+
+        <!-- Текст -->
+        <LinearLayout
+            android:id="@+id/btn_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <LinearLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/widget_option_bg"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:tint="#655BBB"
+                    android:src="@drawable/ic_text_fields_svg" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Текст"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:textColor="#0F172A"
+                android:layout_marginTop="4dp"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+
+        <!-- Голос -->
+        <LinearLayout
+            android:id="@+id/btn_voice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <LinearLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/widget_option_bg"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:tint="#655BBB"
+                    android:src="@drawable/ic_mic_svg" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Голос"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:textColor="#0F172A"
+                android:layout_marginTop="4dp"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+
+        <!-- Вода -->
+        <LinearLayout
+            android:id="@+id/btn_water"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <LinearLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/widget_option_bg"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:tint="#655BBB"
+                    android:src="@drawable/ic_local_drink_svg" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Вода"
+                android:textSize="11sp"
+                android:gravity="center"
+                android:textColor="#0F172A"
+                android:layout_marginTop="4dp"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

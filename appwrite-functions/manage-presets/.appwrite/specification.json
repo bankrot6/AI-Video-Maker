@@ -1,0 +1,14 @@
+{
+  "$id": "manage-presets",
+  "name": "Manage Presets",
+  "runtime": "node-18.0",
+  "execute": ["any"],
+  "events": [],
+  "schedule": "",
+  "timeout": 900,
+  "enabled": true,
+  "logging": true,
+  "entrypoint": "src/index.js",
+  "commands": "npm install",
+  "scopes": ["databases.write", "storage.write"]
+}

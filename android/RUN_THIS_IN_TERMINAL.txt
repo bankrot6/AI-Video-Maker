@@ -1,0 +1,50 @@
+================================================================
+ИНСТРУКЦИЯ: Запустите эти команды в вашем терминале (Terminal.app)
+================================================================
+
+DEMO режим (тестирование процесса):
+----------------------------------
+
+cd /Volumes/External_Storage/Projects/Photosession-AI
+
+java -jar pepk.jar \
+  --keystore upload-keystore-DEMO.jks \
+  --alias upload \
+  --output android/pepk_out.zip \
+  --encryptionkey=000087b97df54de973a38193a23d61553c6f52cfe12bc4703b424aa514157443618a9b8c148176f7916f261dae02efd3a3250fc7ee92a482423674af00dbac25df9575c0 \
+  --include-cert
+
+Когда спросят пароли:
+  Store password: Demo7RuStore9Photosession2026Key!Temp
+  Key password: DemoKey8PhotoAI2026Upload!Secure
+
+================================================================
+PRODUCTION режим (РЕАЛЬНЫЙ keystore):
+================================================================
+
+1. Найдите ваш НАСТОЯЩИЙ keystore
+   (тот который использовался для app-release.aab)
+
+2. Обновите android/key.properties:
+   - storePassword=ВАШ_РЕАЛЬНЫЙ_ПАРОЛЬ
+   - keyPassword=ВАШ_РЕАЛЬНЫЙ_ПАРОЛЬ_КЛЮЧА
+   - keyAlias=ИМЯ_КЛЮЧА
+   - storeFile=../ИМЯ_ФАЙЛА.jks
+
+3. Запустите:
+
+cd /Volumes/External_Storage/Projects/Photosession-AI
+
+java -jar pepk.jar \
+  --keystore /ПОЛНЫЙ/ПУТЬ/К/ВАШЕМУ/РЕАЛЬНОМУ/keystore.jks \
+  --alias ИМЯ_КЛЮЧА_ИЗ_KEYSTORE \
+  --output android/pepk_out.zip \
+  --encryptionkey=000087b97df54de973a38193a23d61553c6f52cfe12bc4703b424aa514157443618a9b8c148176f7916f261dae02efd3a3250fc7ee92a482423674af00dbac25df9575c0 \
+  --include-cert
+
+================================================================
+
+После успешного создания android/pepk_out.zip:
+1. Откройте https://console.rustore.ru/
+2. Перейдите в раздел "Загрузка подписи"
+3. Загрузите файл pepk_out.zip

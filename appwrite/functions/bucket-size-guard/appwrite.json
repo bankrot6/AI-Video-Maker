@@ -1,0 +1,47 @@
+{
+  "functionId": "bucket-size-guard",
+  "name": "bucket-size-guard",
+  "runtime": "node-18.0",
+  "entrypoint": "src/main.js",
+  "execute": [],
+  "events": [],
+  "schedule": "*/15 * * * *",
+  "timeout": 900,
+  "enabled": true,
+  "logging": true,
+  "scopes": [
+    "files.read",
+    "files.write",
+    "documents.read"
+  ],
+  "vars": [
+    {
+      "key": "BUCKET_ID",
+      "value": "user-photos"
+    },
+    {
+      "key": "DATABASE_ID",
+      "value": "main"
+    },
+    {
+      "key": "SAFE_GB",
+      "value": "12"
+    },
+    {
+      "key": "WARN_GB",
+      "value": "15"
+    },
+    {
+      "key": "DANGER_GB",
+      "value": "18"
+    },
+    {
+      "key": "CRITICAL_GB",
+      "value": "22"
+    },
+    {
+      "key": "MAX_DELETE_PER_RUN",
+      "value": "3000"
+    }
+  ]
+}

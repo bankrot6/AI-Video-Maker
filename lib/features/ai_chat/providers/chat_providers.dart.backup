@@ -1,0 +1,886 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
+
+import '../models/chat_message.dart';
+import '../services/ai_dietitian_service.dart';
+import '../services/user_data_aggregator.dart';
+import '../services/deepseek_dietitian_service.dart';
+
+import '../../../data/chat_storage_repository.dart';
+import '../../../services/localization/app_localization_service.dart';
+import '../../../services/token_usage_service.dart';
+
+import '../../home/home_providers.dart';
+import '../../home/gamification_providers.dart';
+
+/// Провайдер сервиса ИИ диетолога
+final aiDietitianServiceProvider = Provider<AiDietitianService>((ref) {
+  final mealRepository = ref.read(mealRepositoryProvider);
+  return AiDietitianService(mealRepository: mealRepository);
+});
+
+/// Провайдер агрегатора данных пользователя
+final userDataAggregatorProvider = Provider<UserDataAggregator>((ref) {
+  final mealRepository = ref.read(mealRepositoryProvider);
+  final weightRepository = ref.read(weightRepositoryProvider);
+  final userRepository = ref.read(userRepositoryProvider);
+
+  return UserDataAggregator(
+    mealRepository: mealRepository,
+    weightRepository: weightRepository,
+    userRepository: userRepository,
+  );
+});
+
+/// Провайдер репозитория хранения чата
+final chatStorageRepositoryProvider = Provider<ChatStorageRepository>((ref) {
+  throw UnimplementedError(
+    'Репозиторий чата должен быть предоставлен через ProviderScope.overrides',
+  );
+});
+
+/// Состояние чата
+class ChatState {
+  final List<ChatMessage> messages;
+  final bool isLoading;
+  final String? error;
+  final bool isTyping;
+
+  const ChatState({
+    this.messages = const [],
+    this.isLoading = false,
+    this.error,
+    this.isTyping = false,
+  });
+
+  ChatState copyWith({
+    List<ChatMessage>? messages,
+    bool? isLoading,
+    String? error,
+    bool? isTyping,
+  }) {
+    return ChatState(
+      messages: messages ?? this.messages,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      isTyping: isTyping ?? this.isTyping,
+    );
+  }
+}
+
+/// Провайдер для управления состоянием чата
+class ChatNotifier extends StateNotifier<ChatState> {
+  final AiDietitianService _aiService;
+  final UserDataAggregator _dataAggregator;
+  final Ref _ref;
+  final TokenUsageService _tokenService = TokenUsageService();
+  ChatStorageRepository? _storageRepository;
+
+  ChatNotifier(this._aiService, this._dataAggregator, this._ref)
+      : super(const ChatState()) {
+    _initializeChat();
+  }
+
+  /// Инициализация чата с приветственным сообщением
+  void _initializeChat() async {
+    // Инициализируем репозиторий сохранения
+    _initStorageRepository();
+
+    // Пытаемся загрузить сохраненную историю
+    final savedMessages = await _storageRepository?.loadCurrentSession();
+
+    if (savedMessages != null && savedMessages.isNotEmpty) {
+      // Загружаем сохраненную историю
+      state = state.copyWith(messages: savedMessages);
+      debugPrint(
+          '📥 CHAT: Загружена история из ${savedMessages.length} сообщений');
+    } else {
+      // Создаем приветственное сообщение
+      final welcomeMessage = ChatMessage.ai(
+        content:
+            '👋 Привет! Я ваш персональный ИИ диетолог с функцией **контекстного анализа**.\n\n'
+            '🧠 **Что я умею:**\n'
+            '• 📊 Анализирую ваши данные о питании за неделю\n'
+            '• 🎯 Оцениваю прогресс по персональным целям\n'
+            '• ⚖️ Проверяю баланс БЖУ в рационе\n'
+            '• 💡 Даю персонализированные рекомендации\n'
+            '• 📈 Отслеживаю динамику веса\n\n'
+            '🚀 **Для точного анализа** используйте кнопки ниже или напишите "анализ", "прогресс", "рекомендации".\n\n'
+            'Чем больше данных вы добавите в приложение, тем точнее будут мои советы! 😊',
+        metadata: {'isWelcome': true},
+      );
+
+      state = state.copyWith(messages: [welcomeMessage]);
+    }
+  }
+
+  /// Инициализация репозитория сохранения
+  void _initStorageRepository() {
+    try {
+      _storageRepository = _ref.read(chatStorageRepositoryProvider);
+    } catch (e) {
+      debugPrint('🔴 CHAT: Ошибка инициализации репозитория сохранения: $e');
+    }
+  }
+
+  /// Отправка сообщения пользователя
+  Future<void> sendMessage(String content) async {
+    if (content.trim().isEmpty) return;
+
+    // Оцениваем количество токенов для запроса
+    final estimatedTokens = _tokenService.estimateTokensForText(content.trim());
+
+    // Проверяем, достаточно ли токенов
+    final hasEnoughTokens =
+        await _tokenService.hasEnoughTokens(estimatedTokens);
+    if (!hasEnoughTokens) {
+      // Показываем ошибку недостатка токенов
+      final errorMessage = ChatMessage.ai(
+        content: '❌ Недостаточно токенов для обработки запроса.\n\n'
+            'Для продолжения использования AI диетолога приобретите дополнительные токены.',
+        metadata: {'error': true, 'tokenError': true},
+      );
+
+      state = state.copyWith(
+        messages: [...state.messages, errorMessage],
+        error: 'Недостаточно токенов',
+      );
+      return;
+    }
+
+    // Добавляем сообщение пользователя
+    final userMessage = ChatMessage.user(content: content.trim());
+    state = state.copyWith(
+      messages: [...state.messages, userMessage],
+      isLoading: true,
+      isTyping: true,
+      error: null,
+    );
+
+    try {
+      // Загружаем контекст пользователя для персонализированных ответов
+      UserContextData? userContext;
+      try {
+        final gamificationData = _ref.read(gamificationProvider);
+        userContext = await _dataAggregator.aggregateUserData(
+          gamificationData: gamificationData,
+        );
+      } catch (e) {
+        // Если не удалось загрузить контекст, продолжаем без него
+        debugPrint('Не удалось загрузить контекст пользователя: $e');
+      }
+
+      // Получаем ответ от ИИ с контекстом (используем streaming для совместимости)
+      String fullResponse = '';
+      await for (final chunk in _aiService.sendMessageStream(
+        message: content.trim(),
+        context: state.messages,
+        userContext: userContext,
+        buildContext: null,
+      )) {
+        fullResponse += chunk;
+      }
+
+      // Списываем токены после успешного получения ответа
+      final actualTokensUsed =
+          _tokenService.estimateTokensForText(content.trim() + fullResponse);
+      final tokenDeducted = await _tokenService.useTokens(actualTokensUsed);
+
+      if (tokenDeducted) {
+        debugPrint('💎 CHAT: Списано $actualTokensUsed токенов за запрос');
+      } else {
+        debugPrint('⚠️ CHAT: Не удалось списать токены, но ответ уже получен');
+      }
+
+      final aiResponse = ChatMessage.ai(
+        content: fullResponse,
+        metadata: {
+          'timestamp': DateTime.now().toIso8601String(),
+          'model': 'deepseek-chat',
+          'tokensUsed': actualTokensUsed,
+        },
+      );
+
+      // Обновляем статус сообщения пользователя
+      final updatedMessages = state.messages.map((msg) {
+        if (msg.id == userMessage.id) {
+          return msg.copyWith(status: MessageStatus.delivered);
+        }
+        return msg;
+      }).toList();
+
+      // Добавляем ответ ИИ
+      state = state.copyWith(
+        messages: [...updatedMessages, aiResponse],
+        isLoading: false,
+        isTyping: false,
+      );
+
+      // Автоматически сохраняем обновленную историю
+      await _autoSaveChat();
+    } catch (e) {
+      // Обрабатываем ошибку
+      final errorMessage = ChatMessage.ai(
+        content:
+            'Извините, произошла ошибка при обработке вашего запроса. Попробуйте еще раз.',
+        metadata: {'error': true},
+      );
+
+      // Обновляем статус сообщения пользователя на ошибку
+      final updatedMessages = state.messages.map((msg) {
+        if (msg.id == userMessage.id) {
+          return msg.copyWith(
+            status: MessageStatus.error,
+            errorMessage: e.toString(),
+          );
+        }
+        return msg;
+      }).toList();
+
+      state = state.copyWith(
+        messages: [...updatedMessages, errorMessage],
+        isLoading: false,
+        isTyping: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Отправка быстрого запроса
+  Future<void> sendQuickQuery(QuickQuery query) async {
+    await sendMessageStreaming(query.content);
+  }
+
+  /// Повторная отправка сообщения с ошибкой
+  Future<void> retryMessage(String messageId) async {
+    final message = state.messages.firstWhere(
+      (msg) => msg.id == messageId,
+      orElse: () => throw StateError('Сообщение не найдено'),
+    );
+
+    if (message.type == MessageType.user &&
+        message.status == MessageStatus.error) {
+      // Удаляем сообщение с ошибкой и отправляем заново
+      final filteredMessages =
+          state.messages.where((msg) => msg.id != messageId).toList();
+      state = state.copyWith(messages: filteredMessages);
+      await sendMessageStreaming(message.content);
+    }
+  }
+
+  /// Очистка чата
+  void clearChat() async {
+    // Создаем новую сессию в хранилище
+    await _storageRepository?.createNewSession();
+
+    state = const ChatState();
+    _initializeChat();
+  }
+
+  /// Удаление конкретного сообщения
+  void deleteMessage(String messageId) async {
+    final updatedMessages =
+        state.messages.where((msg) => msg.id != messageId).toList();
+    state = state.copyWith(messages: updatedMessages);
+
+    // Автоматически сохраняем обновленную историю
+    await _autoSaveChat();
+  }
+
+  /// Отправка сообщения пользователя с потоковым получением ответа
+  Future<void> sendMessageStreaming(String content) async {
+    if (content.trim().isEmpty) return;
+
+    // Добавляем сообщение пользователя
+    final userMessage = ChatMessage.user(content: content.trim());
+
+    // Создаем пустое сообщение ИИ для streaming
+    final aiMessageId = const Uuid().v4();
+    final aiMessage = ChatMessage.ai(
+      content: '',
+      metadata: {
+        'id': aiMessageId,
+        'streaming': true,
+        'timestamp': DateTime.now().toIso8601String(),
+      },
+    );
+
+    state = state.copyWith(
+      messages: [...state.messages, userMessage, aiMessage],
+      isLoading: true,
+      isTyping: true,
+      error: null,
+    );
+
+    try {
+      // Загружаем контекст пользователя для персонализированных ответов
+      UserContextData? userContext;
+      try {
+        final gamificationData = _ref.read(gamificationProvider);
+        userContext = await _dataAggregator.aggregateUserData(
+          gamificationData: gamificationData,
+        );
+      } catch (e) {
+        debugPrint('Не удалось загрузить контекст пользователя: $e');
+      }
+
+      // Получаем поток ответов от ИИ
+      String accumulatedContent = '';
+      String displayContent = '';
+      await for (final chunk in _aiService.sendMessageStream(
+        message: content.trim(),
+        context: state.messages
+            .where((msg) => msg.metadata?['id'] != aiMessageId)
+            .toList(),
+        userContext: userContext,
+        buildContext: null,
+      )) {
+        accumulatedContent += chunk;
+
+        // Фильтруем JSON блоки и markdown символы для отображения в реальном времени
+        displayContent = _filterJsonBlocks(accumulatedContent);
+        displayContent = _filterMarkdownSymbols(displayContent);
+
+        // Пробуем извлечь quickReplies если они уже полностью получены
+        List<QuickReply>? currentQuickReplies;
+        try {
+          final parsedResponse =
+              _parseResponseWithQuickReplies(accumulatedContent);
+          if (parsedResponse.quickReplies?.isNotEmpty == true) {
+            currentQuickReplies = parsedResponse.quickReplies;
+            debugPrint(
+                '🎯 CHAT_PROVIDER: Найдены quickReplies во время streaming');
+          }
+        } catch (e) {
+          // Игнорируем ошибки парсинга во время streaming
+        }
+
+        // Отладочная информация (можно убрать после тестирования)
+        if (accumulatedContent != displayContent) {
+          debugPrint('🔧 CHAT_PROVIDER: Отфильтрован JSON контент');
+        }
+
+        // Обновляем сообщение ИИ в реальном времени
+        final updatedMessages = state.messages.map((msg) {
+          if (msg.metadata?['id'] == aiMessageId) {
+            return msg.copyWith(
+              content: displayContent,
+              quickReplies: currentQuickReplies,
+              metadata: {
+                ...msg.metadata!,
+                'streaming': true,
+                'hasQuickReplies': currentQuickReplies?.isNotEmpty ?? false,
+              },
+            );
+          }
+          return msg;
+        }).toList();
+
+        state = state.copyWith(
+          messages: updatedMessages,
+          isTyping: true,
+        );
+      }
+
+      // Завершаем streaming - обновляем статусы сообщений
+      final finalMessages = state.messages.map((msg) {
+        if (msg.id == userMessage.id) {
+          return msg.copyWith(status: MessageStatus.delivered);
+        } else if (msg.metadata?['id'] == aiMessageId) {
+          // Парсим финальный ответ для извлечения quick replies
+          final parsedResponse =
+              _parseResponseWithQuickReplies(accumulatedContent);
+
+          // Используем уже отфильтрованный displayContent без дополнительной обработки
+          // displayContent уже правильно обработан во время streaming
+          return msg.copyWith(
+            content:
+                displayContent, // Используем готовый отфильтрованный контент!
+            quickReplies: parsedResponse.quickReplies,
+            metadata: {
+              ...msg.metadata!,
+              'streaming': false,
+              'hasQuickReplies':
+                  parsedResponse.quickReplies?.isNotEmpty ?? false,
+            },
+          );
+        }
+        return msg;
+      }).toList();
+
+      state = state.copyWith(
+        messages: finalMessages,
+        isLoading: false,
+        isTyping: false,
+      );
+
+      // Автоматически сохраняем обновленную историю
+      await _autoSaveChat();
+    } catch (e) {
+      // Обрабатываем ошибку
+      debugPrint('❌ CHAT_PROVIDER: Ошибка при streaming: $e');
+
+      final errorMessage = ChatMessage.ai(
+        content:
+            'Извините, произошла ошибка при обработке вашего запроса. Попробуйте еще раз.',
+        metadata: {'error': true},
+      );
+
+      // Обновляем статус сообщения пользователя на ошибку и заменяем streaming сообщение на ошибку
+      final updatedMessages = state.messages.map((msg) {
+        if (msg.id == userMessage.id) {
+          return msg.copyWith(
+            status: MessageStatus.error,
+            errorMessage: e.toString(),
+          );
+        } else if (msg.metadata?['id'] == aiMessageId) {
+          return errorMessage;
+        }
+        return msg;
+      }).toList();
+
+      state = state.copyWith(
+        messages: updatedMessages,
+        isLoading: false,
+        isTyping: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Фильтрует JSON блоки из текста для отображения в реальном времени
+  String _filterJsonBlocks(String content) {
+    String filtered = content;
+
+    // Убираем полные JSON блоки с ```json
+    filtered = filtered.replaceAll(RegExp(r'```json\s*\{[\s\S]*?\}\s*```'), '');
+
+    // Убираем незавершенные JSON блоки (начинающиеся с ```json но не завершенные)
+    filtered = filtered.replaceAll(RegExp(r'```json[\s\S]*$'), '');
+
+    // Убираем обычные JSON объекты (завершенные и незавершенные)
+    filtered =
+        filtered.replaceAll(RegExp(r'\s*\{[\s\S]*"quickReplies"[\s\S]*'), '');
+
+    // Убираем незавершенные JSON объекты в конце
+    filtered = filtered.replaceAll(RegExp(r'\s*\{\s*$'), '');
+    filtered = filtered.replaceAll(RegExp(r'\s*\{\s*"[\s\S]*$'), '');
+
+    // Убираем лишние пустые строки и пробелы
+    filtered = filtered.replaceAll(RegExp(r'\n\s*\n\s*\n+'), '\n\n');
+    filtered = filtered.replaceAll(RegExp(r'\s+$'), '');
+
+    return filtered.trim();
+  }
+
+  /// Фильтрует markdown символы из текста для улучшения UX в streaming режиме
+  /// Использует продвинутый алгоритм для полного скрытия markdown символов
+  String _filterMarkdownSymbols(String content) {
+    String filtered = content;
+
+    // Продвинутая фильтрация - обрабатываем все случаи появления markdown символов
+
+    // 1. Убираем ** в середине текста если они не завершены
+    filtered = _processIncompleteStars(filtered);
+
+    // 2. Убираем ### символы полностью
+    filtered = _processHashHeaders(filtered);
+
+    // 3. Обрабатываем концовки текста
+    filtered = _processTextEndings(filtered);
+
+    // 4. Убираем горизонтальные линии полностью
+    filtered =
+        filtered.replaceAll(RegExp(r'^[-*_]{3,}\s*$', multiLine: true), '');
+
+    // 5. Финальная очистка
+    filtered = filtered.replaceAll(RegExp(r'\n\s*$'), '');
+
+    return filtered;
+  }
+
+  /// Обрабатывает незавершенные звездочки в тексте
+  String _processIncompleteStars(String text) {
+    // Паттерны обработки markdown звездочек:
+    // 1. "1️⃣ **Завтрак: Творожная запеканка с яблоками**" -> "1️⃣ Завтрак: Творожная запеканка с яблоками"
+    // 2. "😊 **МОЙ СОВЕТ" -> "😊 МОЙ СОВЕТ"
+
+    String result = text;
+
+    // Обрабатываем каждую строку отдельно
+    final lines = result.split('\n');
+    final processedLines = lines.map((line) {
+      final trimmedLine = line.trim();
+
+      // Проверяем если строка содержит ** символы
+      if (!trimmedLine.contains('**')) {
+        return line;
+      }
+
+      // Случай 1: Завершенные жирные заголовки **текст** (включая с эмодзи)
+      // Пример: "🍗 **Обед (~900 ккал)**", "1️⃣ **Завтрак**"
+      if (RegExp(r'\*\*[^*]+\*\*').hasMatch(trimmedLine)) {
+        return line.replaceAll(RegExp(r'\*\*'), '');
+      }
+
+      // Случай 2: Незавершенные заголовки с ** в начале
+      // Пример: "😊 **МОЙ СОВЕТ", "**Заголовок"
+      if (trimmedLine.contains('**') &&
+          !RegExp(r'\*\*[^*]*\*\*').hasMatch(trimmedLine)) {
+        return line.replaceAll(RegExp(r'\*\*'), '');
+      }
+
+      // Случай 3: Одиночная * в конце строки
+      if (line.endsWith('*') && !line.endsWith('**')) {
+        return line.substring(0, line.length - 1);
+      }
+
+      return line;
+    }).toList();
+
+    return processedLines.join('\n');
+  }
+
+  /// Обрабатывает заголовки с символами #
+  String _processHashHeaders(String text) {
+    String result = text;
+
+    final lines = result.split('\n');
+    final processedLines = lines.map((line) {
+      // Удаляем ### если после них только пробелы или ничего
+      if (RegExp(r'^#{1,6}\s*$').hasMatch(line.trim())) {
+        return '';
+      }
+
+      // Удаляем ### если они в конце строки
+      return line.replaceAll(RegExp(r'#{1,6}\s*$'), '');
+    }).toList();
+
+    return processedLines.join('\n');
+  }
+
+  /// Обрабатывает концовки текста
+  String _processTextEndings(String text) {
+    String result = text;
+
+    // Убираем ** в самом конце всего текста
+    while (result.endsWith('**') || result.endsWith('*')) {
+      if (result.endsWith('**')) {
+        result = result.substring(0, result.length - 2);
+      } else if (result.endsWith('*')) {
+        result = result.substring(0, result.length - 1);
+      }
+    }
+
+    return result;
+  }
+
+  /// Парсит ответ ИИ для извлечения quick replies (копия из DeepSeekDietitianService)
+  ParsedResponse _parseResponseWithQuickReplies(String response) {
+    try {
+      // Ищем JSON блок с quickReplies
+      final jsonMatch = RegExp(r'```json\s*(\{.*?\})\s*```', dotAll: true)
+          .firstMatch(response);
+
+      List<QuickReply>? quickReplies;
+      String cleanContent = response;
+
+      if (jsonMatch != null) {
+        try {
+          final jsonString = jsonMatch.group(1);
+          if (jsonString != null) {
+            final jsonData =
+                Map<String, dynamic>.from(jsonDecode(jsonString) as Map);
+
+            if (jsonData.containsKey('quickReplies')) {
+              final repliesJson = jsonData['quickReplies'] as List;
+              quickReplies = repliesJson
+                  .map((reply) =>
+                      QuickReply.fromJson(reply as Map<String, dynamic>))
+                  .toList();
+            }
+          }
+
+          // Убираем JSON блок из текста ответа
+          cleanContent = response.replaceAll(jsonMatch.group(0)!, '').trim();
+        } catch (e) {
+          debugPrint('⚠️ CHAT_PROVIDER: Ошибка парсинга JSON quickReplies: $e');
+        }
+      }
+
+      return ParsedResponse(
+        content: cleanContent,
+        quickReplies: quickReplies,
+      );
+    } catch (e) {
+      return ParsedResponse(
+        content: response,
+        quickReplies: null,
+      );
+    }
+  }
+
+  /// Отметка всех сообщений как прочитанных
+  void markAllAsRead() async {
+    final updatedMessages = state.messages.map((msg) {
+      if (msg.type == MessageType.ai && msg.status != MessageStatus.delivered) {
+        return msg.copyWith(status: MessageStatus.delivered);
+      }
+      return msg;
+    }).toList();
+
+    state = state.copyWith(messages: updatedMessages);
+
+    // Автоматически сохраняем обновленную историю
+    await _autoSaveChat();
+  }
+
+  /// Автоматическое сохранение истории чата
+  Future<void> _autoSaveChat() async {
+    if (_storageRepository != null && state.messages.isNotEmpty) {
+      // Не сохраняем пустые чаты или только приветственные сообщения
+      if (_isOnlyWelcomeMessage(state.messages)) {
+        return;
+      }
+      await _storageRepository!.saveCurrentSession(state.messages);
+    }
+  }
+
+  /// Загрузка конкретной сессии
+  Future<void> loadSession(String sessionId) async {
+    if (_storageRepository == null) {
+      _initStorageRepository();
+    }
+
+    final messages = await _storageRepository?.loadSession(sessionId);
+    if (messages != null) {
+      state = state.copyWith(messages: messages);
+    }
+  }
+
+  /// Получение всех сохраненных сессий
+  Future<List<ChatSession>> getAllSessions() async {
+    if (_storageRepository == null) {
+      _initStorageRepository();
+    }
+
+    return await _storageRepository?.getAllSessions() ?? [];
+  }
+
+  /// Удаление сессии
+  Future<void> deleteSession(String sessionId) async {
+    if (_storageRepository == null) {
+      _initStorageRepository();
+    }
+
+    await _storageRepository?.deleteSession(sessionId);
+  }
+
+  /// Очистка всей истории
+  Future<void> clearAllHistory() async {
+    if (_storageRepository == null) {
+      _initStorageRepository();
+    }
+
+    await _storageRepository?.clearAllHistory();
+
+    // Сбрасываем состояние к начальному
+    state = const ChatState();
+    _initializeChat();
+  }
+
+  /// Экспорт чата в текстовый формат
+  String exportChatToText() {
+    if (_storageRepository == null) {
+      return 'Репозиторий сохранения не инициализирован';
+    }
+
+    return _exportChatToText(state.messages);
+  }
+
+  /// Получение статистики чата
+  ChatStatistics getChatStatistics() {
+    if (_storageRepository == null) {
+      return const ChatStatistics(
+        totalMessages: 0,
+        userMessages: 0,
+        aiMessages: 0,
+        systemMessages: 0,
+      );
+    }
+
+    return _getChatStatistics(state.messages);
+  }
+
+  /// Проверка, содержит ли чат только приветственное сообщение
+  bool _isOnlyWelcomeMessage(List<ChatMessage> messages) {
+    if (messages.length != 1) return false;
+
+    final message = messages.first;
+    return message.type == MessageType.ai &&
+        message.metadata?['isWelcome'] == true;
+  }
+
+  /// Экспорт чата в текстовый формат
+  String _exportChatToText(List<ChatMessage> messages) {
+    final buffer = StringBuffer();
+    buffer.writeln('=== ЭКСПОРТ ЧАТА С ИИ ДИЕТОЛОГОМ ===');
+    buffer.writeln('Дата экспорта: ${DateTime.now().toLocal()}');
+    buffer.writeln('Количество сообщений: ${messages.length}');
+    buffer.writeln('=====================================\n');
+
+    for (final message in messages) {
+      final sender = _getSenderName(message.type);
+      final timestamp = message.timestamp.toLocal();
+      final timeStr =
+          '${timestamp.day.toString().padLeft(2, '0')}.${timestamp.month.toString().padLeft(2, '0')} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+
+      buffer.writeln('[$timeStr] $sender:');
+      buffer.writeln(message.content);
+      buffer.writeln('');
+    }
+
+    buffer.writeln('=== КОНЕЦ ЭКСПОРТА ===');
+    return buffer.toString();
+  }
+
+  /// Получение статистики чата
+  ChatStatistics _getChatStatistics(List<ChatMessage> messages) {
+    final userMessages =
+        messages.where((msg) => msg.type == MessageType.user).length;
+    final aiMessages =
+        messages.where((msg) => msg.type == MessageType.ai).length;
+    final systemMessages =
+        messages.where((msg) => msg.type == MessageType.system).length;
+
+    final firstMessage = messages.isNotEmpty ? messages.first.timestamp : null;
+    final lastMessage = messages.isNotEmpty ? messages.last.timestamp : null;
+
+    Duration? sessionDuration;
+    if (firstMessage != null && lastMessage != null) {
+      sessionDuration = lastMessage.difference(firstMessage);
+    }
+
+    return ChatStatistics(
+      totalMessages: messages.length,
+      userMessages: userMessages,
+      aiMessages: aiMessages,
+      systemMessages: systemMessages,
+      sessionDuration: sessionDuration,
+      firstMessageTime: firstMessage,
+      lastMessageTime: lastMessage,
+    );
+  }
+
+  /// Получение имени отправителя по типу сообщения
+  String _getSenderName(MessageType type) {
+    switch (type) {
+      case MessageType.user:
+        return 'Пользователь';
+      case MessageType.ai:
+        return 'ИИ Диетолог';
+      case MessageType.system:
+        return 'Система';
+      case MessageType.quickAction:
+        return 'Быстрое действие';
+    }
+  }
+}
+
+/// Статистика чата
+class ChatStatistics {
+  final int totalMessages;
+  final int userMessages;
+  final int aiMessages;
+  final int systemMessages;
+  final Duration? sessionDuration;
+  final DateTime? firstMessageTime;
+  final DateTime? lastMessageTime;
+
+  const ChatStatistics({
+    required this.totalMessages,
+    required this.userMessages,
+    required this.aiMessages,
+    required this.systemMessages,
+    this.sessionDuration,
+    this.firstMessageTime,
+    this.lastMessageTime,
+  });
+}
+
+/// Провайдер чата
+final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
+  final aiService = ref.read(aiDietitianServiceProvider);
+  final dataAggregator = ref.read(userDataAggregatorProvider);
+  return ChatNotifier(aiService, dataAggregator, ref);
+});
+
+/// Провайдер быстрых запросов с локализацией
+final quickQueriesProvider = Provider<List<QuickQuery>>((ref) {
+  // Возвращаем localized версию быстрых запросов
+  return _getLocalizedQuickQueries(ref);
+});
+
+/// Получает локализованные быстрые запросы
+List<QuickQuery> _getLocalizedQuickQueries(ProviderRef ref) {
+  try {
+    final localizationService = ref.read(appLocalizationServiceProvider);
+
+    return [
+      QuickQuery(
+        id: 'weekly_analysis',
+        title: localizationService.translate('weekly_analysis_title'),
+        content: localizationService.translate('weekly_analysis_content'),
+        icon: '📊',
+      ),
+      QuickQuery(
+        id: 'goal_progress',
+        title: localizationService.translate('goal_progress_title'),
+        content: localizationService.translate('goal_progress_content'),
+        icon: '🎯',
+      ),
+      QuickQuery(
+        id: 'nutrition_balance',
+        title: localizationService.translate('nutrition_balance_title'),
+        content: localizationService.translate('nutrition_balance_content'),
+        icon: '⚖️',
+      ),
+      QuickQuery(
+        id: 'daily_meal_plan',
+        title: localizationService.translate('daily_meal_plan_title'),
+        content: localizationService.translate('daily_meal_plan_content'),
+        icon: '📅',
+      ),
+      QuickQuery(
+        id: 'healthy_snacks',
+        title: localizationService.translate('healthy_snacks_title'),
+        content: localizationService.translate('healthy_snacks_content'),
+        icon: '🥜',
+      ),
+      QuickQuery(
+        id: 'perfect_recipes',
+        title: localizationService.translate('perfect_recipes_title'),
+        content: localizationService.translate('perfect_recipes_content'),
+        icon: '👨‍🍳',
+      ),
+      QuickQuery(
+        id: 'calorie_strategy',
+        title: localizationService.translate('calorie_strategy_title'),
+        content: localizationService.translate('calorie_strategy_content'),
+        icon: '🔥',
+      ),
+    ];
+  } catch (e) {
+    debugPrint('🔄 QUICK_QUERIES: Ошибка локализации, используем fallback: $e');
+    // Fallback - возвращаем оригинальные запросы
+    return PredefinedQueries.dietitianQueries;
+  }
+}
+
+/// Провайдер для проверки доступности сервиса
+final serviceAvailabilityProvider = FutureProvider<bool>((ref) async {
+  final aiService = ref.read(aiDietitianServiceProvider);
+  return await aiService.isServiceAvailable();
+});

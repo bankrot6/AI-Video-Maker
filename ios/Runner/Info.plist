@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.aivideomaker.app.refresh</string>
+			<string>com.aivideomaker.app.processing</string>
+		</array>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>AI Video Maker</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>AI Video Maker</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<false/>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>https</string>
+			<string>http</string>
+		</array>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>Приложению необходим доступ к камере для анализа пищи и определения её питательной ценности</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Приложению необходим доступ к микрофону для голосового ввода и распознавания речи</string>
+		<key>NSMotionUsageDescription</key>
+		<string>Приложению необходим доступ к данным о движении для подсчета шагов и отслеживания вашей физической активности</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Нужно разрешение на геолокацию, чтобы подобрать интересные места рядом и показать их на карте</string>
+		<key>NSNotificationsUsageDescription</key>
+		<string>Разрешите отправку уведомлений, чтобы получать напоминания о приемах пищи и отслеживании калорий и БЖУ</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Приложению необходим доступ для сохранения скриншотов в фотогалерею</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Приложению необходим доступ к фотогалерее для анализа фотографий пищи и определения её питательной ценности</string>
+		<key>StoreKit</key>
+		<dict>
+			<key>Configuration</key>
+			<string>storekit.config</string>
+		</dict>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+			<string>processing</string>
+		</array>
+		<key>UIDeviceFamily</key>
+		<array>
+			<integer>1</integer>
+		</array>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UIRequiresFullScreen</key>
+		<true/>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		</array>
+		<key>UIUserInterfaceStyle</key>
+		<string>Light</string>
+		<key>UIUserNotificationTypes</key>
+		<array>
+			<string>alert</string>
+			<string>badge</string>
+			<string>sound</string>
+		</array>
+		<key>UIStatusBarHidden</key>
+		<false/>
+		<key>GMSApiKey</key>
+		<string>YOUR_GOOGLE_MAPS_API_KEY</string>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>158.160.254.66</key>
+				<dict>
+					<key>NSExceptionAllowsInsecureHTTPLoads</key>
+					<true/>
+					<key>NSIncludesSubdomains</key>
+					<true/>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</plist>

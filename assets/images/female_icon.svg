@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="none" />
+  <!-- Голова -->
+  <circle cx="60" cy="45" r="25" fill="#FFD1A9" stroke="#000000" stroke-width="2" />
+  <!-- Волосы -->
+  <path d="M35 45 Q35 15 60 15 Q85 15 85 45 Q85 55 75 55 L45 55 Q35 55 35 45 Z" fill="#FF69B4" />
+  <!-- Тело -->
+  <path d="M45 70 L45 100 C45 110 75 110 75 100 L75 70 Z" fill="#FF69B4" stroke="#000000" stroke-width="2" />
+  <!-- Вырез на платье -->
+  <path d="M55 70 Q60 80 65 70" fill="none" stroke="#000000" stroke-width="1.5" />
+</svg> 

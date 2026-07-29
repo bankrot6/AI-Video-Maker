@@ -1,0 +1,129 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/meal_model.dart';
+import '../home/home_providers.dart';
+
+/// Класс кэша для аналитических данных
+class AnalyticsCache {
+  final Map<String, NutrientsModel> _dailyNutrientsCache = {};
+  List<NutrientsModel> _weeklyNutrients = [];
+  DateTime? _weekStartDate;
+
+  /// Получение дневных данных из кэша
+  NutrientsModel? getDailyNutrients(DateTime date) {
+    final key = '${date.year}-${date.month}-${date.day}';
+    return _dailyNutrientsCache[key];
+  }
+
+  /// Сохранение дневных данных в кэш
+  void cacheDailyNutrients(DateTime date, NutrientsModel nutrients) {
+    final key = '${date.year}-${date.month}-${date.day}';
+    _dailyNutrientsCache[key] = nutrients;
+  }
+
+  /// Проверка, есть ли недельные данные в кэше
+  bool hasWeeklyData(DateTime weekStart) {
+    if (_weekStartDate == null) return false;
+    return _isSameDate(_weekStartDate!, weekStart) &&
+        _weeklyNutrients.isNotEmpty;
+  }
+
+  /// Получение недельных данных из кэша
+  List<NutrientsModel> getWeeklyNutrients() {
+    return _weeklyNutrients;
+  }
+
+  /// Сохранение недельных данных в кэш
+  void cacheWeeklyNutrients(
+      DateTime weekStart, List<NutrientsModel> nutrients) {
+    _weekStartDate = weekStart;
+    _weeklyNutrients = nutrients;
+  }
+
+  /// Вспомогательный метод для сравнения дат
+  bool _isSameDate(DateTime first, DateTime second) {
+    return first.year == second.year &&
+        first.month == second.month &&
+        first.day == second.day;
+  }
+}
+
+/// Провайдер кэша для аналитических данных
+final analyticsCacheProvider = Provider<AnalyticsCache>((ref) {
+  return AnalyticsCache();
+});
+
+/// Провайдер для получения данных о питательной ценности за неделю
+final weeklyNutrientsProvider =
+    FutureProvider<List<NutrientsModel>>((ref) async {
+  // Получаем репозиторий и кэш
+  final mealRepository = ref.read(mealRepositoryProvider);
+  final cache = ref.read(analyticsCacheProvider);
+
+  // Получаем текущую дату и начало недели
+  final now = DateTime.now();
+  final selectedDate = ref.read(selectedDateProvider);
+
+  // Вычисляем первый день недели
+  final weekday = selectedDate.weekday;
+  final startOfWeek = selectedDate.subtract(Duration(days: weekday - 1));
+
+  // Проверяем кэш
+  if (cache.hasWeeklyData(startOfWeek)) {
+    return cache.getWeeklyNutrients();
+  }
+
+  // Получаем данные за последние 7 дней
+  final nutrients = <NutrientsModel>[];
+
+  for (var i = 0; i < 7; i++) {
+    final date = startOfWeek.add(Duration(days: i));
+
+    // Сначала проверяем кэш
+    NutrientsModel? dailyNutrients = cache.getDailyNutrients(date);
+
+    if (dailyNutrients == null) {
+      // Если нет в кэше, запрашиваем из репозитория
+      dailyNutrients = await mealRepository.getDailyNutrientsTotal(date);
+
+      // Сохраняем в кэш
+      cache.cacheDailyNutrients(date, dailyNutrients);
+    }
+
+    nutrients.add(dailyNutrients);
+  }
+
+  // Сохраняем недельные данные в кэш
+  cache.cacheWeeklyNutrients(startOfWeek, nutrients);
+
+  return nutrients;
+});
+
+/// Провайдер для выбранной даты на экране аналитики
+final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
+
+/// Провайдер для получения данных о питательной ценности за выбранную дату
+final dailyNutrientsForDateProvider =
+    FutureProvider.family<NutrientsModel, DateTime>((ref, date) async {
+  // Используем ключ кэширования на основе года, месяца и дня, чтобы избежать
+  // повторных вызовов для одной и той же даты
+  ref.keepAlive();
+
+  // Получаем кэш и репозиторий
+  final cache = ref.read(analyticsCacheProvider);
+  final mealRepository = ref.read(mealRepositoryProvider);
+
+  // Проверяем кэш
+  NutrientsModel? dailyNutrients = cache.getDailyNutrients(date);
+
+  if (dailyNutrients != null) {
+    return dailyNutrients;
+  }
+
+  // Если нет в кэше, запрашиваем из репозитория
+  dailyNutrients = await mealRepository.getDailyNutrientsTotal(date);
+
+  // Сохраняем в кэш
+  cache.cacheDailyNutrients(date, dailyNutrients);
+
+  return dailyNutrients;
+});

@@ -1,0 +1,17 @@
+{
+  "$id": "generate-thumbnail",
+  "name": "Generate Preset Thumbnail",
+  "runtime": "node-18.0",
+  "execute": [],
+  "events": [
+    "databases.main.collections.presets.documents.*.create",
+    "databases.main.collections.presets.documents.*.update"
+  ],
+  "schedule": "",
+  "timeout": 120,
+  "enabled": true,
+  "logging": true,
+  "entrypoint": "src/index.js",
+  "commands": "npm install",
+  "scopes": ["databases.write", "storage.write"]
+}

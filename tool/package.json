@@ -1,0 +1,12 @@
+{
+  "name": "photosession-ai-tools",
+  "version": "1.0.0",
+  "description": "Scripts for managing AI Video Maker presets",
+  "private": true,
+  "scripts": {
+    "upload": "node upload_to_firebase.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

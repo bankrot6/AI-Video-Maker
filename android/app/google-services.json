@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "742488640443",
+    "project_id": "aivideomaker-app",
+    "storage_bucket": "aivideomaker-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:742488640443:android:0263d38170f62af654129e",
+        "android_client_info": {
+          "package_name": "com.aivideomaker.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFDCF0MKjlxyOnouaWj9t24Mm8iVlRipY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

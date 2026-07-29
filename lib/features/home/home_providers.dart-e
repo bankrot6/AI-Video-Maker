@@ -1,0 +1,116 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/meal_model.dart';
+import '../../models/user_model.dart';
+import '../../data/user_repository.dart';
+import '../../data/meal_repository.dart';
+
+/// Провайдер для репозитория пользователя
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  // В реальном приложении здесь должна быть логика создания или получения
+  // существующего экземпляра репозитория
+  // Для простоты создаем новый экземпляр каждый раз
+  // В продакшене лучше использовать синглтон или внедрять через DI
+  throw UnimplementedError(
+    'Репозиторий должен быть предоставлен через ProviderScope.overrides',
+  );
+});
+
+/// Провайдер для репозитория приемов пищи
+final mealRepositoryProvider = Provider<MealRepository>((ref) {
+  // В реальном приложении здесь должна быть логика создания или получения
+  // существующего экземпляра репозитория
+  // Для простоты создаем новый экземпляр каждый раз
+  // В продакшене лучше использовать синглтон или внедрять через DI
+  throw UnimplementedError(
+    'Репозиторий должен быть предоставлен через ProviderScope.overrides',
+  );
+});
+
+/// Провайдер для выбранной даты
+final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
+
+/// Провайдер для загрузки приемов пищи за конкретную дату
+final mealsForDateProvider =
+    FutureProvider.family<List<MealModel>, DateTime>((ref, date) async {
+  final mealRepository = ref.read(mealRepositoryProvider);
+  return await mealRepository.getMealsForDay(date);
+});
+
+/// StateNotifier для управления данными пользователя
+class UserNotifier extends StateNotifier<UserModel?> {
+  UserNotifier() : super(null);
+
+  void setUser(UserModel user) {
+    state = user;
+  }
+
+  void updateUser(UserModel user) {
+    state = user;
+  }
+
+  void clearUser() {
+    state = null;
+  }
+}
+
+/// Провайдер для данных текущего пользователя
+final currentUserProvider =
+    StateNotifierProvider<UserNotifier, UserModel?>((ref) {
+  return UserNotifier();
+});
+
+/// StateNotifier для управления списком приемов пищи за день
+class DailyMealsNotifier extends StateNotifier<List<MealModel>> {
+  DailyMealsNotifier() : super([]);
+
+  void setMeals(List<MealModel> meals) {
+    state = meals;
+  }
+
+  void addMeal(MealModel meal) {
+    state = [...state, meal];
+  }
+
+  void updateMeal(MealModel updatedMeal) {
+    state = [
+      for (final meal in state)
+        if (meal.id == updatedMeal.id) updatedMeal else meal,
+    ];
+  }
+
+  void removeMeal(String id) {
+    state = [
+      for (final meal in state)
+        if (meal.id != id) meal,
+    ];
+  }
+
+  void clearMeals() {
+    state = [];
+  }
+}
+
+/// Провайдер для списка приемов пищи за день
+final dailyMealsProvider =
+    StateNotifierProvider<DailyMealsNotifier, List<MealModel>>((ref) {
+  return DailyMealsNotifier();
+});
+
+/// StateNotifier для управления нутриентами за день
+class DailyNutrientsNotifier extends StateNotifier<NutrientsModel?> {
+  DailyNutrientsNotifier() : super(null);
+
+  void setNutrients(NutrientsModel nutrients) {
+    state = nutrients;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+/// Провайдер для нутриентов за день
+final dailyNutrientsProvider =
+    StateNotifierProvider<DailyNutrientsNotifier, NutrientsModel?>((ref) {
+  return DailyNutrientsNotifier();
+});

@@ -1,0 +1,542 @@
+import 'dart:io';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import '../../models/nutrition_info.dart';
+import '../image_analysis/image_analysis_service.dart';
+import '../nutrition_service.dart';
+import '../../models/meal_model.dart';
+
+/// Класс для хранения запросов в процессе выполнения
+class _RequestTracker {
+  final Map<String, Future<NutritionInfo>> _requests = {};
+
+  /// Генерирует уникальный ключ для запроса на основе путь файла или хэша байтов
+  String _generateKey(dynamic input) {
+    if (input is File) {
+      return 'file:${input.path}';
+    } else if (input is Uint8List) {
+      return 'bytes:${input.length}:${input.hashCode}';
+    }
+    return 'unknown:${input.hashCode}';
+  }
+
+  /// Проверяет, выполняется ли уже такой запрос
+  Future<NutritionInfo>? checkOngoingRequest(dynamic input) {
+    final key = _generateKey(input);
+    return _requests[key];
+  }
+
+  /// Добавляет запрос в список выполняющихся
+  Future<NutritionInfo> trackRequest(
+      dynamic input, Future<NutritionInfo> future) {
+    final key = _generateKey(input);
+    _requests[key] = future;
+    future.whenComplete(() => _requests.remove(key));
+    return future;
+  }
+}
+
+/// Интегратор сервисов Google Vision и DeepSeek для анализа изображений
+class VisionDeepSeekIntegrator {
+  final NutritionService _nutritionService;
+  final ImageAnalysisService? _imageAnalysisService;
+  final bool _useVision;
+  final _RequestTracker _requestTracker = _RequestTracker();
+
+  VisionDeepSeekIntegrator({
+    required NutritionService nutritionService,
+    ImageAnalysisService? imageAnalysisService,
+    bool useVision = true,
+  })  : _nutritionService = nutritionService,
+        _imageAnalysisService = imageAnalysisService,
+        _useVision = useVision;
+
+  /// Создает интегратор, который будет использовать только DeepSeek
+  /// без предварительной обработки через Google Cloud Vision
+  factory VisionDeepSeekIntegrator.deepSeekOnly({
+    required NutritionService nutritionService,
+  }) {
+    return VisionDeepSeekIntegrator._internal(
+      nutritionService: nutritionService,
+      useVision: false,
+    );
+  }
+
+  /// Внутренний конструктор для создания интегратора с опциональным использованием Vision
+  VisionDeepSeekIntegrator._internal({
+    required NutritionService nutritionService,
+    bool useVision = true,
+  })  : _imageAnalysisService = null,
+        _nutritionService = nutritionService,
+        _useVision = useVision;
+
+  /// Анализирует изображение с помощью Google Vision и DeepSeek
+  Future<NutritionInfo> analyzeImageWithVisionAndDeepSeek(
+      File imageFile) async {
+    try {
+      // Если Vision отключен, используем только DeepSeek для текстового анализа
+      if (!_useVision) {
+        debugPrint(
+            '📡 VISION_INTEGRATOR: Vision отключен, используем анализ через текст');
+        // Возвращаем пустой результат, так как мы не можем определить название блюда
+        return NutritionInfo.empty();
+      }
+
+      debugPrint(
+          '🔄 VISION_INTEGRATOR: Начало анализа изображения: ${imageFile.path}');
+
+      // Шаг 1: Распознаем объекты на изображении с помощью Google Vision
+      final visionResult = await _imageAnalysisService!.analyzeFood(imageFile);
+
+      if (visionResult.detectedLabels.isEmpty) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: Не удалось распознать объекты на изображении');
+        return NutritionInfo.empty();
+      }
+
+      debugPrint(
+          '✅ VISION_INTEGRATOR: Распознаны объекты: ${visionResult.detectedLabels.join(", ")}');
+
+      // Шаг 2: Фильтруем объекты, которые не являются едой
+      final foodLabels = _filterFoodLabels(visionResult.detectedLabels);
+
+      if (foodLabels.isEmpty) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: На изображении не обнаружены пищевые продукты');
+        // Возвращаем объект с ошибкой "не еда"
+        return NutritionInfo(
+          dishName: "Не еда",
+          calories: 0,
+          proteins: 0,
+          fats: 0,
+          carbs: 0,
+          ingredients: [],
+          error: "На изображении не обнаружены пищевые продукты",
+        );
+      }
+
+      debugPrint(
+          '✅ VISION_INTEGRATOR: Отфильтрованы пищевые продукты: ${foodLabels.join(", ")}');
+
+      // Шаг 3: Формируем запрос для DeepSeek
+      final prompt = _buildDeepSeekPrompt(foodLabels);
+
+      debugPrint('🔄 VISION_INTEGRATOR: Отправка запроса в DeepSeek: $prompt');
+
+      // Шаг 4: Отправляем запрос в DeepSeek через NutritionService
+      final nutritionInfo = await _nutritionService.analyzeDishByName(prompt);
+
+      // Проверяем результат на несъедобность
+      if (nutritionInfo.error != null && nutritionInfo.error!.isNotEmpty) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: Определен несъедобный объект: ${nutritionInfo.error}');
+        return nutritionInfo;
+      }
+
+      debugPrint(
+          '✅ VISION_INTEGRATOR: Получен ответ от DeepSeek: ${nutritionInfo.dishName}');
+
+      // Шаг 5: Сохраняем путь к изображению в результатах
+      final updatedInfo = nutritionInfo.copyWith(imagePath: imageFile.path);
+
+      debugPrint('✅ VISION_INTEGRATOR: Анализ изображения завершен успешно');
+
+      return updatedInfo;
+    } catch (e) {
+      debugPrint('❌ VISION_INTEGRATOR: Ошибка при анализе: $e');
+      return NutritionInfo.empty();
+    }
+  }
+
+  /// Фильтрует метки объектов, оставляя только связанные с едой
+  List<String> _filterFoodLabels(List<String> labels) {
+    // Простая фильтрация на основе черного списка
+    final blacklist = [
+      'person',
+      'human',
+      'man',
+      'woman',
+      'device',
+      'electronic',
+      'furniture',
+      'building',
+      'vehicle',
+      'car',
+      'airplane',
+      'electronic device',
+      'computer',
+      'table',
+      'chair',
+      'phone',
+      'smartphone',
+      'clothing',
+      'apparel',
+      'outfit',
+      'dress',
+      'shoe',
+      'accessory'
+    ];
+
+    // Фильтруем, исключая метки из черного списка
+    return labels.where((label) {
+      for (final blackWord in blacklist) {
+        if (label.toLowerCase().contains(blackWord.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Строит промпт для DeepSeek на основе распознанных объектов
+  String _buildDeepSeekPrompt(List<String> foodLabels) {
+    if (foodLabels.isEmpty) {
+      return "Определи пищевую ценность блюда на фото";
+    }
+
+    // Используем до 3-х наиболее значимых меток
+    final priorityLabels = foodLabels.take(3).join(", ");
+
+    return "Определи пищевую ценность блюда на фото, где распознаны: $priorityLabels";
+  }
+
+  /// Анализирует изображение из байтов, используя сначала Google Cloud Vision для получения
+  /// предварительных данных о содержимом, а затем DeepSeek для детального анализа текста
+  Future<NutritionInfo> analyzeImageBytesWithVisionAndDeepSeek(
+      Uint8List imageBytes) async {
+    try {
+      // Если Vision отключен, возвращаем пустой результат
+      if (!_useVision) {
+        debugPrint(
+            '📡 VISION_INTEGRATOR: Vision отключен, используем анализ через текст');
+        return NutritionInfo.empty();
+      }
+
+      // Временно сохраняем изображение в файл для Vision API
+      final tempDir = await Directory.systemTemp.createTemp('vision_analysis');
+      final tempFile = File('${tempDir.path}/temp_image.jpg');
+
+      // Записываем файл
+      await tempFile.writeAsBytes(imageBytes);
+
+      debugPrint(
+          '✅ VISION_INTEGRATOR: Временное изображение сохранено: ${tempFile.path}');
+
+      // Получаем данные о содержимом изображения от Google Cloud Vision
+      debugPrint(
+          '📡 VISION_INTEGRATOR: Отправка изображения в Google Vision API...');
+
+      // Получаем результат от Vision API
+      final visionResult = await _imageAnalysisService!.analyzeFood(tempFile);
+
+      debugPrint(
+          '✅ VISION_INTEGRATOR: Получены данные от Google Vision: ${visionResult.detectedLabels.length} меток');
+
+      // Удаляем временный файл
+      await tempFile.delete();
+      await tempDir.delete(recursive: true);
+      debugPrint('✅ VISION_INTEGRATOR: Временные файлы удалены');
+
+      // Если не удалось распознать еду, возвращаем пустой результат
+      if (visionResult.detectedLabels.isEmpty &&
+          (visionResult.foodName == null || visionResult.foodName!.isEmpty)) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: Google Vision не распознал еду, возвращаем пустой результат');
+
+        // Возвращаем результат с сообщением об ошибке
+        return NutritionInfo(
+          dishName: "Не еда",
+          calories: 0,
+          proteins: 0,
+          fats: 0,
+          carbs: 0,
+          ingredients: [],
+          error:
+              "На изображении не обнаружена еда. Повторите попытку с другим изображением.",
+        );
+      }
+
+      // Проверка на наличие категорий, не связанных с едой
+      final List<String> nonFoodCategories = [
+        'facial hair',
+        'beard',
+        'moustache',
+        'facial expression',
+        'selfie',
+        'vehicle',
+        'building',
+        'furniture',
+        'electronic',
+        'textile',
+        'apparel',
+        'clothing',
+        'person',
+        'smartphone',
+        'mobile phone',
+        'gadget',
+        'technology',
+        'computer'
+      ];
+
+      // Проверяем, содержатся ли несъедобные объекты в метках
+      bool containsNonFoodItems = visionResult.detectedLabels.any((label) =>
+          nonFoodCategories.any((category) =>
+              label.toLowerCase().contains(category.toLowerCase())));
+
+      if (containsNonFoodItems &&
+          (visionResult.foodName == null || visionResult.foodName!.isEmpty)) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: Обнаружены метки, не связанные с едой: ${visionResult.detectedLabels.join(', ')}');
+
+        // Возвращаем результат с сообщением об ошибке
+        return NutritionInfo(
+          dishName: "Не еда",
+          calories: 0,
+          proteins: 0,
+          fats: 0,
+          carbs: 0,
+          ingredients: [],
+          error:
+              "На изображении обнаружены объекты, которые не являются едой: ${visionResult.detectedLabels.join(', ')}",
+        );
+      }
+
+      // Собираем информацию о распознанных объектах
+      final String detectedLabels = visionResult.detectedLabels.join(', ');
+      debugPrint('✅ VISION_INTEGRATOR: Распознанные метки: $detectedLabels');
+
+      // Получаем название блюда, если оно доступно
+      final String dishName = visionResult.foodName ?? "неизвестное блюдо";
+      debugPrint('✅ VISION_INTEGRATOR: Название блюда: $dishName');
+
+      // Получаем информацию о предполагаемых нутриентах из анализа Vision
+      final estimatedNutrients = visionResult.estimatedNutrients;
+
+      // Формируем обогащенный промпт для DeepSeek с региональной информацией
+      final enrichedPrompt = _buildEnrichedPrompt(
+          detectedLabels,
+          dishName,
+          estimatedNutrients ??
+              _convertToEstimatedNutrients(visionResult.estimatedNutrients));
+
+      debugPrint(
+          '📡 VISION_INTEGRATOR: Отправка обогащенного текстового запроса в DeepSeek...');
+
+      // Получаем результат от DeepSeek через текстовый запрос
+      final enrichedResult =
+          await _nutritionService.analyzeDishByName(enrichedPrompt);
+
+      // Проверяем, нет ли ошибки в результате DeepSeek
+      if (enrichedResult.error != null && enrichedResult.error!.isNotEmpty) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: DeepSeek вернул ошибку: ${enrichedResult.error}');
+        // Возвращаем результат с ошибкой
+        return enrichedResult;
+      }
+
+      debugPrint('✅ VISION_INTEGRATOR: Получен результат анализа от DeepSeek');
+
+      return enrichedResult;
+    } catch (e) {
+      debugPrint(
+          '❌ VISION_INTEGRATOR: Ошибка при интеграции Vision и DeepSeek: ${e.toString()}');
+      // Если произошла ошибка, возвращаем пустой результат
+      return NutritionInfo.empty();
+    }
+  }
+
+  /// Этот метод оставлен для обратной совместимости и может быть удален в будущем
+  Future<NutritionInfo> analyzeImageWithEstimatedNutrition(File imageFile,
+      double? calories, double? proteins, double? fats, double? carbs) async {
+    try {
+      // Если есть предварительные оценки питательной ценности, формируем обогащенный промпт
+      final imageAnalysisResult =
+          await _imageAnalysisService!.analyzeFood(imageFile);
+
+      // Преобразуем результат в VisionResult
+      final visionResult =
+          VisionResult.fromImageAnalysisResult(imageAnalysisResult);
+
+      // Объединяем метки
+      final String detectedLabels = visionResult.detectedLabels.join(', ');
+
+      // Получаем название блюда
+      final String? dishName = visionResult.foodName;
+
+      if (dishName == null) {
+        debugPrint(
+            '⚠️ VISION_INTEGRATOR: Название блюда не определено, возвращаем пустой результат');
+        return NutritionInfo.empty();
+      }
+
+      // Создаем объект для примерных нутриентов
+      final EstimatedNutrients estimatedNutrients = EstimatedNutrients(
+        calories: calories ?? 0,
+        proteins: proteins ?? 0,
+        fats: fats ?? 0,
+        carbs: carbs ?? 0,
+      );
+
+      // Формируем обогащенный промпт
+      final String enrichedPrompt =
+          _buildEnrichedPrompt(detectedLabels, dishName, estimatedNutrients);
+
+      // Отправляем запрос
+      final NutritionInfo enrichedResult =
+          await _nutritionService.analyzeDishByName(enrichedPrompt);
+
+      return enrichedResult;
+    } catch (e) {
+      debugPrint(
+          '❌ VISION_INTEGRATOR: Ошибка при анализе с оценкой: ${e.toString()}');
+      return NutritionInfo.empty();
+    }
+  }
+
+  /// Формирует обогащенный промпт для DeepSeek с учетом данных из Vision API
+  String _buildEnrichedPrompt(String detectedLabels, String dishName,
+      EstimatedNutrients estimatedNutrients) {
+    try {
+      // Создаем расширенный запрос с данными из Vision API
+      var prompt = "Проанализируй питательную ценность блюда '$dishName'. ";
+
+      // Добавляем информацию о распознанных объектах
+      if (detectedLabels.isNotEmpty) {
+        prompt += "Распознаны следующие объекты: $detectedLabels. ";
+      }
+
+      // Добавляем информацию из оценки нутриентов
+      if (estimatedNutrients.calories > 0 ||
+          estimatedNutrients.proteins > 0 ||
+          estimatedNutrients.fats > 0 ||
+          estimatedNutrients.carbs > 0) {
+        prompt += "Предварительная оценка питательной ценности: ";
+        if (estimatedNutrients.calories > 0) {
+          prompt += "калории: ${estimatedNutrients.calories} ккал, ";
+        }
+        if (estimatedNutrients.proteins > 0) {
+          prompt += "белки: ${estimatedNutrients.proteins} г, ";
+        }
+        if (estimatedNutrients.fats > 0) {
+          prompt += "жиры: ${estimatedNutrients.fats} г, ";
+        }
+        if (estimatedNutrients.carbs > 0) {
+          prompt += "углеводы: ${estimatedNutrients.carbs} г. ";
+        }
+      }
+
+      prompt +=
+          "Определи точное название блюда и его нутриционную ценность, используя все предоставленные данные. Верни название блюда, калории (ккал), белки (г), жиры (г), углеводы (г) и список основных ингредиентов с весом в граммах.";
+
+      return prompt;
+    } catch (e) {
+      debugPrint(
+          '❌ VISION_INTEGRATOR: Ошибка при создании обогащенного промпта: ${e.toString()}');
+      return "Проанализируй питательную ценность блюда '$dishName'. Определи калории (ккал), белки (г), жиры (г), углеводы (г) и список основных ингредиентов с весом в граммах.";
+    }
+  }
+
+  /// Метод для преобразования NutrientsModel в EstimatedNutrients
+  EstimatedNutrients _convertToEstimatedNutrients(NutrientsModel model) {
+    return EstimatedNutrients(
+      calories: model.calories.toDouble(),
+      proteins: model.proteins,
+      fats: model.fats,
+      carbs: model.carbs,
+    );
+  }
+}
+
+/// Параметры для анализа изображения в изоляте
+class _AnalyzeImageParams {
+  final ImageAnalysisService imageAnalysisService;
+  final File imageFile;
+
+  _AnalyzeImageParams({
+    required this.imageAnalysisService,
+    required this.imageFile,
+  });
+}
+
+/// Анализирует изображение в отдельном изоляте
+Future<dynamic> _analyzeImageInIsolate(_AnalyzeImageParams params) async {
+  return await params.imageAnalysisService.analyzeFood(params.imageFile);
+}
+
+/// Параметры для анализа блюда по названию в изоляте
+class _AnalyzeDishParams {
+  final NutritionService nutritionService;
+  final String prompt;
+
+  _AnalyzeDishParams({
+    required this.nutritionService,
+    required this.prompt,
+  });
+}
+
+/// Анализирует блюдо по названию в отдельном изоляте
+Future<NutritionInfo> _analyzeDishByNameInIsolate(
+    _AnalyzeDishParams params) async {
+  return await params.nutritionService.analyzeDishByName(params.prompt);
+}
+
+/// Параметры для записи файла в изоляте
+class _WriteFileParams {
+  final Uint8List bytes;
+  final String path;
+
+  _WriteFileParams({
+    required this.bytes,
+    required this.path,
+  });
+}
+
+/// Записывает файл в отдельном изоляте
+Future<void> _writeFileInIsolate(_WriteFileParams params) async {
+  final file = File(params.path);
+  await file.writeAsBytes(params.bytes);
+}
+
+// Результат анализа изображения с Vision API
+class VisionResult {
+  final List<String> detectedLabels;
+  final String? foodName;
+  final EstimatedNutrients? estimatedNutrients;
+
+  VisionResult({
+    this.detectedLabels = const [],
+    this.foodName,
+    this.estimatedNutrients,
+  });
+
+  // Конвертер из ImageAnalysisResult
+  factory VisionResult.fromImageAnalysisResult(ImageAnalysisResult result) {
+    return VisionResult(
+      detectedLabels: result.detectedLabels,
+      foodName: result.foodName,
+      estimatedNutrients: result.estimatedNutrients != null
+          ? EstimatedNutrients(
+              calories: result.estimatedNutrients.calories.toDouble(),
+              proteins: result.estimatedNutrients.proteins,
+              fats: result.estimatedNutrients.fats,
+              carbs: result.estimatedNutrients.carbs,
+            )
+          : null,
+    );
+  }
+}
+
+// Класс для хранения оценочных значений питательных веществ
+class EstimatedNutrients {
+  final double calories;
+  final double proteins;
+  final double fats;
+  final double carbs;
+
+  EstimatedNutrients({
+    this.calories = 0,
+    this.proteins = 0,
+    this.fats = 0,
+    this.carbs = 0,
+  });
+}

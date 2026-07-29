@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Garden Play with Vegetables",
+    "theme": "child playing in a rustic garden setting with fresh vegetables and natural props",
+    "tags": ["children", "nature", "food", "summer"],
+    "gender": "child"
+  },
+  {
+    "title": "Dramatic Light Portrait",
+    "theme": "male fashion portrait with dramatic diagonal light beam in dark studio",
+    "tags": ["men", "business"],
+    "gender": "male"
+  },
+  {
+    "title": "Elegance with Horse",
+    "theme": "elegant woman in white dress with white horse in stable setting",
+    "tags": ["women", "animals"],
+    "gender": "female"
+  },
+  {
+    "title": "Sunset Beach Walk",
+    "theme": "woman walking on beach at sunset in casual beach attire",
+    "tags": ["women", "travel", "summer"],
+    "gender": "female"
+  },
+  {
+    "title": "Black and White Family Bond",
+    "theme": "black and white minimalist family portrait with mother and child",
+    "tags": ["family", "children"],
+    "gender": "family"
+  },
+  {
+    "title": "Dark Elegance with Panther",
+    "theme": "dramatic fashion portrait of woman with black panther in studio",
+    "tags": ["women", "animals", "fantasy"],
+    "gender": "female"
+  },
+  {
+    "title": "Pink Cats Lifestyle",
+    "theme": "luxurious pink aesthetic portrait with fluffy cats",
+    "tags": ["women", "animals"],
+    "gender": "female"
+  },
+  {
+    "title": "Night Car Elegance",
+    "theme": "elegant woman getting out of luxury car at night with flash",
+    "tags": ["women", "cars"],
+    "gender": "female"
+  },
+  {
+    "title": "Polaroid Collage Art",
+    "theme": "surreal artistic portrait composed of overlapping polaroid photos",
+    "tags": ["fantasy"],
+    "gender": "neutral"
+  },
+  {
+    "title": "Business Suit Confidence",
+    "theme": "confident person in pinstripe suit sitting on vintage yellow sofa",
+    "tags": ["business", "men"],
+    "gender": "male"
+  }
+]

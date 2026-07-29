@@ -1,0 +1,163 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'token_usage_model.g.dart';
+
+/// Модель для отслеживания использования токенов пользователем
+@JsonSerializable()
+class TokenUsageModel {
+  /// Общее количество доступных токенов (включая купленные)
+  final int totalTokens;
+
+  /// Количество использованных токенов
+  final int usedTokens;
+
+  /// Токены, включенные в подписку
+  final int subscriptionTokens;
+
+  /// Купленные дополнительные токены
+  final int purchasedTokens;
+
+  /// Дата последнего сброса токенов подписки (обычно раз в месяц)
+  final DateTime lastResetDate;
+
+  /// Дата последнего использования токенов
+  final DateTime? lastUsedDate;
+
+  const TokenUsageModel({
+    required this.totalTokens,
+    required this.usedTokens,
+    required this.subscriptionTokens,
+    required this.purchasedTokens,
+    required this.lastResetDate,
+    this.lastUsedDate,
+  });
+
+  /// Создает модель по умолчанию для нового пользователя
+  factory TokenUsageModel.defaultModel() {
+    return TokenUsageModel(
+      totalTokens: 50000, // 50k токенов по умолчанию для подписки
+      usedTokens: 0,
+      subscriptionTokens: 50000,
+      purchasedTokens: 0,
+      lastResetDate: DateTime.now(),
+    );
+  }
+
+  /// Создает модель для пользователя без подписки
+  factory TokenUsageModel.freeUser() {
+    return TokenUsageModel(
+      totalTokens: 10000, // 10k токенов для бесплатного использования
+      usedTokens: 0,
+      subscriptionTokens: 10000,
+      purchasedTokens: 0,
+      lastResetDate: DateTime.now(),
+    );
+  }
+
+  /// Оставшиеся токены
+  int get remainingTokens => totalTokens - usedTokens;
+
+  /// Проверяет, есть ли достаточно токенов для запроса
+  bool hasEnoughTokens(int requiredTokens) {
+    return remainingTokens >= requiredTokens;
+  }
+
+  /// Создает копию с обновленными значениями
+  TokenUsageModel copyWith({
+    int? totalTokens,
+    int? usedTokens,
+    int? subscriptionTokens,
+    int? purchasedTokens,
+    DateTime? lastResetDate,
+    DateTime? lastUsedDate,
+  }) {
+    return TokenUsageModel(
+      totalTokens: totalTokens ?? this.totalTokens,
+      usedTokens: usedTokens ?? this.usedTokens,
+      subscriptionTokens: subscriptionTokens ?? this.subscriptionTokens,
+      purchasedTokens: purchasedTokens ?? this.purchasedTokens,
+      lastResetDate: lastResetDate ?? this.lastResetDate,
+      lastUsedDate: lastUsedDate ?? this.lastUsedDate,
+    );
+  }
+
+  /// Обновляет использованные токены
+  TokenUsageModel useTokens(int tokens) {
+    return copyWith(
+      usedTokens: usedTokens + tokens,
+      lastUsedDate: DateTime.now(),
+    );
+  }
+
+  /// Добавляет купленные токены
+  TokenUsageModel addPurchasedTokens(int tokens) {
+    return copyWith(
+      totalTokens: totalTokens + tokens,
+      purchasedTokens: purchasedTokens + tokens,
+    );
+  }
+
+  /// Сбрасывает токены подписки (ежемесячно)
+  TokenUsageModel resetSubscriptionTokens(int newSubscriptionTokens) {
+    return copyWith(
+      subscriptionTokens: newSubscriptionTokens,
+      totalTokens: newSubscriptionTokens + purchasedTokens,
+      usedTokens: 0,
+      lastResetDate: DateTime.now(),
+    );
+  }
+
+  /// Конвертация в JSON
+  factory TokenUsageModel.fromJson(Map<String, dynamic> json) =>
+      _$TokenUsageModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TokenUsageModelToJson(this);
+
+  @override
+  String toString() {
+    return 'TokenUsageModel(total: $totalTokens, used: $usedTokens, remaining: $remainingTokens)';
+  }
+}
+
+/// Типы пакетов токенов для покупки
+enum TokenPackageType {
+  small('small', 25000, 99), // 25k токенов за 99 рублей
+  medium('medium', 75000, 259), // 75k токенов за 259 рублей
+  large('large', 200000, 599); // 200k токенов за 599 рублей
+
+  const TokenPackageType(this.id, this.tokens, this.priceRub);
+
+  final String id;
+  final int tokens;
+  final int priceRub;
+
+  /// Получает цену за 1000 токенов в рублях
+  double get pricePerKTokens => priceRub / (tokens / 1000);
+}
+
+/// Модель пакета токенов для покупки
+@JsonSerializable()
+class TokenPackageModel {
+  final TokenPackageType type;
+  final String title;
+  final String description;
+  final int tokens;
+  final double price;
+  final String currency;
+  final String? badge; // Например, "Лучшее предложение"
+
+  const TokenPackageModel({
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.tokens,
+    required this.price,
+    required this.currency,
+    this.badge,
+  });
+
+  factory TokenPackageModel.fromJson(Map<String, dynamic> json) =>
+      _$TokenPackageModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TokenPackageModelToJson(this);
+}

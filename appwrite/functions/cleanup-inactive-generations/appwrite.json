@@ -1,0 +1,17 @@
+{
+  "functions": [
+    {
+      "name": "cleanup-inactive-generations",
+      "runtime": "node-22.0",
+      "entrypoint": "src/main.js",
+      "scopes": ["databases.read", "databases.write", "storage.read", "storage.write"],
+      "schedule": "0 2 * * *",
+      "timeout": 300,
+      "vars": {
+        "APPWRITE_STORAGE_BUCKET_ID": "user-photos",
+        "APPWRITE_DATABASE_ID": "",
+        "APPWRITE_GENERATIONS_COLLECTION_ID": "user_generations"
+      }
+    }
+  ]
+}

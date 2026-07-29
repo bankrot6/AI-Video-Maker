@@ -1,0 +1,25 @@
+[Unit]
+Description=Appwrite Functions Watchdog (detects stuck function executions)
+Documentation=https://github.com/photosession-ai
+After=docker.service appwrite-health.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/etc/appwrite-functions-watchdog.env
+ExecStart=/usr/local/bin/appwrite-functions-watchdog.sh
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/appwrite-functions-watchdog.log
+StandardError=append:/var/log/appwrite-functions-watchdog.log
+
+# Безопасность: ограничиваем ресурсы самого watchdog-а
+MemoryMax=128M
+CPUQuota=10%
+
+StartLimitIntervalSec=600
+StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target

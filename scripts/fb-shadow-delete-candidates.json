@@ -1,0 +1,3865 @@
+{
+  "generatedAt": "2026-04-15T09:14:17.085Z",
+  "note": "fb-id с единственным совпадением в Appwrite; проверь и используй для точечного удаления",
+  "presetIds": [
+    "preset_1773733337486_garden_play_with_vegetables",
+    "preset_1773733338105_dramatic_light_portrait",
+    "preset_1773733338641_elegance_with_horse",
+    "preset_1773733339159_sunset_beach_walk",
+    "preset_1773733339685_black_and_white_family_bond",
+    "preset_1773733340179_dark_elegance_with_panther",
+    "preset_1773733340642_pink_cats_lifestyle",
+    "preset_1773733341107_night_car_elegance",
+    "preset_1773733341545_polaroid_collage_art",
+    "preset_1773733342064_business_suit_confidence",
+    "preset_1773734915981_чёрный_минимал",
+    "preset_1773735013591_ангельская_эстетика",
+    "preset_1773735267761_красная_шапочка",
+    "preset_1773735366163_за_объективом",
+    "preset_1773735450245_испанская_фиеста",
+    "preset_1773740835504_свобода_неба",
+    "preset_1773741336358_лунная_нимфа",
+    "preset_1773741794354_сад_нежности",
+    "preset_1773743015779_мистический_расклад",
+    "preset_1773743067881_голубое_поле",
+    "preset_1773743138758_морская_романтика",
+    "preset_1773743208324_стиль_города",
+    "preset_1773743293886_ожидание_чуда",
+    "preset_1773743342849_цветок_и_тишина",
+    "preset_1773743414662_восточная_муза",
+    "preset_1773743486269_сила_и_грация",
+    "preset_1773743556293_белая_высота",
+    "preset_1773743628563_фото_на_пляже",
+    "preset_1773743684746_фото_с_лошадью",
+    "preset_1773743741133_детское_фото_в_саду",
+    "preset_1773743814869_портретное_фото_с_лучом_света",
+    "preset_1773743886142_черно_белое_семейное_фото",
+    "preset_1773743959221____чёрное_фото_с_пантерой",
+    "preset_1773744032979_дома_в_пальто",
+    "preset_1773744116065_фото_с_котятами_в_розовом_стиле",
+    "preset_1773744200780_элегантное_фото_из_машины",
+    "preset_1773744299309_состоишь_из_фото",
+    "preset_1773744372677_в_деловом_костюме",
+    "preset_1773802038764_розовое_настроение",
+    "preset_1773802201504___для_любимой_мамы",
+    "preset_1773802279098_маленькая_муза_весны",
+    "preset_1773802355157_голубая_свобода",
+    "preset_1773802413725___под_ее_контролем",
+    "preset_1773802491090___объятие_любви",
+    "preset_1773802568143_пудровый_шик",
+    "preset_1773802645850___лето_на_побережье",
+    "preset_1773802723484_цветочная_сказка",
+    "preset_1773802800477_бизнес_в_облаках",
+    "preset_1773802876469_розы_и_романтика",
+    "preset_1773802933184_тропический_закат",
+    "preset_1773803007331_городская_меланхолия",
+    "preset_1773803084011_воздушная_нежность",
+    "preset_1773803154495_тропический_рай",
+    "preset_1773803230891___под_тяжёлым_небом",
+    "preset_1773803306447_цветочная_элегантность",
+    "preset_1773803361535_тишина_моря",
+    "preset_1773803439806_маленький_босс",
+    "preset_1773896486852_романтика_города",
+    "preset_1773896576438_домашний_момент",
+    "preset_1773896681189___утро_в_конюшне",
+    "preset_1773896772088_холодная_уверенность",
+    "preset_1773896876954_утро_в_париже",
+    "preset_1773896966831_коллаж_из_студийных_фото",
+    "preset_1773897052123___алый_гламур",
+    "preset_1773897143961_изумрудная_ночь",
+    "preset_1773897363116_любовь_на_берегу",
+    "preset_1773897452553_лунный_сад",
+    "preset_1773897629737_кристальный_шик",
+    "preset_1773897745512_черно_белое_фото_на_лошади",
+    "preset_1773897834981_нежность_золотого_часа",
+    "preset_1773897923743_деревенский_вечер",
+    "preset_1773898004905_белая_королева",
+    "preset_1773898086827___алая_романтика",
+    "preset_1773898381670_красная_ночь",
+    "preset_1773898470659___нежный_март",
+    "preset_1773898555650_балконная_романтика",
+    "preset_1773898643867_цветы_для_тебя",
+    "preset_1773898843313_утро_с_пионами",
+    "preset_1773898932163_огни_дороги",
+    "preset_1773899019740_первые_тёплые_дни",
+    "preset_1773899136836_современный_шик",
+    "preset_1773899271142_вечер_в_итальянском_ресторане",
+    "preset_1773899358265___парная_фотосессия",
+    "preset_1773899447099_ночная_провокация",
+    "preset_1773899535848_белая_нежность",
+    "preset_1773899625549_золотое_побережье",
+    "preset_1773899728010_клиника_заботы",
+    "preset_1773899814305_близость",
+    "preset_1773899948552_парные_фото_на_фоне_моря",
+    "preset_1773900064483_вечер_у_моря",
+    "preset_1773900357440___самое_тёплое_утро",
+    "preset_1773900529434_ромашковое_поле",
+    "preset_1773900632268_тихая_весна",
+    "preset_1773900816537_дух_экспедиции",
+    "preset_1773900912424_городская_свобода",
+    "preset_1773901090294_мода_и_природа",
+    "preset_1773901341532_роскошное_фото_в_отеле",
+    "preset_1773901437384_дым_и_тишина",
+    "preset_1773901661760_сад_тюльпанов",
+    "preset_1773901949225___фотосессия_в_кофейне",
+    "preset_1773902036519_лицо_героя",
+    "preset_1773902684737___утро_в_городе",
+    "preset_1773902778811_ночной_бунт",
+    "preset_1773903037028_чёрный_минимал",
+    "preset_1773903430923_тихое_ранчо",
+    "preset_1773999750649_фото_в_деловом_стиле",
+    "preset_1773999985628_свет_бабочек",
+    "preset_1774000101577_цветочное_платье",
+    "preset_1774000208003_весенняя_нежность",
+    "preset_1774000326990_нежный_момент",
+    "preset_1774000439787_фотосессия__азартные_игры_",
+    "preset_1774000557600_в_весеннем_пальто",
+    "preset_1774000680057_нежная_весна",
+    "preset_1774000794624_свет_и_тень",
+    "preset_1774243508220_тихая_близость",
+    "preset_1774243603561_ветви_вербы",
+    "preset_1774243687034_нежный_праздник",
+    "preset_1774243773311_пасхальный_уют",
+    "preset_1774243858847_нежность_контраста",
+    "preset_1774243944897_свет_луны",
+    "preset_1774244029065_опасные_90_е",
+    "preset_1774244113002_лазурный_берег",
+    "preset_1774244196359_свет_свечей",
+    "preset_1774244279897___завтрак_в_городе",
+    "preset_1774244378058_маленький_капитан_америка",
+    "preset_1774244440233_среди_подсолнухов",
+    "preset_1774244524298_набережный_стиль",
+    "preset_1774244621829_живой_момент",
+    "preset_1774244700728_кадр_в_тумане",
+    "preset_1774244781264_пойманный_шаг",
+    "preset_1774244867064_фото_со_своим_животным",
+    "preset_1774244949753_стиль_без_слов",
+    "preset_1774245036068_тихое_поле",
+    "preset_1774245125526___селфи_с_парнем_в_машине",
+    "preset_1774245191498_нежные_пионы",
+    "preset_1774245276269_нежное_утро",
+    "preset_1774245363658___энергия_героя",
+    "preset_1774245533095_лилии_и_свет",
+    "preset_1774245619207_тихая_красота",
+    "preset_1774245712833_____призвание___врач",
+    "preset_1774245799091_свет_мастера",
+    "preset_1774245913812_космический_путник",
+    "preset_1774246001888_солнечная_тишина",
+    "preset_1774246090540_профессиональная_эстетика",
+    "preset_1774246174601_вечерний_шик",
+    "preset_1774246262020_утро_на_мосту",
+    "preset_1774246366323_нежность_роз",
+    "preset_1774246454459___солнечный_двор",
+    "preset_1774246555255_белые_орхидеи",
+    "preset_1774246658728_летний_рынок",
+    "preset_1774246748724_тишина_востока",
+    "preset_1774246817121_над_городом",
+    "preset_1774246896761_хрупкий_контраст",
+    "preset_1774246984987_стиль_города",
+    "preset_1774247066355_весна_в_городе",
+    "preset_1774247153631_сквозь_огни",
+    "preset_1774247244397_ночная_история",
+    "preset_1774247340543_золотое_поле",
+    "preset_1774247421824_розовая_долина",
+    "preset_1774247600579_тропическая_муза",
+    "preset_1774247685350_утренний_уют",
+    "preset_1774247773387_вкус_лета",
+    "preset_1774496770898_с_чебурашкой_на_льду",
+    "preset_1774496854048_с_человеком_пауком",
+    "preset_1774497008213_фото_в_деловом_стиле",
+    "preset_1774497092454_нежный_праздник",
+    "preset_1774573310763_кабинет_министра",
+    "preset_1774573405362_пара_на_море",
+    "preset_1774573487987_тёплые_объятия",
+    "preset_1774573569105_в_платье_на_природе",
+    "preset_1774573634458_нежный_покой",
+    "preset_1774607014061_пыль_и_металл",
+    "preset_1774607106990_взгляд_вершины",
+    "preset_1774607199909_мужские_фото_в_стиле_casual",
+    "preset_1774608245418_хочешь_такое_же_фото___",
+    "preset_1774608338752_рождённый_быть_героем",
+    "preset_1774608446169_сила_в_движении",
+    "preset_1774659705060_взгляд_сквозь_текст",
+    "preset_1774659771689_в_образе_ангела",
+    "preset_1774659855130_союз_без_слов",
+    "preset_1774659967114_фото_с_ребёнком",
+    "preset_1774660049078_тишина_бамбука",
+    "preset_1774746089545_фото_со_слонами",
+    "preset_1774746166071_детский_день_рождения",
+    "preset_1774746225739_нежно_розовая_фотосессия",
+    "preset_1774746299997_отражённый_мир",
+    "preset_1774746376530_тишина_степи",
+    "preset_1774832511935_розовый_день_рождения",
+    "preset_1774832593115_детское_фото_к_пасхе",
+    "preset_1774832668594_в_рыбацкой_лодке",
+    "preset_1774832733403_режим_креатор_pro",
+    "preset_1774832810042_связь_в_ночи",
+    "preset_1774875734226_пауза_в_городе",
+    "preset_1774890109168_эстетика_отчуждения",
+    "preset_1774904516980_селфи_в_машине",
+    "preset_1774918903415_мягкое_волшебство",
+    "preset_1774933330106_атмосфера_весны",
+    "preset_1774947732165_денежная_королева",
+    "preset_1774962130150_винтажная_муза",
+    "preset_1774976553814_минимализм_формы",
+    "preset_1775005306444_лёгкая_меланхолия",
+    "preset_1775019710167_лесная_атмосфера",
+    "preset_1775034146276_деловое_фото_на_парковке",
+    "preset_1775048515389_домашняя_гармония",
+    "preset_1775062924748_сила_в_тишине",
+    "preset_1775091780042_прикосновение_весны",
+    "preset_1775106145115_тонкая_драматургия",
+    "preset_1775120517745_стиль_без_усилий",
+    "preset_1775135024821_винтажное_мужское_фото",
+    "preset_1775149328147_фотосессия_в_деревне",
+    "preset_1775163702014_кролики_и_уют",
+    "preset_1775178123969_контраст_характеров",
+    "preset_1775192550586_солнечный_рисунок",
+    "preset_1775206916395_фотосессия_с_конём",
+    "preset_1775221337034_эстетика_сказки",
+    "preset_1775235736430_расслабленный_ритм",
+    "preset_1775250134491_пасхальный_стол",
+    "preset_1775264507472_город_под_землёй",
+    "preset_1775278916079_цветочное_фото_в_зеркале",
+    "preset_1775293334402_летнее_фото_на_роликах",
+    "preset_1775307695984_плёночная_эстетика",
+    "preset_1775322116470_девочка_из_сказки",
+    "preset_1775336512952_бизнес_ланч",
+    "preset_1775350913923_в_океанариуме",
+    "preset_1775365317785_а_есть_ли_любовь",
+    "preset_1775379703521_криминальный_кадр",
+    "preset_1775394101712_лёгкость_весны",
+    "preset_1775408503165_золотое_притяжение",
+    "preset_1775422947774_крылья_весны",
+    "preset_1775437307879_побережье_и_свобода",
+    "preset_1775451748795_свадебная_фотосессия",
+    "preset_1775466113076_доставка_цветов",
+    "preset_1775480546682_мысли_у_океана",
+    "preset_1775494913207_тишина_и_контраст",
+    "preset_1775509323675_пасхальное_утро",
+    "preset_1775523701676_ночной_защитник",
+    "preset_1775538094710_тонкое_притяжение",
+    "preset_1775552557434_тёплый_фокус",
+    "preset_1775566916280_y2k_настроение",
+    "preset_1775581312729_пасмурное_утро",
+    "preset_1775595865525_нежность_вербы",
+    "preset_1775610118783_студийное_tv_фото",
+    "preset_1775624507503_ветер_и_тишина",
+    "preset_1775638984794_ветер_и_мысли",
+    "preset_1775667709122_грация_кошки",
+    "preset_1775682210813_романтика_отпуска",
+    "preset_1775696509822_фотосессия_в_кофейных_тонах",
+    "preset_1775710905169_классика_портрета",
+    "preset_1775725310259_ночной_флирт",
+    "preset_1775739723326_сельская_сказка",
+    "preset_1775754209187_тихое_ранчо",
+    "preset_1775768512277_фотосессия_на_пляже",
+    "preset_1775782937231_black_фотосессия_в_студии",
+    "preset_1775797370137_тишина_улицы",
+    "preset_1775811944288_итальянское_утро",
+    "preset_1775898136208_романтика_на_колёсах",
+    "preset_1775912510684_тёплая_безмятежность",
+    "preset_1775926908952_в_кабриолете_на_море",
+    "preset_1775941315929_светлый_праздник",
+    "preset_1775955719594_васильковая_нежность",
+    "preset_1775970102534_сила_мегаполиса",
+    "preset_1775998920560_светлая_пасха",
+    "preset_1776042112783_тепло_поколений",
+    "preset_1776070934003_на_фоне_храма",
+    "preset_1776085333589_тихий_минимализм",
+    "preset_1776114119235_эмоции_в_кадрах",
+    "preset_1776128516933_совместное_фото_к_светлой_пасхе",
+    "preset_1776142913333_маяк_и_ветер",
+    "preset_1776157337926_чёрный_берег",
+    "preset_1776171732531_сдержанный_шик",
+    "preset_1776186130093_любовь_в_лучах",
+    "preset_1776200573134_объятие_заката",
+    "preset_1776214930670_сдержанная_сила",
+    "preset_1776229308768_розовый_стиль",
+    "preset_1776243721534_элегантность_в_белом"
+  ],
+  "details": [
+    {
+      "fbPresetId": "preset_1773733337486_garden_play_with_vegetables",
+      "matchedAppwritePresetId": "6dfab1f44074b0b5f7d26edaf70f4ac0",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "6dfab1f44074b0b5f7d26edaf70f4ac0"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733338105_dramatic_light_portrait",
+      "matchedAppwritePresetId": "5fb848465c9c18180282c91de30c48ff",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5fb848465c9c18180282c91de30c48ff"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733338641_elegance_with_horse",
+      "matchedAppwritePresetId": "0180d3ed185199b605f3ad9bfbc1f547",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "0180d3ed185199b605f3ad9bfbc1f547"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733339159_sunset_beach_walk",
+      "matchedAppwritePresetId": "ceffd294c46d3c422fee08e3e2aa03c5",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ceffd294c46d3c422fee08e3e2aa03c5"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733339685_black_and_white_family_bond",
+      "matchedAppwritePresetId": "9d6e08b8387cb6a78f46201d32d2bd0d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9d6e08b8387cb6a78f46201d32d2bd0d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733340179_dark_elegance_with_panther",
+      "matchedAppwritePresetId": "4e26e5ef38673793132fd5a4c8f94a70",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4e26e5ef38673793132fd5a4c8f94a70"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733340642_pink_cats_lifestyle",
+      "matchedAppwritePresetId": "0950f90fd3699d91301ee04a67ad3c05",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "0950f90fd3699d91301ee04a67ad3c05"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733341107_night_car_elegance",
+      "matchedAppwritePresetId": "1ef79e86950961dde0ebdecaa4ee98f4",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1ef79e86950961dde0ebdecaa4ee98f4"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733341545_polaroid_collage_art",
+      "matchedAppwritePresetId": "2cdb6cff0eda7995e1468373e463bff9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2cdb6cff0eda7995e1468373e463bff9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773733342064_business_suit_confidence",
+      "matchedAppwritePresetId": "6c43fc05e9c72c6fa8921d3c5f71c95c",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "6c43fc05e9c72c6fa8921d3c5f71c95c"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773734915981_чёрный_минимал",
+      "matchedAppwritePresetId": "preset_1773734915981_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773734915981_______________"
+          ],
+          "confidence": "high"
+        },
+        {
+          "kind": "unique_preview_url",
+          "awIds": [
+            "preset_1773734915981_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773735013591_ангельская_эстетика",
+      "matchedAppwritePresetId": "b493ea67c2b08f26b23845509b5fbe1e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b493ea67c2b08f26b23845509b5fbe1e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773735267761_красная_шапочка",
+      "matchedAppwritePresetId": "preset_1773735267761________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773735267761________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773735366163_за_объективом",
+      "matchedAppwritePresetId": "preset_1773735366163______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773735366163______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773735450245_испанская_фиеста",
+      "matchedAppwritePresetId": "ff0853c35e765ba2872d049319de1e9d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ff0853c35e765ba2872d049319de1e9d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773740835504_свобода_неба",
+      "matchedAppwritePresetId": "preset_1773740835504_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773740835504_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773741336358_лунная_нимфа",
+      "matchedAppwritePresetId": "preset_1773741336358_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773741336358_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773741794354_сад_нежности",
+      "matchedAppwritePresetId": "preset_1773741794354_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773741794354_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743015779_мистический_расклад",
+      "matchedAppwritePresetId": "cec06cfe5feb9f12d206c96bb5fe96b9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "cec06cfe5feb9f12d206c96bb5fe96b9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743067881_голубое_поле",
+      "matchedAppwritePresetId": "preset_1773743067881_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743067881_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743138758_морская_романтика",
+      "matchedAppwritePresetId": "aa61c37ed69d2779d42c1bbd998e992a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "aa61c37ed69d2779d42c1bbd998e992a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743208324_стиль_города",
+      "matchedAppwritePresetId": "preset_1773743208324_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743208324_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743293886_ожидание_чуда",
+      "matchedAppwritePresetId": "preset_1773743293886______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743293886______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743342849_цветок_и_тишина",
+      "matchedAppwritePresetId": "preset_1773743342849________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743342849________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743414662_восточная_муза",
+      "matchedAppwritePresetId": "preset_1773743414662_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743414662_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743486269_сила_и_грация",
+      "matchedAppwritePresetId": "preset_1773743486269______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743486269______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743556293_белая_высота",
+      "matchedAppwritePresetId": "preset_1773743556293_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743556293_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743628563_фото_на_пляже",
+      "matchedAppwritePresetId": "preset_1773743628563______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743628563______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743684746_фото_с_лошадью",
+      "matchedAppwritePresetId": "preset_1773743684746_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773743684746_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743741133_детское_фото_в_саду",
+      "matchedAppwritePresetId": "1cae88be0a56e84fe8d522d083070d4a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1cae88be0a56e84fe8d522d083070d4a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743814869_портретное_фото_с_лучом_света",
+      "matchedAppwritePresetId": "c3769335c71799a0462de7182a3cf54e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c3769335c71799a0462de7182a3cf54e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743886142_черно_белое_семейное_фото",
+      "matchedAppwritePresetId": "5d4c94333c60d058684cc733c6766c5a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5d4c94333c60d058684cc733c6766c5a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773743959221____чёрное_фото_с_пантерой",
+      "matchedAppwritePresetId": "7723aa710cb06e7ecb75de657f5504ba",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "7723aa710cb06e7ecb75de657f5504ba"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773744032979_дома_в_пальто",
+      "matchedAppwritePresetId": "preset_1773744032979______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773744032979______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773744116065_фото_с_котятами_в_розовом_стиле",
+      "matchedAppwritePresetId": "bd4dbf21464cb3bf735abd98b0274a19",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "bd4dbf21464cb3bf735abd98b0274a19"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773744200780_элегантное_фото_из_машины",
+      "matchedAppwritePresetId": "eba65d0a747093207e4740425742e7a9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "eba65d0a747093207e4740425742e7a9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773744299309_состоишь_из_фото",
+      "matchedAppwritePresetId": "96e2a24a6b26fbeb2f6265e85b2d40a6",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "96e2a24a6b26fbeb2f6265e85b2d40a6"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773744372677_в_деловом_костюме",
+      "matchedAppwritePresetId": "3f297d756979c095e29112a7b38464e5",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "3f297d756979c095e29112a7b38464e5"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802038764_розовое_настроение",
+      "matchedAppwritePresetId": "81ea89face8bff4e94e42f75837a595a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "81ea89face8bff4e94e42f75837a595a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802201504___для_любимой_мамы",
+      "matchedAppwritePresetId": "10b072a41d1f3cd15915bb412e95c0e7",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "10b072a41d1f3cd15915bb412e95c0e7"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802279098_маленькая_муза_весны",
+      "matchedAppwritePresetId": "3b253a762044141d4fdaf821203c656c",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "3b253a762044141d4fdaf821203c656c"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802355157_голубая_свобода",
+      "matchedAppwritePresetId": "preset_1773802355157________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773802355157________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802413725___под_ее_контролем",
+      "matchedAppwritePresetId": "16021bf0d1666e411336cbf089009136",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "16021bf0d1666e411336cbf089009136"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802491090___объятие_любви",
+      "matchedAppwritePresetId": "preset_1773802491090________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773802491090________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802568143_пудровый_шик",
+      "matchedAppwritePresetId": "preset_1773802568143_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773802568143_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802645850___лето_на_побережье",
+      "matchedAppwritePresetId": "7b0754d091d6a77e7711a9b7d326923e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "7b0754d091d6a77e7711a9b7d326923e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802723484_цветочная_сказка",
+      "matchedAppwritePresetId": "f78d24a2345f78e168207e08167e2624",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f78d24a2345f78e168207e08167e2624"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802800477_бизнес_в_облаках",
+      "matchedAppwritePresetId": "9b7186ed102f8a77084e59316ed2164a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9b7186ed102f8a77084e59316ed2164a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802876469_розы_и_романтика",
+      "matchedAppwritePresetId": "5647da67e9bb677e9de8ebcb2d0099a3",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5647da67e9bb677e9de8ebcb2d0099a3"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773802933184_тропический_закат",
+      "matchedAppwritePresetId": "58d77b31ba66726467d729cbcc9a97c0",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "58d77b31ba66726467d729cbcc9a97c0"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803007331_городская_меланхолия",
+      "matchedAppwritePresetId": "337cdb1671f885928590428aa72b402f",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "337cdb1671f885928590428aa72b402f"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803084011_воздушная_нежность",
+      "matchedAppwritePresetId": "ca91f4843b1b712733cc77072bcca00d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ca91f4843b1b712733cc77072bcca00d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803154495_тропический_рай",
+      "matchedAppwritePresetId": "preset_1773803154495________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773803154495________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803230891___под_тяжёлым_небом",
+      "matchedAppwritePresetId": "84eaf3d91221f37a3da4eb0caa499e6c",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "84eaf3d91221f37a3da4eb0caa499e6c"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803306447_цветочная_элегантность",
+      "matchedAppwritePresetId": "5eb717939bdf6987cced19e1472a87a2",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5eb717939bdf6987cced19e1472a87a2"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803361535_тишина_моря",
+      "matchedAppwritePresetId": "preset_1773803361535____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773803361535____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773803439806_маленький_босс",
+      "matchedAppwritePresetId": "preset_1773803439806_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773803439806_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896486852_романтика_города",
+      "matchedAppwritePresetId": "1234ebc606f0ff5d71c1d08017527758",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1234ebc606f0ff5d71c1d08017527758"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896576438_домашний_момент",
+      "matchedAppwritePresetId": "preset_1773896576438________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773896576438________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896681189___утро_в_конюшне",
+      "matchedAppwritePresetId": "bd7429ce1ac9b50bc5068235cfc93416",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "bd7429ce1ac9b50bc5068235cfc93416"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896772088_холодная_уверенность",
+      "matchedAppwritePresetId": "9b7df709c8fbd4bb8322fcb17992adc8",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9b7df709c8fbd4bb8322fcb17992adc8"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896876954_утро_в_париже",
+      "matchedAppwritePresetId": "preset_1773896876954______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773896876954______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773896966831_коллаж_из_студийных_фото",
+      "matchedAppwritePresetId": "8d09d2cd50a63cb7d5d46cc9cdf12186",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "8d09d2cd50a63cb7d5d46cc9cdf12186"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897052123___алый_гламур",
+      "matchedAppwritePresetId": "preset_1773897052123______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773897052123______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897143961_изумрудная_ночь",
+      "matchedAppwritePresetId": "preset_1773897143961________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773897143961________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897363116_любовь_на_берегу",
+      "matchedAppwritePresetId": "af3fc006b2ade6e7ee27873fab61df1b",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "af3fc006b2ade6e7ee27873fab61df1b"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897452553_лунный_сад",
+      "matchedAppwritePresetId": "preset_1773897452553___________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773897452553___________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897629737_кристальный_шик",
+      "matchedAppwritePresetId": "preset_1773897629737________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773897629737________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897745512_черно_белое_фото_на_лошади",
+      "matchedAppwritePresetId": "c967b66c62604ae78e94f16a23e31f92",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c967b66c62604ae78e94f16a23e31f92"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897834981_нежность_золотого_часа",
+      "matchedAppwritePresetId": "15f14f6903837f7424eba9126d03e996",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "15f14f6903837f7424eba9126d03e996"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773897923743_деревенский_вечер",
+      "matchedAppwritePresetId": "f2afc4898a73db8d052496e509ef587a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f2afc4898a73db8d052496e509ef587a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898004905_белая_королева",
+      "matchedAppwritePresetId": "preset_1773898004905_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898004905_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898086827___алая_романтика",
+      "matchedAppwritePresetId": "a61265c9960ee18ff6c6c4360131c436",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a61265c9960ee18ff6c6c4360131c436"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898381670_красная_ночь",
+      "matchedAppwritePresetId": "preset_1773898381670_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898381670_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898470659___нежный_март",
+      "matchedAppwritePresetId": "preset_1773898470659______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898470659______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898555650_балконная_романтика",
+      "matchedAppwritePresetId": "c3f147234162397cb34fc1d85e83534a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c3f147234162397cb34fc1d85e83534a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898643867_цветы_для_тебя",
+      "matchedAppwritePresetId": "preset_1773898643867_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898643867_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898843313_утро_с_пионами",
+      "matchedAppwritePresetId": "preset_1773898843313_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898843313_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773898932163_огни_дороги",
+      "matchedAppwritePresetId": "preset_1773898932163____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773898932163____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899019740_первые_тёплые_дни",
+      "matchedAppwritePresetId": "5f868562539185f6629cdaecd66169d3",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5f868562539185f6629cdaecd66169d3"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899136836_современный_шик",
+      "matchedAppwritePresetId": "preset_1773899136836________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773899136836________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899271142_вечер_в_итальянском_ресторане",
+      "matchedAppwritePresetId": "1828116ea55869bdc4bd7eed5e7078e9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1828116ea55869bdc4bd7eed5e7078e9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899358265___парная_фотосессия",
+      "matchedAppwritePresetId": "12e405d553dfcee423933b02e9638c93",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "12e405d553dfcee423933b02e9638c93"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899447099_ночная_провокация",
+      "matchedAppwritePresetId": "a242bc1a58202dd8b45b6966f7f12d20",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a242bc1a58202dd8b45b6966f7f12d20"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899535848_белая_нежность",
+      "matchedAppwritePresetId": "preset_1773899535848_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773899535848_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899625549_золотое_побережье",
+      "matchedAppwritePresetId": "85ece491b776224fbd6345d6db18af55",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "85ece491b776224fbd6345d6db18af55"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899728010_клиника_заботы",
+      "matchedAppwritePresetId": "preset_1773899728010_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773899728010_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899814305_близость",
+      "matchedAppwritePresetId": "preset_1773899814305_________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773899814305_________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773899948552_парные_фото_на_фоне_моря",
+      "matchedAppwritePresetId": "0b201dcb67aa65e45084423e5d0e4e8a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "0b201dcb67aa65e45084423e5d0e4e8a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900064483_вечер_у_моря",
+      "matchedAppwritePresetId": "preset_1773900064483_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773900064483_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900357440___самое_тёплое_утро",
+      "matchedAppwritePresetId": "2dc704e1768f7f43919b9cd90e421f20",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2dc704e1768f7f43919b9cd90e421f20"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900529434_ромашковое_поле",
+      "matchedAppwritePresetId": "preset_1773900529434________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773900529434________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900632268_тихая_весна",
+      "matchedAppwritePresetId": "preset_1773900632268____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773900632268____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900816537_дух_экспедиции",
+      "matchedAppwritePresetId": "preset_1773900816537_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773900816537_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773900912424_городская_свобода",
+      "matchedAppwritePresetId": "461a1d5d155ce47d0765b04dd5a8f929",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "461a1d5d155ce47d0765b04dd5a8f929"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773901090294_мода_и_природа",
+      "matchedAppwritePresetId": "preset_1773901090294_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773901090294_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773901341532_роскошное_фото_в_отеле",
+      "matchedAppwritePresetId": "707750c569946e870d1cc97e69f31cff",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "707750c569946e870d1cc97e69f31cff"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773901437384_дым_и_тишина",
+      "matchedAppwritePresetId": "preset_1773901437384_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773901437384_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773901661760_сад_тюльпанов",
+      "matchedAppwritePresetId": "preset_1773901661760______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773901661760______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773901949225___фотосессия_в_кофейне",
+      "matchedAppwritePresetId": "a01b2a837c682caf73938cc8d0b19914",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a01b2a837c682caf73938cc8d0b19914"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773902036519_лицо_героя",
+      "matchedAppwritePresetId": "preset_1773902036519___________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773902036519___________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773902684737___утро_в_городе",
+      "matchedAppwritePresetId": "preset_1773902684737________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773902684737________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773902778811_ночной_бунт",
+      "matchedAppwritePresetId": "preset_1773902778811____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773902778811____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773903037028_чёрный_минимал",
+      "matchedAppwritePresetId": "preset_1773903037028_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773903037028_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773903430923_тихое_ранчо",
+      "matchedAppwritePresetId": "preset_1773903430923____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773903430923____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773999750649_фото_в_деловом_стиле",
+      "matchedAppwritePresetId": "4908b6deabba50be94f9c3023759106e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4908b6deabba50be94f9c3023759106e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1773999985628_свет_бабочек",
+      "matchedAppwritePresetId": "preset_1773999985628_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1773999985628_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000101577_цветочное_платье",
+      "matchedAppwritePresetId": "fd649a0a68c441547da671697ee113ae",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "fd649a0a68c441547da671697ee113ae"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000208003_весенняя_нежность",
+      "matchedAppwritePresetId": "9cbc50771bbb5d439ada08f33ed24a2e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9cbc50771bbb5d439ada08f33ed24a2e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000326990_нежный_момент",
+      "matchedAppwritePresetId": "preset_1774000326990______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774000326990______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000439787_фотосессия__азартные_игры_",
+      "matchedAppwritePresetId": "9f2a0de23e96f02d3d5f9a0c45de1bb8",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9f2a0de23e96f02d3d5f9a0c45de1bb8"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000557600_в_весеннем_пальто",
+      "matchedAppwritePresetId": "e1c1420dc1fa408d5fec16d7fa63575d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "e1c1420dc1fa408d5fec16d7fa63575d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000680057_нежная_весна",
+      "matchedAppwritePresetId": "preset_1774000680057_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774000680057_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774000794624_свет_и_тень",
+      "matchedAppwritePresetId": "preset_1774000794624____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774000794624____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243508220_тихая_близость",
+      "matchedAppwritePresetId": "preset_1774243508220_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774243508220_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243603561_ветви_вербы",
+      "matchedAppwritePresetId": "preset_1774243603561____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774243603561____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243687034_нежный_праздник",
+      "matchedAppwritePresetId": "preset_1774243687034________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774243687034________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243773311_пасхальный_уют",
+      "matchedAppwritePresetId": "preset_1774243773311_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774243773311_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243858847_нежность_контраста",
+      "matchedAppwritePresetId": "5cfa441e1c57b00808fddd8d58242298",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5cfa441e1c57b00808fddd8d58242298"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774243944897_свет_луны",
+      "matchedAppwritePresetId": "preset_1774243944897__________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774243944897__________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244029065_опасные_90_е",
+      "matchedAppwritePresetId": "preset_1774244029065_________90__",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244029065_________90__"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244113002_лазурный_берег",
+      "matchedAppwritePresetId": "preset_1774244113002_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244113002_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244196359_свет_свечей",
+      "matchedAppwritePresetId": "preset_1774244196359____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244196359____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244279897___завтрак_в_городе",
+      "matchedAppwritePresetId": "461432f7674a6523f364b6668ea4e546",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "461432f7674a6523f364b6668ea4e546"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244378058_маленький_капитан_америка",
+      "matchedAppwritePresetId": "411c45038bf58c0ddae5f85a9343d179",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "411c45038bf58c0ddae5f85a9343d179"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244440233_среди_подсолнухов",
+      "matchedAppwritePresetId": "82c40621779b9a5e3dac7df9cdbb4c4d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "82c40621779b9a5e3dac7df9cdbb4c4d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244524298_набережный_стиль",
+      "matchedAppwritePresetId": "4d8a10b846e131a334877f10ada62dc0",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4d8a10b846e131a334877f10ada62dc0"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244621829_живой_момент",
+      "matchedAppwritePresetId": "preset_1774244621829_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244621829_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244700728_кадр_в_тумане",
+      "matchedAppwritePresetId": "preset_1774244700728______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244700728______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244781264_пойманный_шаг",
+      "matchedAppwritePresetId": "preset_1774244781264______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244781264______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244867064_фото_со_своим_животным",
+      "matchedAppwritePresetId": "7b5ada3ce3649b392f2215e6ee1ed055",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "7b5ada3ce3649b392f2215e6ee1ed055"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774244949753_стиль_без_слов",
+      "matchedAppwritePresetId": "preset_1774244949753_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774244949753_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245036068_тихое_поле",
+      "matchedAppwritePresetId": "preset_1774245036068___________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245036068___________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245125526___селфи_с_парнем_в_машине",
+      "matchedAppwritePresetId": "94da614b1c3f154fe55c9cb46f615a51",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "94da614b1c3f154fe55c9cb46f615a51"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245191498_нежные_пионы",
+      "matchedAppwritePresetId": "preset_1774245191498_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245191498_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245276269_нежное_утро",
+      "matchedAppwritePresetId": "preset_1774245276269____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245276269____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245363658___энергия_героя",
+      "matchedAppwritePresetId": "preset_1774245363658________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245363658________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245533095_лилии_и_свет",
+      "matchedAppwritePresetId": "preset_1774245533095_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245533095_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245619207_тихая_красота",
+      "matchedAppwritePresetId": "preset_1774245619207______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245619207______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245712833_____призвание___врач",
+      "matchedAppwritePresetId": "27b7bd96ee583b86b7f85a3f05bf5156",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "27b7bd96ee583b86b7f85a3f05bf5156"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245799091_свет_мастера",
+      "matchedAppwritePresetId": "preset_1774245799091_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774245799091_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774245913812_космический_путник",
+      "matchedAppwritePresetId": "c0b3c66bf895ae5e9d3717d598b05b38",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c0b3c66bf895ae5e9d3717d598b05b38"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246001888_солнечная_тишина",
+      "matchedAppwritePresetId": "72ab2193c320c7e89b489bc329a33fca",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "72ab2193c320c7e89b489bc329a33fca"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246090540_профессиональная_эстетика",
+      "matchedAppwritePresetId": "fbcfdc2fd4fe8193013f0d0ed01c890d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "fbcfdc2fd4fe8193013f0d0ed01c890d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246174601_вечерний_шик",
+      "matchedAppwritePresetId": "preset_1774246174601_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246174601_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246262020_утро_на_мосту",
+      "matchedAppwritePresetId": "preset_1774246262020______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246262020______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246366323_нежность_роз",
+      "matchedAppwritePresetId": "preset_1774246366323_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246366323_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246454459___солнечный_двор",
+      "matchedAppwritePresetId": "4f581c6c7c6e9811f064c9fc8d797e28",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4f581c6c7c6e9811f064c9fc8d797e28"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246555255_белые_орхидеи",
+      "matchedAppwritePresetId": "preset_1774246555255______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246555255______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246658728_летний_рынок",
+      "matchedAppwritePresetId": "preset_1774246658728_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246658728_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246748724_тишина_востока",
+      "matchedAppwritePresetId": "preset_1774246748724_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246748724_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246817121_над_городом",
+      "matchedAppwritePresetId": "preset_1774246817121____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246817121____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246896761_хрупкий_контраст",
+      "matchedAppwritePresetId": "98fe3d61f7b0ccad1fc59796cf67fd49",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "98fe3d61f7b0ccad1fc59796cf67fd49"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774246984987_стиль_города",
+      "matchedAppwritePresetId": "preset_1774246984987_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774246984987_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247066355_весна_в_городе",
+      "matchedAppwritePresetId": "preset_1774247066355_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247066355_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247153631_сквозь_огни",
+      "matchedAppwritePresetId": "preset_1774247153631____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247153631____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247244397_ночная_история",
+      "matchedAppwritePresetId": "preset_1774247244397_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247244397_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247340543_золотое_поле",
+      "matchedAppwritePresetId": "preset_1774247340543_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247340543_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247421824_розовая_долина",
+      "matchedAppwritePresetId": "preset_1774247421824_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247421824_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247600579_тропическая_муза",
+      "matchedAppwritePresetId": "c259a6664023635afe25e43f3557fefd",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c259a6664023635afe25e43f3557fefd"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247685350_утренний_уют",
+      "matchedAppwritePresetId": "preset_1774247685350_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247685350_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774247773387_вкус_лета",
+      "matchedAppwritePresetId": "preset_1774247773387__________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774247773387__________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774496770898_с_чебурашкой_на_льду",
+      "matchedAppwritePresetId": "94acaab561e1d591eed3dff7cc242d75",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "94acaab561e1d591eed3dff7cc242d75"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774496854048_с_человеком_пауком",
+      "matchedAppwritePresetId": "9b7456af8291886dd55d09732d2b387b",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9b7456af8291886dd55d09732d2b387b"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774497008213_фото_в_деловом_стиле",
+      "matchedAppwritePresetId": "9aff39fdf6174de409e7a77a127d160d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "9aff39fdf6174de409e7a77a127d160d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774497092454_нежный_праздник",
+      "matchedAppwritePresetId": "preset_1774497092454________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774497092454________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774573310763_кабинет_министра",
+      "matchedAppwritePresetId": "08429cb030babefb8f424d9edd913389",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "08429cb030babefb8f424d9edd913389"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774573405362_пара_на_море",
+      "matchedAppwritePresetId": "preset_1774573405362_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774573405362_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774573487987_тёплые_объятия",
+      "matchedAppwritePresetId": "preset_1774573487987_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774573487987_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774573569105_в_платье_на_природе",
+      "matchedAppwritePresetId": "bd224e2570a86ecad580c32c776dcab5",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "bd224e2570a86ecad580c32c776dcab5"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774573634458_нежный_покой",
+      "matchedAppwritePresetId": "preset_1774573634458_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774573634458_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774607014061_пыль_и_металл",
+      "matchedAppwritePresetId": "preset_1774607014061______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774607014061______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774607106990_взгляд_вершины",
+      "matchedAppwritePresetId": "preset_1774607106990_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774607106990_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774607199909_мужские_фото_в_стиле_casual",
+      "matchedAppwritePresetId": "b449707dec0ed3d4fdc6eec06da79221",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b449707dec0ed3d4fdc6eec06da79221"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774608245418_хочешь_такое_же_фото___",
+      "matchedAppwritePresetId": "e0372962f3bb69a90ef250962acbfe2f",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "e0372962f3bb69a90ef250962acbfe2f"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774608338752_рождённый_быть_героем",
+      "matchedAppwritePresetId": "a14ff5b3af2b8493f86ab988d88f8118",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a14ff5b3af2b8493f86ab988d88f8118"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774608446169_сила_в_движении",
+      "matchedAppwritePresetId": "preset_1774608446169________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774608446169________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774659705060_взгляд_сквозь_текст",
+      "matchedAppwritePresetId": "14680dc7d397adadcf0c595104cfca3a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "14680dc7d397adadcf0c595104cfca3a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774659771689_в_образе_ангела",
+      "matchedAppwritePresetId": "preset_1774659771689________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774659771689________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774659855130_союз_без_слов",
+      "matchedAppwritePresetId": "preset_1774659855130______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774659855130______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774659967114_фото_с_ребёнком",
+      "matchedAppwritePresetId": "preset_1774659967114________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774659967114________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774660049078_тишина_бамбука",
+      "matchedAppwritePresetId": "preset_1774660049078_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774660049078_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774746089545_фото_со_слонами",
+      "matchedAppwritePresetId": "preset_1774746089545________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774746089545________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774746166071_детский_день_рождения",
+      "matchedAppwritePresetId": "19c630a5657c21fa5ca4502ba79bfad4",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "19c630a5657c21fa5ca4502ba79bfad4"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774746225739_нежно_розовая_фотосессия",
+      "matchedAppwritePresetId": "dcf407711a08223e9cdb2f769ee1ba34",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "dcf407711a08223e9cdb2f769ee1ba34"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774746299997_отражённый_мир",
+      "matchedAppwritePresetId": "preset_1774746299997_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774746299997_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774746376530_тишина_степи",
+      "matchedAppwritePresetId": "preset_1774746376530_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774746376530_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774832511935_розовый_день_рождения",
+      "matchedAppwritePresetId": "4d4caff74a000849e8e5086f12f7d565",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4d4caff74a000849e8e5086f12f7d565"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774832593115_детское_фото_к_пасхе",
+      "matchedAppwritePresetId": "b4ebcaedd76a854bfeaac91550930ade",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b4ebcaedd76a854bfeaac91550930ade"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774832668594_в_рыбацкой_лодке",
+      "matchedAppwritePresetId": "6fe6129129a01e3dcc80aeaf2b38e1e8",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "6fe6129129a01e3dcc80aeaf2b38e1e8"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774832733403_режим_креатор_pro",
+      "matchedAppwritePresetId": "b9d6668ed2b276bae5705f388e5844fc",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b9d6668ed2b276bae5705f388e5844fc"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774832810042_связь_в_ночи",
+      "matchedAppwritePresetId": "preset_1774832810042_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774832810042_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774875734226_пауза_в_городе",
+      "matchedAppwritePresetId": "preset_1774875734226_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774875734226_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774890109168_эстетика_отчуждения",
+      "matchedAppwritePresetId": "ed8a988460ccd70c995df665a50c82b1",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ed8a988460ccd70c995df665a50c82b1"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774904516980_селфи_в_машине",
+      "matchedAppwritePresetId": "preset_1774904516980_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774904516980_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774918903415_мягкое_волшебство",
+      "matchedAppwritePresetId": "3cb291b05e5ff2e00072077ed1c16a64",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "3cb291b05e5ff2e00072077ed1c16a64"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774933330106_атмосфера_весны",
+      "matchedAppwritePresetId": "preset_1774933330106________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774933330106________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774947732165_денежная_королева",
+      "matchedAppwritePresetId": "b9c09aefe00a11d84622e0dccae964f1",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b9c09aefe00a11d84622e0dccae964f1"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774962130150_винтажная_муза",
+      "matchedAppwritePresetId": "preset_1774962130150_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1774962130150_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1774976553814_минимализм_формы",
+      "matchedAppwritePresetId": "ee1c77d03d5ab5800cc509713c588002",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ee1c77d03d5ab5800cc509713c588002"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775005306444_лёгкая_меланхолия",
+      "matchedAppwritePresetId": "409c6135826d9b58d38aa16ac8f89dde",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "409c6135826d9b58d38aa16ac8f89dde"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775019710167_лесная_атмосфера",
+      "matchedAppwritePresetId": "1ad6dd82ea050396108105e318a6c7af",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1ad6dd82ea050396108105e318a6c7af"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775034146276_деловое_фото_на_парковке",
+      "matchedAppwritePresetId": "6c9f235399163e3727681202ee0b6bfb",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "6c9f235399163e3727681202ee0b6bfb"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775048515389_домашняя_гармония",
+      "matchedAppwritePresetId": "fce6ba43e6c8165d3cb34cde81d3a9b1",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "fce6ba43e6c8165d3cb34cde81d3a9b1"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775062924748_сила_в_тишине",
+      "matchedAppwritePresetId": "preset_1775062924748______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775062924748______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775091780042_прикосновение_весны",
+      "matchedAppwritePresetId": "d581e8bfd163c3e2fbb2865fc0266e6f",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "d581e8bfd163c3e2fbb2865fc0266e6f"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775106145115_тонкая_драматургия",
+      "matchedAppwritePresetId": "4caf9cb1d3ad8331c3e0a4cdf46ff114",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "4caf9cb1d3ad8331c3e0a4cdf46ff114"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775120517745_стиль_без_усилий",
+      "matchedAppwritePresetId": "f69e16cd2f3be8f9a3a7302ed076db6c",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f69e16cd2f3be8f9a3a7302ed076db6c"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775135024821_винтажное_мужское_фото",
+      "matchedAppwritePresetId": "b222d676020eab3a9e4e4fe1a63cd178",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b222d676020eab3a9e4e4fe1a63cd178"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775149328147_фотосессия_в_деревне",
+      "matchedAppwritePresetId": "1bd6702ad6a607c81585bf73a03fefd9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1bd6702ad6a607c81585bf73a03fefd9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775163702014_кролики_и_уют",
+      "matchedAppwritePresetId": "preset_1775163702014______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775163702014______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775178123969_контраст_характеров",
+      "matchedAppwritePresetId": "cfa6449258f5422e777a9b3e59b693cd",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "cfa6449258f5422e777a9b3e59b693cd"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775192550586_солнечный_рисунок",
+      "matchedAppwritePresetId": "2b8ac0e84bb3e4713f3849b800b2aea9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2b8ac0e84bb3e4713f3849b800b2aea9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775206916395_фотосессия_с_конём",
+      "matchedAppwritePresetId": "046c55ae13929f22aad371f690eb4508",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "046c55ae13929f22aad371f690eb4508"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775221337034_эстетика_сказки",
+      "matchedAppwritePresetId": "preset_1775221337034________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775221337034________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775235736430_расслабленный_ритм",
+      "matchedAppwritePresetId": "83e9ea41094a96496aca3374f8e332b2",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "83e9ea41094a96496aca3374f8e332b2"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775250134491_пасхальный_стол",
+      "matchedAppwritePresetId": "preset_1775250134491________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775250134491________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775264507472_город_под_землёй",
+      "matchedAppwritePresetId": "37c0de53c44a2ebe59d87dd4ed4288f0",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "37c0de53c44a2ebe59d87dd4ed4288f0"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775278916079_цветочное_фото_в_зеркале",
+      "matchedAppwritePresetId": "1740ae6557502f1124f731c98cc982f3",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1740ae6557502f1124f731c98cc982f3"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775293334402_летнее_фото_на_роликах",
+      "matchedAppwritePresetId": "b0903a2aa4eb5eb07e6a6ab8fabe7e08",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "b0903a2aa4eb5eb07e6a6ab8fabe7e08"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775307695984_плёночная_эстетика",
+      "matchedAppwritePresetId": "e6c16fcf61e2c38da24ebcccd86b873d",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "e6c16fcf61e2c38da24ebcccd86b873d"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775322116470_девочка_из_сказки",
+      "matchedAppwritePresetId": "619a4e149641ad86e35778cc1e03967b",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "619a4e149641ad86e35778cc1e03967b"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775336512952_бизнес_ланч",
+      "matchedAppwritePresetId": "preset_1775336512952____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775336512952____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775350913923_в_океанариуме",
+      "matchedAppwritePresetId": "preset_1775350913923______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775350913923______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775365317785_а_есть_ли_любовь",
+      "matchedAppwritePresetId": "81ee29716913cdc1bd6dd969b7ba9f4e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "81ee29716913cdc1bd6dd969b7ba9f4e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775379703521_криминальный_кадр",
+      "matchedAppwritePresetId": "83f12f18fda21fece041e64df46cff51",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "83f12f18fda21fece041e64df46cff51"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775394101712_лёгкость_весны",
+      "matchedAppwritePresetId": "preset_1775394101712_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775394101712_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775408503165_золотое_притяжение",
+      "matchedAppwritePresetId": "1630d9beaf048951bcd19d1133716646",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1630d9beaf048951bcd19d1133716646"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775422947774_крылья_весны",
+      "matchedAppwritePresetId": "preset_1775422947774_____________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775422947774_____________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775437307879_побережье_и_свобода",
+      "matchedAppwritePresetId": "f732fcdd1036ecfe4d3702e92792c5ea",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f732fcdd1036ecfe4d3702e92792c5ea"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775451748795_свадебная_фотосессия",
+      "matchedAppwritePresetId": "285086acb35e716b94ccb689f38e280f",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "285086acb35e716b94ccb689f38e280f"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775466113076_доставка_цветов",
+      "matchedAppwritePresetId": "preset_1775466113076________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775466113076________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775480546682_мысли_у_океана",
+      "matchedAppwritePresetId": "preset_1775480546682_______________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775480546682_______________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775494913207_тишина_и_контраст",
+      "matchedAppwritePresetId": "98fb2bc6ec4ed88fff0111dd54853acc",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "98fb2bc6ec4ed88fff0111dd54853acc"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775509323675_пасхальное_утро",
+      "matchedAppwritePresetId": "preset_1775509323675________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775509323675________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775523701676_ночной_защитник",
+      "matchedAppwritePresetId": "preset_1775523701676________________",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "preset_1775523701676________________"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775538094710_тонкое_притяжение",
+      "matchedAppwritePresetId": "f5816b27e3da3cdac2ef842337138595",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f5816b27e3da3cdac2ef842337138595"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775552557434_тёплый_фокус",
+      "matchedAppwritePresetId": "3c52ba53fc0ade89108354aec90587a2",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "3c52ba53fc0ade89108354aec90587a2"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775566916280_y2k_настроение",
+      "matchedAppwritePresetId": "2038bad4cc7f54270c4bbbb223fbec8e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2038bad4cc7f54270c4bbbb223fbec8e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775581312729_пасмурное_утро",
+      "matchedAppwritePresetId": "f1fd15b92edd596199394be307e6710a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f1fd15b92edd596199394be307e6710a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775595865525_нежность_вербы",
+      "matchedAppwritePresetId": "93cd3676e9c2fade7cd6f9edca77050b",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "93cd3676e9c2fade7cd6f9edca77050b"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775610118783_студийное_tv_фото",
+      "matchedAppwritePresetId": "de51bdda16ae8779e41783ecf36fcf71",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "de51bdda16ae8779e41783ecf36fcf71"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775624507503_ветер_и_тишина",
+      "matchedAppwritePresetId": "18dbdbfe8efb8d31e91e3e2bd270c589",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "18dbdbfe8efb8d31e91e3e2bd270c589"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775638984794_ветер_и_мысли",
+      "matchedAppwritePresetId": "685147d98d7d4eccd6e3fbc158f0c993",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "685147d98d7d4eccd6e3fbc158f0c993"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775667709122_грация_кошки",
+      "matchedAppwritePresetId": "f679db05cc4d1b0db56490bbb59f9600",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f679db05cc4d1b0db56490bbb59f9600"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775682210813_романтика_отпуска",
+      "matchedAppwritePresetId": "d85517772c3483a133e99c31ddc14184",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "d85517772c3483a133e99c31ddc14184"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775696509822_фотосессия_в_кофейных_тонах",
+      "matchedAppwritePresetId": "3f591dcd7d851439e7c549a805636f2b",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "3f591dcd7d851439e7c549a805636f2b"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775710905169_классика_портрета",
+      "matchedAppwritePresetId": "a9bc69c839ff96eee33b98dbc5c8ac51",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a9bc69c839ff96eee33b98dbc5c8ac51"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775725310259_ночной_флирт",
+      "matchedAppwritePresetId": "2dbc50bfdfce7b75e6bbbcfbe1538cc4",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2dbc50bfdfce7b75e6bbbcfbe1538cc4"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775739723326_сельская_сказка",
+      "matchedAppwritePresetId": "ff06443af7b13e7ae49718933a4ce349",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ff06443af7b13e7ae49718933a4ce349"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775754209187_тихое_ранчо",
+      "matchedAppwritePresetId": "2ce391fdf0223e3b0253128b551547f5",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "2ce391fdf0223e3b0253128b551547f5"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775768512277_фотосессия_на_пляже",
+      "matchedAppwritePresetId": "f179eb91725fa86f93fb501084e5d8ff",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f179eb91725fa86f93fb501084e5d8ff"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775782937231_black_фотосессия_в_студии",
+      "matchedAppwritePresetId": "5c17662f9b0ab8bf4f4284d25114da92",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5c17662f9b0ab8bf4f4284d25114da92"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775797370137_тишина_улицы",
+      "matchedAppwritePresetId": "85e7def3e09d23a3d6b643918adfd58a",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "85e7def3e09d23a3d6b643918adfd58a"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775811944288_итальянское_утро",
+      "matchedAppwritePresetId": "103fbe50329d1c9887f27bb36f98aaa0",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "103fbe50329d1c9887f27bb36f98aaa0"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775898136208_романтика_на_колёсах",
+      "matchedAppwritePresetId": "ae781f12a1eec9fcc0ae4c64261a2ac8",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "ae781f12a1eec9fcc0ae4c64261a2ac8"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775912510684_тёплая_безмятежность",
+      "matchedAppwritePresetId": "de933a75471b095e89122d6e89ec66f9",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "de933a75471b095e89122d6e89ec66f9"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775926908952_в_кабриолете_на_море",
+      "matchedAppwritePresetId": "d142b56b3a01517565f466c3b42134be",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "d142b56b3a01517565f466c3b42134be"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775941315929_светлый_праздник",
+      "matchedAppwritePresetId": "c1d2eea84d932c53270a7c34547f921e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c1d2eea84d932c53270a7c34547f921e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775955719594_васильковая_нежность",
+      "matchedAppwritePresetId": "15f83fba79ea98f12d1ec7f3fbe31f4e",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "15f83fba79ea98f12d1ec7f3fbe31f4e"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775970102534_сила_мегаполиса",
+      "matchedAppwritePresetId": "15e1e5ab807dd6b6b612db0df13754f5",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "15e1e5ab807dd6b6b612db0df13754f5"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1775998920560_светлая_пасха",
+      "matchedAppwritePresetId": "6f0c681ce359daae33163b213e838a44",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "6f0c681ce359daae33163b213e838a44"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776042112783_тепло_поколений",
+      "matchedAppwritePresetId": "eafa8faaf548badb96e4123f4183ccba",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "eafa8faaf548badb96e4123f4183ccba"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776070934003_на_фоне_храма",
+      "matchedAppwritePresetId": "55ffe7eb13b19c0439469f9670633c45",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "55ffe7eb13b19c0439469f9670633c45"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776085333589_тихий_минимализм",
+      "matchedAppwritePresetId": "36f50a80b2410fcbfb2e063526fd644c",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "36f50a80b2410fcbfb2e063526fd644c"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776114119235_эмоции_в_кадрах",
+      "matchedAppwritePresetId": "1dbbedac792486d76a86bdc027276449",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "1dbbedac792486d76a86bdc027276449"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776128516933_совместное_фото_к_светлой_пасхе",
+      "matchedAppwritePresetId": "c11602ba7282144be8c30c3499853c25",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "c11602ba7282144be8c30c3499853c25"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776142913333_маяк_и_ветер",
+      "matchedAppwritePresetId": "35da0fa2e58e1c8bcd4215b553b825fe",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "35da0fa2e58e1c8bcd4215b553b825fe"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776157337926_чёрный_берег",
+      "matchedAppwritePresetId": "5a442e17c457508a06f6fcea88b95162",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5a442e17c457508a06f6fcea88b95162"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776171732531_сдержанный_шик",
+      "matchedAppwritePresetId": "bc251e72d141bb9997c56867cf2bccdc",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "bc251e72d141bb9997c56867cf2bccdc"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776186130093_любовь_в_лучах",
+      "matchedAppwritePresetId": "5b80ca808e1ce297599af71ea1750706",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "5b80ca808e1ce297599af71ea1750706"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776200573134_объятие_заката",
+      "matchedAppwritePresetId": "f0b7e0bbee5c0222c08a88bcdcf1b787",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f0b7e0bbee5c0222c08a88bcdcf1b787"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776214930670_сдержанная_сила",
+      "matchedAppwritePresetId": "38a22faf5d8b195f94c183da3951670f",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "38a22faf5d8b195f94c183da3951670f"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776229308768_розовый_стиль",
+      "matchedAppwritePresetId": "a7054400386bfe0bca85a0a60505a109",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "a7054400386bfe0bca85a0a60505a109"
+          ],
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "fbPresetId": "preset_1776243721534_элегантность_в_белом",
+      "matchedAppwritePresetId": "f72470b8e86388b3179fb66c81568fb3",
+      "reasons": [
+        {
+          "kind": "unique_prompt",
+          "awIds": [
+            "f72470b8e86388b3179fb66c81568fb3"
+          ],
+          "confidence": "high"
+        }
+      ]
+    }
+  ]
+}

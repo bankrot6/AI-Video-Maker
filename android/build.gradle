@@ -1,0 +1,64 @@
+buildscript {
+    ext.kotlin_version = '2.1.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.2'  // Firebase plugin
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://developer.huawei.com/repo/' }
+        // RuStore native SDKs (Pay + BillingClient dual-SDK migration)
+        maven { url 'https://artifactory-external.vkpartner.ru/artifactory/maven' }
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+subprojects { project ->
+    if (project.name == "mytracker_sdk") {
+        project.afterEvaluate {
+            if (project.hasProperty("android")) {
+                project.android {
+                    if (namespace == null || namespace.toString().trim().isEmpty()) {
+                        namespace = "com.my.tracker.flutter"
+                    }
+                    compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_1_8
+                        targetCompatibility JavaVersion.VERSION_1_8
+                    }
+                }
+            }
+
+            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions {
+                    jvmTarget = "1.8"
+                }
+            }
+
+            project.tasks.withType(JavaCompile).configureEach {
+                sourceCompatibility = "1.8"
+                targetCompatibility = "1.8"
+            }
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

@@ -1,0 +1,23 @@
+{
+  "name": "appwrite-migration-scripts",
+  "version": "1.0.0",
+  "description": "Firebase to Appwrite migration tools",
+  "type": "module",
+  "scripts": {
+    "setup": "node create_appwrite_resources.js",
+    "migrate": "node migrate_firebase_to_appwrite.js",
+    "sync:appwrite-to-firebase": "node sync_appwrite_missing_to_firebase.mjs",
+    "mirror:appwrite-to-firebase": "node mirror_appwrite_to_firestore.mjs",
+    "migrate:firebase-images": "node migrate_remote_images_to_firebase_storage.mjs",
+    "analyze:presets-dual-db": "node analyze_presets_dual_db.mjs",
+    "prune:firestore-to-appwrite-1to1": "node prune_firestore_to_appwrite_1to1.mjs",
+    "match:fb-only-presets": "node match_firestore_only_presets_to_appwrite.mjs",
+    "match:fb-only-presets:deletes-json": "node match_firestore_only_presets_to_appwrite.mjs --write-deletes=./fb-shadow-delete-candidates.json",
+    "status": "node -e \"import('./migrate_firebase_to_appwrite.js').then(({default: M}) => new M().init().then(() => console.log(JSON.stringify(new M().getStatus(), null, 2))))\""
+  },
+  "dependencies": {
+    "firebase": "^10.7.1",
+    "firebase-admin": "^12.6.0",
+    "node-appwrite": "^13.0.0"
+  }
+}

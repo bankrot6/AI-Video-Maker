@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /presets/{presetId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+        && (!resource.data.keys().hasAll(['firebaseOwnerUid'])
+            || resource.data.firebaseOwnerUid == request.auth.uid);
+    }
+    
+    match /user_generations/{generationId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && (!('firebaseUid' in resource.data)
+            || (resource.data.firebaseUid is string
+                && resource.data.firebaseUid == request.auth.uid));
+    }
+    
+    match /preset_earnings/{earningId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

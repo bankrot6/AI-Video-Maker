@@ -1,0 +1,17 @@
+RuStore release artifacts (AI Video Maker)
+
+AAB:
+  /Volumes/External_Storage/Projects/AI Video Maker/build/app/outputs/bundle/release/app-release.aab
+
+APK:
+  /Volumes/External_Storage/Projects/AI Video Maker/build/app/outputs/flutter-apk/app-release.apk
+
+Signing cert (public PEM):
+  /Volumes/External_Storage/Projects/AI Video Maker/rustore_signing_cert.pem
+
+Keystore alias:
+  upload
+
+Certificate fingerprints:
+  SHA1:   C3:50:19:D0:3B:D2:2A:01:7F:1A:3B:F7:0C:DB:AC:A3:3C:37:D1:1B
+  SHA256: DE:6B:FC:31:19:1F:FC:AE:D2:A3:DE:C6:50:C9:59:A8:80:3C:78:77:0B:D9:65:12:E1:2B:AC:8B:CB:5D:51:C6

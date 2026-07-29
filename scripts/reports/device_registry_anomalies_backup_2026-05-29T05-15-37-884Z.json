@@ -1,0 +1,68 @@
+{
+  "createdAt": "2026-05-29T05:15:37.891Z",
+  "databaseId": "main",
+  "threshold": 100,
+  "totalAnomalies": 5,
+  "anomalies": [
+    {
+      "id": "69dce7a0002bf1d65f64",
+      "fingerprint": "3bb5e640ed5a009977f3d26ec4a650988e5007f1a369adf8e01884d041b9d79a",
+      "platform": "ios",
+      "subscriptionType": "free",
+      "purchasedCredits": 1210,
+      "earnedCredits": 0,
+      "freeCreditsUsed": 20,
+      "freeGenerationsUsed": 2,
+      "firstSeenAt": "2026-04-13T12:54:56.703Z",
+      "updatedAt": "2026-05-20T09:29:18.797+00:00"
+    },
+    {
+      "id": "6a01cff9001df72e3ca3",
+      "fingerprint": "d6d0f22085d911e04ff9410a7edea19015ba34c8ced9ad35607db1b84e58940b",
+      "platform": "android",
+      "subscriptionType": "free",
+      "purchasedCredits": 250,
+      "earnedCredits": 0,
+      "freeCreditsUsed": 330,
+      "freeGenerationsUsed": 34,
+      "firstSeenAt": "2026-05-11T12:47:53.479Z",
+      "updatedAt": "2026-05-26T06:09:43.758+00:00"
+    },
+    {
+      "id": "69d81bfe002c5f5a980f",
+      "fingerprint": "b520e70669e7e77437d499e28034980796298df831a19cf6088b31f3de5d8222",
+      "platform": "android",
+      "subscriptionType": "free",
+      "purchasedCredits": 200,
+      "earnedCredits": 0,
+      "freeCreditsUsed": 400,
+      "freeGenerationsUsed": 40,
+      "firstSeenAt": "2026-04-09T21:37:02.709Z",
+      "updatedAt": "2026-05-29T03:06:04.863+00:00"
+    },
+    {
+      "id": "69d73b9a003aa85f2cd4",
+      "fingerprint": "e49b209a0544f4776e8425b61b201bae763f63cfa9f4f88a4d23574dd266c515",
+      "platform": "android",
+      "subscriptionType": "free",
+      "purchasedCredits": 100,
+      "earnedCredits": 0,
+      "freeCreditsUsed": 8625,
+      "freeGenerationsUsed": 862,
+      "firstSeenAt": "2026-04-09T05:39:38.938Z",
+      "updatedAt": "2026-05-29T00:51:40.008+00:00"
+    },
+    {
+      "id": "69d924f4000aa045eba8",
+      "fingerprint": "a02483a918f5e25fa87d1c5ec69b1ae2789a5ce989d74c25887c87a9fd0ea5a4",
+      "platform": "android",
+      "subscriptionType": "free",
+      "purchasedCredits": 100,
+      "earnedCredits": 0,
+      "freeCreditsUsed": 600,
+      "freeGenerationsUsed": 60,
+      "firstSeenAt": "2026-04-10T16:27:32.170Z",
+      "updatedAt": "2026-05-29T05:14:12.970+00:00"
+    }
+  ]
+}

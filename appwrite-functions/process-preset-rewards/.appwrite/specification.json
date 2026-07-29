@@ -1,0 +1,16 @@
+{
+  "$id": "process-preset-rewards",
+  "name": "Process Preset Rewards",
+  "runtime": "node-18.0",
+  "execute": [],
+  "events": [
+    "databases.main.collections.presets.documents.*.update"
+  ],
+  "schedule": "",
+  "timeout": 60,
+  "enabled": true,
+  "logging": true,
+  "entrypoint": "src/index.js",
+  "commands": "npm install",
+  "scopes": ["databases.write"]
+}
