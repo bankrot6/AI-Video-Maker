@@ -22,6 +22,22 @@ function thumbFileId(presetId) {
   return `th-${safe}`;
 }
 
+// Превью пресета здесь — это видео, а миниатюру пайплайн делает из ключевого
+// кадра ещё до генерации видео. Декодировать mp4 нечем, поэтому такие превью
+// пропускаем: повтор попытки исход не изменит.
+function isDecodableImage(contentType, buffer) {
+  const type = String(contentType ?? '').toLowerCase();
+  if (type.startsWith('video/')) return false;
+  if (type.startsWith('image/')) return true;
+
+  const brand = buffer.subarray(4, 8).toString('latin1');
+  if (brand === 'ftyp') {
+    const subtype = buffer.subarray(8, 12).toString('latin1');
+    return subtype.startsWith('avif') || subtype.startsWith('heic') || subtype.startsWith('mif1');
+  }
+  return true;
+}
+
 export default async ({ req, res, log, error }) => {
   let doc;
   try {
@@ -60,6 +76,11 @@ export default async ({ req, res, log, error }) => {
 
     const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
 
+    if (!isDecodableImage(imgRes.headers.get('content-type'), imageBuffer)) {
+      log(`Preview is not an image for ${presetId}, nothing to resize`);
+      return res.json({ ok: false, skipped: 'not_an_image' });
+    }
+
     log('Generating WebP thumbnail…');
     const thumb = await sharp(imageBuffer)
       .resize(THUMBNAIL_WIDTH, null, { withoutEnlargement: true })
@@ -88,6 +109,12 @@ export default async ({ req, res, log, error }) => {
     log(`Done: ${thumbUrl}`);
     return res.json({ ok: true, thumbnailUrl: thumbUrl });
   } catch (err) {
+    // Нераспознанный формат не лечится повтором, поэтому отвечаем успехом:
+    // иначе Appwrite будет заново дёргать функцию на каждое обновление пресета.
+    if (/unsupported image format|Input buffer contains/i.test(err.message)) {
+      log(`Undecodable preview for ${presetId}: ${err.message}`);
+      return res.json({ ok: false, skipped: 'undecodable' });
+    }
     error(`Failed for ${presetId}: ${err.message}`);
     return res.json({ ok: false, error: err.message }, 500);
   }
