@@ -5,7 +5,7 @@
   "entrypoint": "src/main.js",
   "execute": [],
   "events": [],
-  "schedule": "0 */4 * * *",
+  "schedule": "40 1 * * *",
   "timeout": 900,
   "enabled": true,
   "logging": true,
