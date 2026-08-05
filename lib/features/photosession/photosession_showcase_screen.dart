@@ -17,6 +17,8 @@ import '../../config/credit_config.dart';
 import '../../providers/credit_providers.dart';
 import '../../services/credit_service.dart';
 import '../../services/device_registry_service.dart';
+import '../../services/generated_media.dart';
+import '../../services/video_poster_service.dart';
 import '../../services/localization/app_localization_service.dart';
 import '../../services/post_photosession_review_service.dart';
 import '../../services/proxied_image_service.dart';
@@ -29,6 +31,7 @@ import '../subscription/purchase_routes.dart';
 import '../subscription/subscription_providers.dart';
 import 'background_generation_provider.dart';
 import 'custom_preset_creation_screen.dart';
+import 'manual_prompt_creation_screen.dart';
 import 'photosession_generation_screen.dart';
 import 'photosession_providers.dart';
 import 'preset_likes_provider.dart';
@@ -39,6 +42,9 @@ import 'theme/photosession_theme_scope.dart';
 import 'tutorial/photosession_tutorial.dart';
 import 'widgets/photosession_theme_toggle.dart';
 import '../../widgets/generated_media_view.dart';
+
+/// Способ создания видео, который пользователь выбирает по кнопке «+».
+enum _CreationMode { byIdea, byOwnPrompt }
 
 const _kSpacing = 6.0;
 const _kPadding = 12.0;
@@ -368,11 +374,19 @@ class _PhotosessionShowcaseScreenState
       Future.delayed(Duration(milliseconds: i * 50), () {
         if (!mounted) return;
         final thumbUrl = preset.displayImageUrl.trim();
-        if (thumbUrl.isNotEmpty) svc.prefetch([thumbUrl]);
+        if (thumbUrl.isEmpty) return;
+        if (GeneratedMedia.isVideo(thumbUrl)) {
+          // У пресета нет готовой обложки — греем кадр, а не само видео.
+          unawaited(VideoPosterService().poster(thumbUrl));
+          return;
+        }
+        svc.prefetch([thumbUrl]);
         Future.delayed(const Duration(milliseconds: 100), () {
           if (!mounted) return;
           final fullUrl = preset.previewImageUrl.trim();
-          if (fullUrl.isNotEmpty && fullUrl != thumbUrl) {
+          if (fullUrl.isNotEmpty &&
+              fullUrl != thumbUrl &&
+              !GeneratedMedia.isVideo(fullUrl)) {
             svc.prefetch([fullUrl]);
           }
         });
@@ -509,7 +523,14 @@ class _PhotosessionShowcaseScreenState
     final thumbSeen = <String>{};
     for (final p in presets.take(_kPrefetchThumbAheadCount)) {
       final u = p.displayImageUrl.trim();
-      if (u.isNotEmpty && thumbSeen.add(u)) thumbUrls.add(u);
+      if (u.isEmpty || !thumbSeen.add(u)) continue;
+      // Видео в сетке показывается кадром, поэтому и греть нужно кадр:
+      // прогрев самого ролика забил бы кэш изображений мегабайтами.
+      if (GeneratedMedia.isVideo(u)) {
+        unawaited(VideoPosterService().poster(u));
+      } else {
+        thumbUrls.add(u);
+      }
     }
     svc.prefetch(thumbUrls);
 
@@ -519,7 +540,9 @@ class _PhotosessionShowcaseScreenState
       final seen = Set<String>.from(thumbSeen);
       for (final p in presets.take(_kPrefetchFullPreviewCount)) {
         final u = p.previewImageUrl.trim();
-        if (u.isEmpty || seen.contains(u)) continue;
+        if (u.isEmpty || seen.contains(u) || GeneratedMedia.isVideo(u)) {
+          continue;
+        }
         seen.add(u);
         fullUrls.add(u);
       }
@@ -768,11 +791,19 @@ class _PhotosessionShowcaseScreenState
   }
 
   Future<void> _openCreateScreen() async {
+    final mode = await _askCreationMode();
+    if (mode == null || !mounted) return;
+
     final canOpenTextGeneration = await _ensureTextGenerationCredits();
     if (!canOpenTextGeneration || !mounted) return;
 
     final customResult = await Navigator.of(context).push<bool>(
-      photosessionRoute<bool>(const CustomPresetCreationScreen()),
+      photosessionRoute<bool>(
+        switch (mode) {
+          _CreationMode.byIdea => const CustomPresetCreationScreen(),
+          _CreationMode.byOwnPrompt => const ManualPromptCreationScreen(),
+        },
+      ),
     );
     if (!mounted) return;
 
@@ -780,6 +811,16 @@ class _PhotosessionShowcaseScreenState
     if (customResult == true) {
       ref.read(selectedPresetTagIdProvider.notifier).state = PresetTag.idAll;
     }
+  }
+
+  /// Спрашивает, писать ли промпт самому или доверить его сборку ИИ.
+  Future<_CreationMode?> _askCreationMode() {
+    return showModalBottomSheet<_CreationMode>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => const _CreationModeSheet(),
+    );
   }
 
   Future<bool> _ensureTextGenerationCredits() async {
@@ -942,7 +983,7 @@ class _PhotosessionShowcaseScreenState
         id: 'showcase_filters',
         title: 'Что такое пресеты',
         description:
-            'Пресеты - это готовые идеи видео с уже продуманными сценами, стилем и настроением. Теги помогают быстро сузить подборку: "Все", "В тренде", "Лайки" или "Мои".',
+            'Пресеты — готовые идеи коротких роликов: сцена, стиль, движение камеры и настроение уже продуманы. Теги быстро сужают ленту: «Все», «В тренде», «Лайки» или «Мои».',
         icon: Icons.grid_view_rounded,
         align: ContentAlign.bottom,
       ));
@@ -952,9 +993,9 @@ class _PhotosessionShowcaseScreenState
       steps.add((
         key: _searchActionKey,
         id: 'showcase_search',
-        title: 'Быстрый поиск по пресетам',
+        title: 'Быстрый поиск по роликам',
         description:
-            'Нажмите на поиск или зажмите строку тегов, чтобы раскрыть полноширинный поиск. Он ищет по названию, описанию сцены и тегам, а вернуться обратно к тегам можно одной кнопкой.',
+            'Нажмите на поиск или зажмите строку тегов, чтобы раскрыть полноширинный поиск. Он ищет по названию, описанию сцены и тегам; вернуться к тегам можно одной кнопкой.',
         icon: Icons.search_rounded,
         align: ContentAlign.bottom,
       ));
@@ -964,10 +1005,10 @@ class _PhotosessionShowcaseScreenState
       steps.add((
         key: _createFabKey,
         id: 'showcase_create',
-        title: 'Создайте свою идею',
+        title: 'Создайте своё видео',
         description:
-            'Нажмите "+", если хотите не брать готовую идею, а собрать видео под себя: по текстовому описанию или по референсу.',
-        icon: Icons.auto_awesome_rounded,
+            'Нажмите «+», чтобы собрать ролик с нуля. Откроется меню: по короткому описанию (ИИ допишет промпт) или сразу своим готовым промптом.',
+        icon: Icons.videocam_rounded,
         align: ContentAlign.top,
       ));
     }
@@ -980,10 +1021,10 @@ class _PhotosessionShowcaseScreenState
       (
         key: _firstPresetCardKey,
         id: 'showcase_preset',
-        title: 'Готовые пресеты',
+        title: 'Готовые ролики',
         description:
-            'Здесь уже есть готовые идеи видео. Откройте любую карточку, чтобы посмотреть пример, добавить своё фото, выбрать модель и при желании поправить описание сцены.',
-        icon: Icons.style_rounded,
+            'Откройте карточку, чтобы посмотреть пример клипа, выбрать модель генерации и при желании поправить описание сцены — затем запустите своё видео по этой идее.',
+        icon: Icons.movie_creation_outlined,
         align: ContentAlign.bottom,
       ),
       (
@@ -991,7 +1032,7 @@ class _PhotosessionShowcaseScreenState
         id: 'showcase_likes',
         title: 'Лайки на пресетах',
         description:
-            'Так пользователи отмечают понравившиеся идеи. Если вы создадите свой удачный публичный пресет, он тоже сможет собирать лайки и приносить вам кредиты.',
+            'Так отмечают удачные идеи роликов. Если вы опубликуете свой пресет, он тоже сможет собирать лайки и приносить вам кредиты.',
         icon: Icons.favorite_rounded,
         align: ContentAlign.bottom,
       ),
@@ -1862,8 +1903,11 @@ class _PresetCardState extends ConsumerState<_PresetCard> {
   @override
   void initState() {
     super.initState();
+    // Серверная функция умеет уменьшать только изображения. Для видео обложку
+    // строит сам клиент из первого кадра, поэтому дёргать её незачем.
     if (widget.preset.thumbnailUrl == null &&
-        !isFaceSwapPresetId(widget.preset.id)) {
+        !isFaceSwapPresetId(widget.preset.id) &&
+        !GeneratedMedia.isVideo(widget.preset.previewImageUrl)) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _requestThumbnail());
     }
   }
@@ -2394,6 +2438,288 @@ class _SubscriptionBannerState extends ConsumerState<_SubscriptionBanner> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Нижнее меню «+»: выбор режима создания + обучение при первом открытии.
+class _CreationModeSheet extends ConsumerStatefulWidget {
+  const _CreationModeSheet();
+
+  @override
+  ConsumerState<_CreationModeSheet> createState() => _CreationModeSheetState();
+}
+
+class _CreationModeSheetState extends ConsumerState<_CreationModeSheet> {
+  final _byIdeaKey = GlobalKey();
+  final _byOwnPromptKey = GlobalKey();
+  bool _isTutorialVisible = false;
+  bool _didTryAutoTutorial = false;
+  bool _autoTutorialChain = false;
+  TutorialCoachMark? _activeCoachMark;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleTutorialIfNeeded();
+    });
+  }
+
+  @override
+  void dispose() {
+    _activeCoachMark?.finish();
+    _activeCoachMark = null;
+    super.dispose();
+  }
+
+  void _scheduleTutorialIfNeeded({bool force = false}) {
+    if (!mounted || _isTutorialVisible) return;
+
+    runPhotosessionAutoTutorialChain(
+      context: context,
+      ref: ref,
+      force: force,
+      scenario: PhotosessionTutorialScenario.creationMode,
+      schedulingGateOk: () => mounted && !_isTutorialVisible,
+      buildTargets: _buildTutorialTargets,
+      getDidTryAuto: () => _didTryAutoTutorial,
+      setDidTryAuto: (v) => _didTryAutoTutorial = v,
+      getChainActive: () => _autoTutorialChain,
+      setChainActive: (v) => _autoTutorialChain = v,
+      onShow: (targets) {
+        final store = ref.read(photosessionTutorialStoreProvider);
+        final palette = PhotosessionPalette.of(context);
+        setState(() => _isTutorialVisible = true);
+        final coach = TutorialCoachMark(
+          targets: targets,
+          colorShadow: palette.depth,
+          opacityShadow: 0.78,
+          hideSkip: true,
+          paddingFocus: 10,
+          pulseEnable: false,
+          beforeFocus: photosessionTutorialBeforeFocus(targets),
+          onFinish: () async {
+            _activeCoachMark = null;
+            if (mounted) setState(() => _isTutorialVisible = false);
+            await store.markSeen(PhotosessionTutorialScenario.creationMode);
+          },
+          onSkip: () {
+            _activeCoachMark = null;
+            if (mounted) setState(() => _isTutorialVisible = false);
+            store.markSeen(PhotosessionTutorialScenario.creationMode);
+            return true;
+          },
+        );
+        _activeCoachMark = coach;
+        coach.showForPhotosession(context);
+      },
+    );
+  }
+
+  List<TargetFocus> _buildTutorialTargets() {
+    final steps = <({
+      GlobalKey key,
+      String id,
+      String title,
+      String description,
+      IconData icon,
+    })>[];
+
+    if (_byIdeaKey.currentContext != null) {
+      steps.add((
+        key: _byIdeaKey,
+        id: 'creation_by_idea',
+        title: 'По описанию',
+        description:
+            'Короткая идея своими словами: «кот на Марсе», «робот танцует». '
+            'ИИ сам соберёт подробный промпт со сценой и движением — его можно '
+            'подправить перед генерацией. Удобно, если не хотите писать длинный текст.',
+        icon: Icons.auto_awesome_rounded,
+      ));
+    }
+
+    if (_byOwnPromptKey.currentContext != null) {
+      steps.add((
+        key: _byOwnPromptKey,
+        id: 'creation_by_own_prompt',
+        title: 'Свой промпт',
+        description:
+            'Пишете полный промпт сами — он уйдёт в модель как есть, без доработки ИИ. '
+            'Берите этот режим, если уже знаете формулировку или хотите полный контроль.',
+        icon: Icons.edit_note_rounded,
+      ));
+    }
+
+    return [
+      for (var i = 0; i < steps.length; i++)
+        buildPhotosessionTutorialTarget(
+          context: context,
+          key: steps[i].key,
+          id: steps[i].id,
+          title: steps[i].title,
+          description: steps[i].description,
+          step: i + 1,
+          total: steps.length,
+          icon: steps[i].icon,
+          align: ContentAlign.top,
+        ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return PhotosessionThemeScope(
+      child: PopScope(
+        canPop: !_isTutorialVisible,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Как создать видео?',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ),
+                      PhotosessionTutorialHelpButton(
+                        plain: true,
+                        tooltip: 'Чем отличаются режимы',
+                        onPressed: () =>
+                            _scheduleTutorialIfNeeded(force: true),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        tooltip: 'Закрыть',
+                        onPressed: _isTutorialVisible
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _CreationModeOption(
+                    key: _byIdeaKey,
+                    icon: Icons.auto_awesome_rounded,
+                    title: 'По описанию',
+                    subtitle: 'Опишите идею в двух словах — ИИ соберёт '
+                        'подробный промпт и покажет его перед генерацией',
+                    onTap: _isTutorialVisible
+                        ? null
+                        : () =>
+                            Navigator.of(context).pop(_CreationMode.byIdea),
+                  ),
+                  const SizedBox(height: 12),
+                  _CreationModeOption(
+                    key: _byOwnPromptKey,
+                    icon: Icons.edit_note_rounded,
+                    title: 'Свой промпт',
+                    subtitle: 'Уже знаете, что писать: текст уйдёт в модель '
+                        'как есть, без доработки ИИ',
+                    onTap: _isTutorialVisible
+                        ? null
+                        : () => Navigator.of(context)
+                            .pop(_CreationMode.byOwnPrompt),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Пункт меню выбора способа создания видео.
+class _CreationModeOption extends StatelessWidget {
+  const _CreationModeOption({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.outline.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: colors.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: colors.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colors.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
           ),
         ),
       ),

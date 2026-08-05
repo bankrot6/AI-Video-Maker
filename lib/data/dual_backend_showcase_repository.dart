@@ -75,6 +75,7 @@ class DualBackendShowcaseRepository implements ShowcaseRepository {
     String? ownerId,
     String? clientAssignedPresetId,
     String? pairedPreviewImageUrl,
+    String? thumbnailUrl,
   }) async {
     final presetId = clientAssignedPresetId ??
         _uuid.v4().replaceAll('-', '').substring(0, 24);
@@ -93,6 +94,7 @@ class DualBackendShowcaseRepository implements ShowcaseRepository {
       ownerId: ownerId,
       clientAssignedPresetId: presetId,
       pairedPreviewImageUrl: null,
+      thumbnailUrl: thumbnailUrl,
     );
     debugPrint(
       'DualBackendShowcaseRepository: primary createPreset OK id=${primaryCreated.id}, '
@@ -106,6 +108,7 @@ class DualBackendShowcaseRepository implements ShowcaseRepository {
       imageStyle: imageStyle,
       ownerId: ownerId,
       presetId: presetId,
+      thumbnailUrl: thumbnailUrl,
     ));
     return primaryCreated;
   }
@@ -118,6 +121,7 @@ class DualBackendShowcaseRepository implements ShowcaseRepository {
     String? imageStyle,
     String? ownerId,
     required String presetId,
+    String? thumbnailUrl,
   }) async {
     try {
       debugPrint(
@@ -133,6 +137,7 @@ class DualBackendShowcaseRepository implements ShowcaseRepository {
         ownerId: ownerId,
         clientAssignedPresetId: presetId,
         pairedPreviewImageUrl: null,
+        thumbnailUrl: thumbnailUrl,
       );
       debugPrint(
         'DualBackendShowcaseRepository: mirror createPreset завершён id=$presetId',

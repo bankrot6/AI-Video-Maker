@@ -418,7 +418,7 @@ deploy_function "repair-preset-permissions" "Repair Preset Permissions" \
   APPWRITE_GENERATIONS_COLLECTION_ID "$GENERATIONS_COLL" \
   REPAIR_PRESET_PERMISSIONS_PAGE_SIZE "50"
 
-deploy_function "daily-preset-pipeline" "Daily Preset Pipeline" \
+deploy_function "daily-preset-pipeline" "Daily Video Preset Pipeline" \
   "[]" "0 */8 * * *" 900 \
   APPWRITE_ENDPOINT       "$ENDPOINT" \
   APPWRITE_PROJECT_ID     "$PROJECT_ID" \
@@ -432,7 +432,10 @@ deploy_function "daily-preset-pipeline" "Daily Preset Pipeline" \
   NL_PROXY_TOKEN          "$NL_PROXY_TOKEN" \
   AI_PROXY_PIAPI_PORT     "$AI_PROXY_PIAPI_PORT" \
   AI_PROXY_DEEPSEEK_PORT  "$AI_PROXY_DEEPSEEK_PORT" \
-  YANDEX_AI_RELAY_BASE_URL "$YANDEX_AI_RELAY_BASE_URL"
+  YANDEX_AI_RELAY_BASE_URL "$YANDEX_AI_RELAY_BASE_URL" \
+  APIBOST_MODEL           "$(get_env "APIBOST_MODEL" "gemini-3-pro-image-preview")" \
+  APIBOST_VIDEO_MODEL     "$(get_env "APIBOST_VIDEO_MODEL" "veo3.1-lite")" \
+  DAILY_PRESET_PIPELINE_COUNT "$(get_env "DAILY_PRESET_PIPELINE_COUNT" "1")"
 
 deploy_function "manage-presets" "Manage Presets" \
   "[]" "" 900 \
@@ -497,7 +500,12 @@ deploy_function "verify-rustore-purchase" "Verify RuStore Purchase" \
 
 # Открываем execute-права для всех (клиентский SDK без авторизации)
 echo ""
-echo "=== Setting execute permissions for verify-trial, apibost-proxy, ad-creative-generator and verify-rustore-purchase ==="
+echo "=== Setting execute permissions for generate-thumbnail, verify-trial, apibost-proxy, ad-creative-generator and verify-rustore-purchase ==="
+aw_put "functions/generate-thumbnail" \
+  "{\"functionId\":\"generate-thumbnail\",\"name\":\"Generate Preset Thumbnail\",\"runtime\":\"${NODE_RUNTIME}\",\"execute\":[\"any\"],\"events\":$DB_EVENTS,\"schedule\":\"\",\"timeout\":120,\"enabled\":true,\"logging\":true,\"entrypoint\":\"src/index.js\",\"commands\":\"npm install\"}" \
+  > /dev/null
+echo "  generate-thumbnail execute=[\"any\"] set"
+
 aw_put "functions/verify-trial" \
   "{\"functionId\":\"verify-trial\",\"name\":\"Verify Trial\",\"runtime\":\"${NODE_RUNTIME}\",\"execute\":[\"any\"],\"events\":[],\"schedule\":\"\",\"timeout\":15,\"enabled\":true,\"logging\":true,\"entrypoint\":\"src/index.js\",\"commands\":\"npm install\"}" \
   > /dev/null

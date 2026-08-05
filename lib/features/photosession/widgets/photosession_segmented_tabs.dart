@@ -61,7 +61,7 @@ class PhotosessionSegmentedTabs extends StatelessWidget {
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected
-                          ? palette.background
+                          ? palette.onAccent
                           : colors.onSurface.withValues(alpha: 0.6),
                     ),
                   ),

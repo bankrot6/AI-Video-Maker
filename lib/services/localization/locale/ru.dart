@@ -31,7 +31,7 @@ Map<String, String> ru = {
   'weekly_subscription': 'Недельная подписка',
   'monthly_subscription': 'Месячная подписка',
   'yearly_subscription': 'Годовая подписка',
-  'unlimited_access': 'Создавайте фотосессии без ограничений',
+  'unlimited_access': 'Создавайте видео без ограничений',
   'save_50': 'Экономия 50%',
   'week': 'Неделя',
   '1_month': '1 месяц',

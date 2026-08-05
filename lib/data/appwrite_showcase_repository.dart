@@ -213,6 +213,7 @@ class AppwriteShowcaseRepository implements ShowcaseRepository {
     String? ownerId,
     String? clientAssignedPresetId,
     String? pairedPreviewImageUrl,
+    String? thumbnailUrl,
   }) async {
     assert(
       pairedPreviewImageUrl == null ||
@@ -238,25 +239,45 @@ class AppwriteShowcaseRepository implements ShowcaseRepository {
           ]
         : <String>[Permission.read(Role.any())];
 
+    final data = <String, dynamic>{
+      'prompt': prompt,
+      'previewImageUrl': previewImageUrl,
+      if (title != null && title.isNotEmpty) 'title': title,
+      if (tagList.isNotEmpty) 'tags': tagList,
+      if (imageStyle != null && imageStyle.isNotEmpty) 'imageStyle': imageStyle,
+      'createdAt': DateTime.now().toIso8601String(),
+      if (ownerId != null && ownerId.isNotEmpty) 'ownerId': ownerId,
+      'isPublic': true,
+      'likesCount': 0,
+      'likedBy': <String>[],
+    };
+    final thumbnailData = thumbnailUrl != null && thumbnailUrl.isNotEmpty
+        ? <String, dynamic>{
+            'thumbnailUrl': thumbnailUrl,
+            'thumbnailSourceUrl': previewImageUrl,
+          }
+        : const <String, dynamic>{};
+
+    Future<Document> create(Map<String, dynamic> payload) => db.createDocument(
+          databaseId: _databaseId,
+          collectionId: _collectionId,
+          documentId: docId,
+          data: payload,
+          permissions: permissions,
+        );
+
     try {
-      final doc = await db.createDocument(
-        databaseId: _databaseId,
-        collectionId: _collectionId,
-        documentId: docId,
-        data: {
-          'prompt': prompt,
-          'previewImageUrl': previewImageUrl,
-          if (title != null && title.isNotEmpty) 'title': title,
-          if (tagList.isNotEmpty) 'tags': tagList,
-          if (imageStyle != null && imageStyle.isNotEmpty) 'imageStyle': imageStyle,
-          'createdAt': DateTime.now().toIso8601String(),
-          if (ownerId != null && ownerId.isNotEmpty) 'ownerId': ownerId,
-          'isPublic': true,
-          'likesCount': 0,
-          'likedBy': <String>[],
-        },
-        permissions: permissions,
-      );
+      Document doc;
+      try {
+        doc = await create({...data, ...thumbnailData});
+      } on AppwriteException catch (e) {
+        // Коллекции старых окружений могут не знать полей обложки — пресет
+        // важнее её, поэтому повтор идёт без них.
+        if (thumbnailData.isEmpty || !_isUnknownAttribute(e)) rethrow;
+        debugPrint('AppwriteShowcaseRepository: нет полей обложки, '
+            'создаём пресет без них: ${e.message}');
+        doc = await create(data);
+      }
       final preset = _documentToPreset(doc);
       if (preset != null) return preset;
     } catch (e, st) {
@@ -265,6 +286,9 @@ class AppwriteShowcaseRepository implements ShowcaseRepository {
     }
     throw StateError('Не удалось создать пресет');
   }
+
+  static bool _isUnknownAttribute(AppwriteException e) =>
+      (e.message ?? '').toLowerCase().contains('unknown attribute');
 
   @override
   Stream<List<PhotoSessionPreset>> watchPresets({int limit = 0}) async* {

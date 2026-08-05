@@ -4,6 +4,7 @@ import '../models/image_generation_request.dart';
 import '../models/preset_tag.dart';
 import 'apibost_model_catalog.dart';
 import 'nutrition_analysis/deepseek/deepseek_client.dart';
+import 'prompt_length_guard.dart';
 
 /// Превращает короткую идею пользователя в детальный промпт для генератора.
 abstract class ImagePromptService {
@@ -23,7 +24,19 @@ class DeepSeekImagePromptService
 
   final DeepSeekClient _client;
 
-  static const String _systemPrompt = '''
+  /// Лимит подставляется из каталога моделей, а не пишется числом в тексте:
+  /// иначе инструкция и реальный предел разъезжаются при смене модели.
+  static final String _systemPrompt = _systemPromptTemplate.replaceFirst(
+    _lengthLimitPlaceholder,
+    PromptLengthGuard.instruction(_promptLimit),
+  );
+
+  static const int _promptLimit =
+      ApiBostModelCatalog.videoPromptGenerationTarget;
+
+  static const String _lengthLimitPlaceholder = '{{LENGTH_LIMIT}}';
+
+  static const String _systemPromptTemplate = '''
 Ты — профессиональный промпт-инженер для генеративных моделей видео (Google Veo 3.1). Пользователь описывает идею буквально несколькими словами. Твоя задача — превратить её в детальный промпт на русском языке, по которому модель гарантированно снимет красивый и осмысленный видеоролик.
 
 ТЕХНИЧЕСКИЕ ОГРАНИЧЕНИЯ МОДЕЛИ (учитывай при построении промпта):
@@ -32,7 +45,7 @@ class DeepSeekImagePromptService
 - Соотношение сторон приходит в запросе — учитывай его в композиции. Для вертикального кадра строй композицию по вертикали, для горизонтального — по горизонтали.
 - Модель генерирует звук — его нужно описать явно.
 - Не вставляй в текст промпта служебные директивы в квадратных скобках вида [9:16] или [8s] — их подставляет приложение.
-- Жёсткий лимит длины: весь промпт не длиннее 1800 символов вместе с заголовками и переносами строк. Более длинный промпт модель не примет. Держись нижней границы диапазонов предложений в блоках, пиши плотно, без повторов и общих слов.
+- {{LENGTH_LIMIT}}
 
 ОБЯЗАТЕЛЬНАЯ СТРУКТУРА (используй ровно эти заголовки, каждый с новой строки):
 
@@ -69,6 +82,7 @@ class DeepSeekImagePromptService
 КРИТИЧЕСКИЕ ПРАВИЛА:
 - Видео может быть про что угодно: предмет, животное, пейзаж, еда, техника, абстракция, персонаж, интерьер. НЕ превращай запрос в съёмку человека.
 - НЕ добавляй людей, если пользователь о них не просил.
+- Фильтр безопасности Veo отклоняет промпт, если человек описан без возраста. Каждому человеку в кадре указывай явный взрослый возраст («молодая женщина, около 25 лет»), одежду описывай сдержанно, а ракурсы формулируй как операторский приём, а не как скрытую съёмку. Не упоминай реальных людей, знаменитостей, бренды, оружие и насилие.
 - Не меняй суть идеи — только дополняй её конкретикой.
 - Каждая деталь должна быть визуальной: «матовая керамика с трещинами глазури», а не «красивая посуда».
 - Движение обязательно должно быть в промпте: статичная картинка без изменений — плохой результат для видео.
@@ -84,11 +98,24 @@ class DeepSeekImagePromptService
     try {
       final response = await _client.generateText('$_systemPrompt\n\n$userPrompt');
       final cleaned = _stripWrappers(response.trim());
-      return cleaned.isEmpty ? null : cleaned;
+      if (cleaned.isEmpty) return null;
+      return PromptLengthGuard.enforce(
+        cleaned,
+        limit: _promptLimit,
+        compress: _compress,
+        tag: 'ImagePromptService',
+      );
     } catch (e) {
       debugPrint('ImagePromptService: $e');
       return null;
     }
+  }
+
+  Future<String?> _compress(String text, int limit) async {
+    final response = await _client.generateText(
+      '${PromptLengthGuard.compressionInstruction(limit)}\n\n$text',
+    );
+    return _stripWrappers(response.trim());
   }
 
   String _buildUserMessage(ImageGenerationRequest request) {

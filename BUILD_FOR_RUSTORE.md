@@ -98,18 +98,18 @@ ID: aivideomaker.yearly.rustore
 #### Создайте consumable товары (кредиты):
 
 ```
-ID: aivideomaker.credits.50.rustore
-Название: Малый пакет (50 кредитов)
+ID: aivideomaker.credits.40.rustore
+Название: Малый пакет (40 кредитов)
 Тип: Consumable
 Цена: 149 ₽
 
-ID: aivideomaker.credits.200.rustore
-Название: Средний пакет (200 кредитов)
+ID: aivideomaker.credits.150.rustore
+Название: Средний пакет (150 кредитов)
 Тип: Consumable
 Цена: 449 ₽
 
-ID: aivideomaker.credits.600.rustore
-Название: Большой пакет (600 кредитов)
+ID: aivideomaker.credits.400.rustore
+Название: Большой пакет (400 кредитов)
 Тип: Consumable
 Цена: 999 ₽
 ```

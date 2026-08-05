@@ -7,6 +7,7 @@ import '../../models/photo_session_preset.dart';
 import '../../models/photosession_provider.dart';
 import '../../models/preset_tag.dart';
 import '../../providers/credit_providers.dart';
+import '../subscription/subscription_providers.dart';
 import '../../services/prompt_sections.dart';
 import '../../widgets/edit_text/full_screen_text_editor_screen.dart';
 import 'background_generation_provider.dart';
@@ -16,6 +17,8 @@ import 'photosession_support_error.dart';
 import 'theme/photosession_palette.dart';
 import 'theme/photosession_theme_scope.dart';
 import 'tutorial/photosession_tutorial.dart';
+import 'widgets/model_selection.dart';
+import 'widgets/option_chips_row.dart';
 import 'widgets/photosession_segmented_tabs.dart';
 import '../subscription/purchase_routes.dart';
 
@@ -36,22 +39,9 @@ class _CustomPresetCreationScreenState
   static ButtonStyle _brownActionButtonStyle(PhotosessionPalette palette) =>
       FilledButton.styleFrom(
         backgroundColor: palette.accent,
-        foregroundColor: palette.background,
+        foregroundColor: palette.onAccent,
         disabledBackgroundColor: palette.surface,
         disabledForegroundColor: palette.textSecondary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      );
-
-  static ButtonStyle _oliveOutlineButtonStyle(PhotosessionPalette palette) =>
-      OutlinedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 54),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        backgroundColor: palette.surfaceHigh.withValues(alpha: 0.45),
-        foregroundColor: palette.accent,
-        disabledForegroundColor: palette.textSecondary,
-        side: BorderSide(color: palette.accentMuted, width: 1.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -77,14 +67,14 @@ class _CustomPresetCreationScreenState
 
   int _selectedTab = 0;
   ImageStyle _selectedStyle = ImageStyle.auto;
-  ImageFormat _selectedFormat = ImageFormat.portrait;
+  ImageFormat _selectedFormat = ImageFormat.story;
   ImageMood _selectedMood = ImageMood.auto;
   String? _generatedPrompt;
   final Map<String, String> _editedSections = {};
   bool _loading = false;
   String? _error;
   int _revealedSectionCount = 0;
-  PhotosessionProvider _selectedProvider = PhotosessionProvider.googleFlash;
+  PhotosessionProvider _selectedProvider = PhotosessionProvider.veoFast;
   bool _isTutorialVisible = false;
   bool _didTryAutoTutorial = false;
   bool _didTryResultTutorial = false;
@@ -205,7 +195,7 @@ class _CustomPresetCreationScreenState
   Future<void> _generatePrompt() async {
     final request = _request;
     if (!request.isValid) {
-      setState(() => _error = 'Напишите, что нужно нарисовать');
+      setState(() => _error = 'Напишите, что должно происходить в видео');
       return;
     }
 
@@ -243,7 +233,7 @@ class _CustomPresetCreationScreenState
 
       if (prompt == null || prompt.isEmpty) {
         setState(() {
-          _error = 'Не удалось создать описание изображения';
+          _error = 'Не удалось создать описание ролика';
           _loading = false;
         });
         return;
@@ -267,6 +257,16 @@ class _CustomPresetCreationScreenState
     }
   }
 
+  Future<void> _pickModel() async {
+    final selected = await showModelSelectionSheet(
+      context: context,
+      selected: _selectedProvider,
+    );
+    if (selected != null && mounted) {
+      setState(() => _selectedProvider = selected);
+    }
+  }
+
   Future<void> _revealSectionsProgressively() async {
     final sections = _parsePromptSections(_generatedPrompt!);
     final count = sections.length;
@@ -279,7 +279,7 @@ class _CustomPresetCreationScreenState
 
   Future<void> _generatePreset() async {
     if (_generatedPrompt == null) {
-      setState(() => _error = 'Сначала создайте описание изображения');
+      setState(() => _error = 'Сначала создайте описание ролика');
       return;
     }
 
@@ -325,7 +325,7 @@ class _CustomPresetCreationScreenState
           final palette = PhotosessionPalette.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(_creditFailureMessage(result.reason)),
+              content: Text(creditReservationFailureMessage(result.reason)),
               backgroundColor: palette.danger,
             ),
           );
@@ -347,21 +347,6 @@ class _CustomPresetCreationScreenState
           backgroundColor: palette.danger,
         ),
       );
-    }
-  }
-
-  String _creditFailureMessage(String? reason) {
-    switch (reason) {
-      case 'server_unconfigured':
-        return 'Сервис кредитов не настроен в этой сборке';
-      case 'device_not_registered':
-        return 'Устройство не зарегистрировано на сервере. '
-            'Проверьте интернет и перезапустите приложение';
-      case 'server_unavailable':
-        return 'Сервер кредитов недоступен. Проверьте интернет '
-            'и попробуйте ещё раз';
-      default:
-        return 'Не удалось подготовить списание кредитов';
     }
   }
 
@@ -495,9 +480,9 @@ class _CustomPresetCreationScreenState
         steps.add((
           key: _ideaKey,
           id: 'custom_idea',
-          title: 'Опишите идею',
+          title: 'Опишите идею ролика',
           description:
-              'Напишите, что нужно нарисовать — хватит нескольких слов: «кот-астронавт на Марсе», «логотип для пекарни». Остальное AI придумает сам.',
+              'Напишите, что должно происходить в видео — хватит нескольких слов: «кот-астронавт на Марсе», «танцующий робот в неоне». Остальное AI додумает сам.',
           icon: Icons.lightbulb_outline_rounded,
           align: ContentAlign.bottom,
         ));
@@ -508,7 +493,7 @@ class _CustomPresetCreationScreenState
           id: 'custom_text_on_image',
           title: 'Добавьте надпись',
           description:
-              'Если на картинке нужен текст — поздравление, название, слоган — впишите его здесь дословно, и он появится на изображении.',
+              'Если в ролике нужен текст — поздравление, название, слоган — впишите его здесь дословно, и он появится в кадре.',
           icon: Icons.title_rounded,
           align: ContentAlign.top,
         ));
@@ -517,9 +502,9 @@ class _CustomPresetCreationScreenState
         steps.add((
           key: _descriptionButtonKey,
           id: 'custom_generate_prompt',
-          title: 'Соберите описание',
+          title: 'Соберите промпт для видео',
           description:
-              'Эта кнопка превращает вашу идею в подробный промпт. Потом его можно вручную поправить и сразу перейти к генерации.',
+              'Кнопка превращает идею в подробное описание сцены и движения. Потом его можно поправить вручную и сразу перейти к генерации.',
           icon: Icons.auto_awesome_rounded,
           align: ContentAlign.top,
         ));
@@ -531,7 +516,7 @@ class _CustomPresetCreationScreenState
           id: 'custom_tabs',
           title: 'Двигайтесь по шагам',
           description:
-              'Сначала идея, затем готовый промпт. Возвращайтесь на любой шаг в любой момент.',
+              'Сначала идея, затем готовый промпт для ролика. На любой шаг можно вернуться в любой момент.',
           icon: Icons.view_day_rounded,
           align: ContentAlign.bottom,
         ));
@@ -540,9 +525,9 @@ class _CustomPresetCreationScreenState
         steps.add((
           key: _promptCardKey,
           id: 'custom_prompt_edit',
-          title: 'Исправьте описание вручную',
+          title: 'Подправьте описание ролика',
           description:
-              'Нажмите на любой блок, чтобы поправить объект, фон, свет, цвет или технические детали. Самый быстрый способ подогнать картинку под себя.',
+              'Нажмите на блок, чтобы изменить объект, фон, свет, движение или технические детали. Самый быстрый способ подогнать клип под себя.',
           icon: Icons.edit_rounded,
           align: ContentAlign.bottom,
         ));
@@ -551,9 +536,9 @@ class _CustomPresetCreationScreenState
         steps.add((
           key: _photoModelSelectorKey,
           id: 'custom_model',
-          title: 'Выберите модель генерации',
+          title: 'Выберите модель видео',
           description:
-              'Для первых тестов начните с обычной модели, а для сложных сцен и максимальной детализации переключайтесь на PRO.',
+              'Для первых тестов начните с обычной модели, а для сложных сцен и более плавного движения переключайтесь на PRO.',
           icon: Icons.auto_awesome_mosaic_rounded,
           align: ContentAlign.top,
         ));
@@ -562,10 +547,10 @@ class _CustomPresetCreationScreenState
         steps.add((
           key: _photoGenerateButtonKey,
           id: 'custom_generate',
-          title: 'Создайте изображение',
+          title: 'Создайте видео',
           description:
-              'После генерации вы получите готовую картинку: её можно сохранить, отправить друзьям и при желании открыть для сообщества.',
-          icon: Icons.auto_fix_high_rounded,
+              'После генерации вы получите готовый клип: его можно сохранить, отправить друзьям и при желании открыть для сообщества.',
+          icon: Icons.videocam_rounded,
           align: ContentAlign.top,
         ));
       }
@@ -611,7 +596,7 @@ class _CustomPresetCreationScreenState
                   foregroundColor: colors.onSurface,
                   surfaceTintColor: Colors.transparent,
                   title: const Text(
-                    'Создать изображение',
+                    'Создать видео',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
@@ -681,9 +666,12 @@ class _CustomPresetCreationScreenState
   Widget _buildPromptGenerationBar(ColorScheme colors) {
     final palette = PhotosessionPalette.of(context);
     final usage = ref.watch(creditUsageNotifierProvider).valueOrNull;
-    final isTierLocked = usage != null &&
-        (usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(_selectedProvider.creditTier);
+    final hasPaidSubscription =
+        ref.watch(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
+    final isTierLocked = !CreditCost.isTierAccessible(
+      _selectedProvider.creditTier,
+      hasPaidSubscription: hasPaidSubscription,
+    );
     final hasEnoughCredits =
         usage == null || usage.hasEnoughCredits(_selectedProvider.creditCost);
     return Padding(
@@ -696,7 +684,13 @@ class _CustomPresetCreationScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildProviderSelector(colors, palette),
+          KeyedSubtree(
+            key: _photoModelSelectorKey,
+            child: ModelSelectorButton(
+              selected: _selectedProvider,
+              onPressed: _pickModel,
+            ),
+          ),
           const SizedBox(height: 10),
           SizedBox(
             height: 56,
@@ -737,7 +731,7 @@ class _CustomPresetCreationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _OptionChipsRow<ImageStyle>(
+        OptionChipsRow<ImageStyle>(
           title: 'Стиль',
           values: ImageStyle.values,
           selected: _selectedStyle,
@@ -745,15 +739,15 @@ class _CustomPresetCreationScreenState
           onSelected: (value) => setState(() => _selectedStyle = value),
         ),
         const SizedBox(height: 10),
-        _OptionChipsRow<ImageFormat>(
+        OptionChipsRow<ImageFormat>(
           title: 'Формат',
-          values: ImageFormat.values,
+          values: ImageFormatX.videoFormats,
           selected: _selectedFormat,
           labelOf: (value) => '${value.label} · ${value.aspectRatio}',
           onSelected: (value) => setState(() => _selectedFormat = value),
         ),
         const SizedBox(height: 10),
-        _OptionChipsRow<ImageMood>(
+        OptionChipsRow<ImageMood>(
           title: 'Настроение',
           values: ImageMood.values,
           selected: _selectedMood,
@@ -803,7 +797,7 @@ class _CustomPresetCreationScreenState
                       controller: _ideaController,
                       focusNode: _ideaFocus,
                       fieldKey: _ideaKey,
-                      label: 'Что нарисовать',
+                      label: 'Что снять',
                       hint: _ideaHint,
                       icon: Icons.lightbulb_outline_rounded,
                       minLines: _sceneFieldMinLines,
@@ -843,7 +837,7 @@ class _CustomPresetCreationScreenState
                             controller: _textOnImageController,
                             focusNode: _textOnImageFocus,
                             fieldKey: _textOnImageKey,
-                            label: 'Надпись на изображении',
+                            label: 'Надпись в кадре',
                             hint: 'Например: С днём рождения!',
                             icon: Icons.title_rounded,
                             required: false,
@@ -858,7 +852,7 @@ class _CustomPresetCreationScreenState
                           controller: _textOnImageController,
                           focusNode: _textOnImageFocus,
                           fieldKey: _textOnImageKey,
-                          label: 'Надпись на изображении',
+                          label: 'Надпись в кадре',
                           hint: 'Например: С днём рождения!',
                           icon: Icons.title_rounded,
                           required: false,
@@ -930,7 +924,7 @@ class _CustomPresetCreationScreenState
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: palette.background,
+                    color: palette.onAccent,
                   ),
                 )
               : Icon(
@@ -1097,315 +1091,6 @@ class _CustomPresetCreationScreenState
   static const String _ideaHint =
       'Хватит нескольких слов: «кот-астронавт на Марсе», '
       '«уютная кофейня под дождём», «логотип для пекарни»';
-
-  Widget _buildProviderSelector(
-    ColorScheme colors,
-    PhotosessionPalette palette,
-  ) {
-    return OutlinedButton(
-      key: _photoModelSelectorKey,
-      onPressed: () => _showModelSelectionSheet(colors),
-      style: _oliveOutlineButtonStyle(palette),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _providerIcon(_selectedProvider),
-            size: 22,
-            color: palette.accent,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            _selectedProvider.label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: palette.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: palette.textSecondary,
-            size: 20,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showModelSelectionSheet(ColorScheme colors) {
-    final palette = PhotosessionPalette.of(context);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 4),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.onSurface.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome_mosaic_rounded,
-                        color: colors.primary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Выберите модель генерации',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: colors.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: PhotosessionProvider.values
-                          .where((p) => p.isAvailable)
-                          .map((p) {
-                        final isSelected = _selectedProvider == p;
-                        final usage =
-                            ref.read(creditUsageNotifierProvider).valueOrNull;
-                        final isLocked = usage != null &&
-                            (usage.isFreeUser || usage.isTrialUser) &&
-                            !CreditCost.isTierAvailableForTrial(p.creditTier);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: isLocked
-                                  ? () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Модель доступна только подписчикам',
-                                          ),
-                                          duration: Duration(seconds: 2),
-                                        ),
-                                      );
-                                    }
-                                  : () {
-                                      setState(() => _selectedProvider = p);
-                                      Navigator.pop(context);
-                                    },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Opacity(
-                                opacity: isLocked ? 0.5 : 1.0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: isSelected && !isLocked
-                                          ? colors.primary
-                                          : colors.outline.withOpacity(0.2),
-                                      width: isSelected && !isLocked ? 2.5 : 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: colors.surfaceContainerHighest
-                                              .withOpacity(0.6),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          isLocked
-                                              ? Icons.lock_rounded
-                                              : _providerIcon(p),
-                                          size: 24,
-                                          color: isSelected && !isLocked
-                                              ? colors.primary
-                                              : colors.onSurface
-                                                  .withOpacity(0.6),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    p.label,
-                                                    style: TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: colors.onSurface,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                if (p.sourceBadge != null) ...[
-                                                  Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 2,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: palette.accent
-                                                          .withValues(
-                                                              alpha: 0.16),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              5),
-                                                    ),
-                                                    child: Text(
-                                                      p.sourceBadge!,
-                                                      style: TextStyle(
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: palette.accent,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                ],
-                                                Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 3,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: isLocked
-                                                        ? colors.outline
-                                                            .withOpacity(0.1)
-                                                        : colors.primary
-                                                            .withOpacity(0.12),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                  ),
-                                                  child: Text(
-                                                    isLocked ? 'PRO' : p.price,
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: isLocked
-                                                          ? colors.outline
-                                                          : colors.primary,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              isLocked
-                                                  ? 'Доступна с подпиской PRO'
-                                                  : p.description,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                height: 1.4,
-                                                color: colors.onSurface
-                                                    .withOpacity(0.7),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (isSelected && !isLocked)
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 8),
-                                          child: Icon(
-                                            Icons.check_circle_rounded,
-                                            color: colors.primary,
-                                            size: 24,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  IconData _providerIcon(PhotosessionProvider p) {
-    switch (p) {
-      case PhotosessionProvider.piapi:
-        return Icons.rocket_launch_rounded;
-      case PhotosessionProvider.googleFlash:
-        return Icons.bolt_rounded;
-      case PhotosessionProvider.flash:
-        return Icons.flash_on_rounded;
-      case PhotosessionProvider.qwen:
-        return Icons.grain_rounded;
-      case PhotosessionProvider.gptImage15:
-        return Icons.auto_awesome_rounded;
-      case PhotosessionProvider.gptImage2:
-        return Icons.diamond_rounded;
-      case PhotosessionProvider.grokImage:
-        return Icons.blur_on_rounded;
-      case PhotosessionProvider.apibostPro:
-        return Icons.workspace_premium_rounded;
-      case PhotosessionProvider.apibostStandard:
-        return Icons.speed_rounded;
-      case PhotosessionProvider.apibostFlash:
-        return Icons.electric_bolt_rounded;
-    }
-  }
 
   Widget _buildPromptTab(ThemeData theme, ColorScheme colors) {
     final palette = PhotosessionPalette.of(context);
@@ -1623,86 +1308,6 @@ class _CustomPresetCreationScreenState
 }
 
 /// Горизонтальный ряд взаимоисключающих вариантов: стиль, формат, настроение.
-class _OptionChipsRow<T> extends StatelessWidget {
-  const _OptionChipsRow({
-    required this.title,
-    required this.values,
-    required this.selected,
-    required this.labelOf,
-    required this.onSelected,
-  });
-
-  final String title;
-  final List<T> values;
-  final T selected;
-  final String Function(T value) labelOf;
-  final ValueChanged<T> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colors.onSurface.withOpacity(0.7),
-          ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: values.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final value = values[index];
-              final isSelected = value == selected;
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => onSelected(value),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isSelected
-                            ? colors.primary
-                            : colors.outline.withOpacity(0.5),
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Text(
-                      labelOf(value),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected
-                            ? colors.primary
-                            : colors.onSurface.withOpacity(0.8),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _ShimmerSectionCard extends StatefulWidget {
   const _ShimmerSectionCard({required this.colors});
 

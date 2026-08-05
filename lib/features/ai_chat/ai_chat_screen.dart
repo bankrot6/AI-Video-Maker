@@ -131,7 +131,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen>
       },
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF2F2F7),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         extendBodyBehindAppBar: true,
         extendBody: true,
         resizeToAvoidBottomInset: false,
@@ -140,9 +140,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen>
         body: Stack(
           children: [
             // Светлый фон как в онбординге
-            const Positioned.fill(
+            Positioned.fill(
               child: DecoratedBox(
-                decoration: BoxDecoration(color: Color(0xFFF2F2F7)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                ),
               ),
             ),
             // Основной контент
@@ -1276,6 +1278,8 @@ class _KeyboardAwareFadeMask extends StatelessWidget {
     // Опускаем вниз, чтобы уходило под клавиатуру
     const bottomOffset = -40.0;
 
+    final background = Theme.of(context).scaffoldBackgroundColor;
+
     return Positioned(
       left: 0,
       right: 0,
@@ -1283,13 +1287,13 @@ class _KeyboardAwareFadeMask extends StatelessWidget {
       height: blurHeight,
       child: IgnorePointer(
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
                 Colors.transparent,
-                Color(0xFFF2F2F7),
+                background,
               ],
             ),
           ),

@@ -23,6 +23,7 @@ import 'theme/photosession_theme_scope.dart';
 import 'tutorial/photosession_tutorial.dart';
 import '../subscription/paid_feature_gate.dart';
 import '../subscription/purchase_routes.dart';
+import '../subscription/subscription_providers.dart';
 
 class PhotosessionFaceSwapScreen extends ConsumerStatefulWidget {
   const PhotosessionFaceSwapScreen({
@@ -46,7 +47,7 @@ class _PhotosessionFaceSwapScreenState
   File? _userPhoto;
   PhotoInputValidationResult? _userPhotoValidation;
   bool _isUserPhotoValidationInProgress = false;
-  PhotosessionProvider _selectedProvider = PhotosessionProvider.googleFlash;
+  PhotosessionProvider _selectedProvider = PhotosessionProvider.veoFast;
   bool _useExactFaceSwap = false;
   bool _presetDeleting = false;
 
@@ -110,7 +111,7 @@ class _PhotosessionFaceSwapScreenState
         return AlertDialog(
           title: const Text('Удалить генерацию?'),
           content: const Text(
-            'Снимок будет удалён из истории на сервере. Отменить это нельзя.',
+            'Видео будет удалено из истории на сервере. Отменить это нельзя.',
           ),
           actions: [
             TextButton(
@@ -294,7 +295,7 @@ class _PhotosessionFaceSwapScreenState
 
     try {
       final provider = _useExactFaceSwap
-          ? PhotosessionProvider.googleFlash
+          ? PhotosessionProvider.veoFast
           : _selectedProvider;
       final result = await ref
           .read(backgroundGenerationProvider.notifier)
@@ -416,9 +417,9 @@ class _PhotosessionFaceSwapScreenState
       steps.add((
         key: _faceSwapTipsHeaderKey,
         id: 'faceswap_tips',
-        title: 'Подсказки по замене лица',
+        title: 'Как сделать ролик с собой',
         description:
-            'Здесь кратко описано, как связаны референс и ваше фото. Из этого блока можно снова открыть пошаговое обучение по экрану.',
+            'Кратко: референс задаёт сцену, ваше фото лица — кто появится в клипе. Из этого блока можно снова открыть пошаговое обучение.',
         icon: Icons.question_mark_rounded,
         align: ContentAlign.bottom,
       ));
@@ -428,9 +429,9 @@ class _PhotosessionFaceSwapScreenState
       steps.add((
         key: _referenceCardKey,
         id: 'faceswap_reference',
-        title: 'Выберите референс',
+        title: 'Выберите сцену-референс',
         description:
-            'Референс задаёт позу, одежду, свет и общую композицию. Если хотите повторить конкретный кадр или стиль, начните именно отсюда.',
+            'Референс задаёт композицию, одежду, свет и атмосферу будущего ролика. Если хотите повторить конкретную идею — начните отсюда.',
         icon: Icons.image_outlined,
         align: ContentAlign.bottom,
       ));
@@ -442,7 +443,7 @@ class _PhotosessionFaceSwapScreenState
         id: 'faceswap_user',
         title: 'Добавьте своё лицо',
         description:
-            'Лучше загружать фото, где лицо хорошо видно прямо, без очков, сильных теней и фильтров. Так замена получится заметно чище.',
+            'Загрузите чёткое фото лица анфас — без очков, сильных теней и фильтров. Так модель точнее перенесёт вас в видео.',
         icon: Icons.face_retouching_natural_rounded,
         align: ContentAlign.bottom,
       ));
@@ -454,7 +455,7 @@ class _PhotosessionFaceSwapScreenState
         id: 'faceswap_mode',
         title: 'Выберите режим',
         description:
-            'Точная замена подойдёт, если нужно вставить себя в готовый кадр. Воссоздать стиль лучше использовать, когда хочется сохранить атмосферу референса, но допустить новую позу и композицию.',
+            'Точная замена вставит вас в готовую сцену. «Воссоздать стиль» сохранит атмосферу референса, но допустит новую позу и композицию в ролике.',
         icon: Icons.palette_outlined,
         align: ContentAlign.top,
       ));
@@ -464,10 +465,10 @@ class _PhotosessionFaceSwapScreenState
       steps.add((
         key: _generateButtonKey,
         id: 'faceswap_generate',
-        title: 'Запустите генерацию',
+        title: 'Создайте видео',
         description:
-            'Когда референс и ваше лицо загружены, запускайте фотосессию. Дальше результат можно будет открыть, сохранить и отправить.',
-        icon: Icons.auto_awesome_rounded,
+            'Когда референс и лицо загружены — запускайте генерацию ролика. Готовый клип можно открыть, сохранить и отправить.',
+        icon: Icons.videocam_rounded,
         align: ContentAlign.top,
       ));
     }
@@ -492,15 +493,18 @@ class _PhotosessionFaceSwapScreenState
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final usage = ref.watch(creditUsageNotifierProvider).valueOrNull;
+    final hasPaidSubscription =
+        ref.watch(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
     final hasReference = _referencePhoto != null || _referenceImageUrl != null;
     final requiredCredits = _useExactFaceSwap
         ? _exactFaceSwapCreditCost
         : _selectedProvider.creditCost;
     final effectiveTier = _selectedProvider.creditTier;
     final isTierLocked = !_useExactFaceSwap &&
-        usage != null &&
-        (usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(effectiveTier);
+        !CreditCost.isTierAccessible(
+          effectiveTier,
+          hasPaidSubscription: hasPaidSubscription,
+        );
     final hasEnoughCredits =
         usage == null || usage.hasEnoughCredits(requiredCredits);
     final canGenerate = hasReference &&
@@ -799,7 +803,7 @@ class _PhotosessionFaceSwapScreenState
   Widget _buildFaceSwapTipsSection(ColorScheme colors) {
     return _buildExpandableSection(
       colors: colors,
-      title: 'Как работает замена лица',
+      title: 'Как сделать ролик с собой',
       expanded: _faceSwapTipsExpanded,
       onToggle: () =>
           setState(() => _faceSwapTipsExpanded = !_faceSwapTipsExpanded),
@@ -826,7 +830,7 @@ class _PhotosessionFaceSwapScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Слева референс задаёт стиль и сцену, справа загружается ваше лицо. В точной замене лицо подставляется в этот кадр, а в режиме стиля референс остаётся первым изображением, а ваше лицо вторым.',
+            'Слева — сцена-референс, справа — ваше лицо. В точной замене вы появляетесь в этой сцене; в режиме стиля атмосфера референса сохраняется, а композиция ролика может измениться.',
             style: TextStyle(
               fontSize: 13,
               height: 1.35,
@@ -846,17 +850,17 @@ class _PhotosessionFaceSwapScreenState
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Выбирайте референс с понятной позой и светом — так проще перенести лицо.',
+                'Берите референс с понятной позой и светом — так проще перенести вас в ролик.',
           ),
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Ваше фото: лицо прямо, без сильных теней, очков и тяжёлых фильтров.',
+                'Фото лица: анфас, без сильных теней, очков и тяжёлых фильтров.',
           ),
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Если результат слабый, сначала смените исходные снимки, затем пробуйте другой режим.',
+                'Если клип слабый — сначала смените исходные фото, затем попробуйте другой режим.',
           ),
         ],
       ),
@@ -1112,13 +1116,16 @@ class _PhotosessionFaceSwapScreenState
     final hasBlockingValidationIssue =
         _userPhotoValidation?.isBlocking ?? false;
     final usage = ref.watch(creditUsageNotifierProvider).valueOrNull;
+    final hasPaidSubscription =
+        ref.watch(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
     final requiredCredits = _useExactFaceSwap
         ? _exactFaceSwapCreditCost
         : _selectedProvider.creditCost;
     final isTierLocked = !_useExactFaceSwap &&
-        usage != null &&
-        (usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(_selectedProvider.creditTier);
+        !CreditCost.isTierAccessible(
+          _selectedProvider.creditTier,
+          hasPaidSubscription: hasPaidSubscription,
+        );
     final hasEnoughCredits =
         usage == null || usage.hasEnoughCredits(requiredCredits);
     return Container(
@@ -1164,7 +1171,7 @@ class _PhotosessionFaceSwapScreenState
             ),
             label: Text(
               canGenerate
-                  ? 'Создать фотосессию'
+                  ? 'Создать видео'
                   : isTierLocked
                       ? 'Нужен PRO'
                       : !hasEnoughCredits
@@ -1191,14 +1198,16 @@ class _PhotosessionFaceSwapScreenState
   }
 
   Widget _buildProviderSelector(ColorScheme colors) {
-    final usage = ref.watch(creditUsageNotifierProvider).valueOrNull;
+    final hasPaidSubscription =
+        ref.watch(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
     final effectiveProvider = _useExactFaceSwap
-        ? PhotosessionProvider.googleFlash
+        ? PhotosessionProvider.veoFast
         : _selectedProvider;
     final isLocked = !_useExactFaceSwap &&
-        usage != null &&
-        (usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(effectiveProvider.creditTier);
+        !CreditCost.isTierAccessible(
+          effectiveProvider.creditTier,
+          hasPaidSubscription: hasPaidSubscription,
+        );
     final icon = _useExactFaceSwap
         ? Icons.face_retouching_natural_rounded
         : _faceSwapProviderIcon(_selectedProvider);
@@ -1262,7 +1271,8 @@ class _PhotosessionFaceSwapScreenState
   }
 
   void _showModelSelectionSheet(ColorScheme colors) {
-    final usage = ref.read(creditUsageNotifierProvider).valueOrNull;
+    final hasPaidSubscription =
+        ref.read(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
 
     showModalBottomSheet(
       context: context,
@@ -1323,15 +1333,14 @@ class _PhotosessionFaceSwapScreenState
                             .where((p) =>
                                 p.isAvailable &&
                                 p.supportsImageEditing &&
-                                p != PhotosessionProvider.flash)
+                                p != PhotosessionProvider.veoLite)
                             .map((p) {
                           final isSelected =
                               !_useExactFaceSwap && _selectedProvider == p;
-                          final isLocked = usage != null &&
-                              (usage.isFreeUser || usage.isTrialUser) &&
-                              !CreditCost.isTierAvailableForTrial(
-                                p.creditTier,
-                              );
+                          final isLocked = !CreditCost.isTierAccessible(
+                            p.creditTier,
+                            hasPaidSubscription: hasPaidSubscription,
+                          );
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: _buildModelOption(
@@ -1377,7 +1386,7 @@ class _PhotosessionFaceSwapScreenState
                             isLocked: false,
                             onTap: () => setState(() {
                               _selectedProvider =
-                                  PhotosessionProvider.googleFlash;
+                                  PhotosessionProvider.veoFast;
                               _useExactFaceSwap = true;
                               Navigator.pop(context);
                             }),
@@ -1546,26 +1555,16 @@ class _PhotosessionFaceSwapScreenState
 
   IconData _faceSwapProviderIcon(PhotosessionProvider p) {
     switch (p) {
-      case PhotosessionProvider.piapi:
-        return Icons.rocket_launch_rounded;
-      case PhotosessionProvider.googleFlash:
-        return Icons.bolt_rounded;
-      case PhotosessionProvider.flash:
+      case PhotosessionProvider.veoLite:
         return Icons.flash_on_rounded;
-      case PhotosessionProvider.qwen:
-        return Icons.grain_rounded;
-      case PhotosessionProvider.gptImage15:
+      case PhotosessionProvider.veoFast:
+        return Icons.bolt_rounded;
+      case PhotosessionProvider.veoPro:
+        return Icons.rocket_launch_rounded;
+      case PhotosessionProvider.veoFastPreview:
         return Icons.auto_awesome_rounded;
-      case PhotosessionProvider.gptImage2:
+      case PhotosessionProvider.veoPro4k:
         return Icons.diamond_rounded;
-      case PhotosessionProvider.grokImage:
-        return Icons.blur_on_rounded;
-      case PhotosessionProvider.apibostPro:
-        return Icons.workspace_premium_rounded;
-      case PhotosessionProvider.apibostStandard:
-        return Icons.speed_rounded;
-      case PhotosessionProvider.apibostFlash:
-        return Icons.electric_bolt_rounded;
     }
   }
 }

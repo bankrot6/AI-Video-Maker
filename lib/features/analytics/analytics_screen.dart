@@ -10,7 +10,7 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return RTLWrapper(
       child: Scaffold(
-        backgroundColor: const Color(0xFFF2F2F7),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Аналитика'),
           actions: [

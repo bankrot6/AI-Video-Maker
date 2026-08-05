@@ -38,13 +38,13 @@ class PhotosessionTheme {
     final scheme = ColorScheme(
       brightness: palette.brightness,
       primary: palette.accent,
-      onPrimary: palette.background,
+      onPrimary: palette.onAccent,
       primaryContainer: palette.accentMuted,
       onPrimaryContainer: palette.textPrimary,
       secondary: palette.textPrimary,
       onSecondary: palette.background,
       tertiary: palette.warning,
-      onTertiary: palette.background,
+      onTertiary: palette.depth,
       surface: palette.surface,
       onSurface: palette.textPrimary,
       surfaceContainerLowest: palette.background,
@@ -56,9 +56,9 @@ class PhotosessionTheme {
       outline: palette.outline,
       outlineVariant: palette.accentMuted,
       error: palette.danger,
-      onError: palette.isDark ? palette.textPrimary : Colors.white,
+      onError: Colors.white,
       errorContainer: palette.danger,
-      onErrorContainer: palette.isDark ? palette.textPrimary : Colors.white,
+      onErrorContainer: Colors.white,
       shadow: palette.depth,
       scrim: palette.depth,
       inverseSurface: palette.textPrimary,
@@ -107,7 +107,7 @@ class PhotosessionTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: palette.accent,
-        foregroundColor: palette.background,
+        foregroundColor: palette.onAccent,
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: palette.surfaceHigh,
@@ -141,7 +141,7 @@ class PhotosessionTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: palette.accent,
-          foregroundColor: palette.background,
+          foregroundColor: palette.onAccent,
           disabledBackgroundColor: palette.surfaceHigh,
           disabledForegroundColor: palette.textSecondary,
         ),
@@ -149,7 +149,7 @@ class PhotosessionTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: palette.accent,
-          foregroundColor: palette.background,
+          foregroundColor: palette.onAccent,
           disabledBackgroundColor: palette.surfaceHigh,
           disabledForegroundColor: palette.textSecondary,
         ),

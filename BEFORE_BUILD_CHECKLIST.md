@@ -5,7 +5,7 @@
 - [x] RuStore App ID обновлен на `2063737207`
 - [x] Product IDs переименованы:
   - Подписки: `aivideomaker.weekly/monthly/yearly.rustore`
-  - Кредиты: `aivideomaker.credits.50/200/600.rustore`
+  - Кредиты: `aivideomaker.credits.40/150/400.rustore`
 - [x] Firebase конфигурация для нового проекта (`google-services.json`)
 - [x] Package name: `com.aivideomaker.app`
 - [x] Deep links настроены (aivideomaker://)
@@ -103,9 +103,9 @@ storeFile=../upload-keystore.jks
 
 | ID | Название | Кредиты | Цена |
 |----|----------|---------|------|
-| `aivideomaker.credits.50.rustore` | Малый пакет | 50 | 149 ₽ |
-| `aivideomaker.credits.200.rustore` | Средний пакет | 200 | 449 ₽ |
-| `aivideomaker.credits.600.rustore` | Большой пакет | 600 | 999 ₽ |
+| `aivideomaker.credits.40.rustore` | Малый пакет | 40 | 149 ₽ |
+| `aivideomaker.credits.150.rustore` | Средний пакет | 150 | 449 ₽ |
+| `aivideomaker.credits.400.rustore` | Большой пакет | 400 | 999 ₽ |
 
 **Важно:** Product IDs должны быть созданы в RuStore Console **ТОЧНО** с этими названиями.
 

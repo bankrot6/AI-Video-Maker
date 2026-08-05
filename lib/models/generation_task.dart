@@ -38,7 +38,7 @@ class GenerationTask {
     required this.userPhotoPath,
     required this.prompt,
     required this.createdAt,
-    this.provider = PhotosessionProvider.googleFlash,
+    this.provider = PhotosessionProvider.veoFast,
     this.taskType = GenerationTaskType.preset,
     this.referenceImageUrl,
     this.faceSwapMode,

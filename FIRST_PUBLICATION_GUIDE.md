@@ -51,9 +51,9 @@ bash android/CREATE_KEYSTORE.sh
 
 | Product ID | Название | Тип | Цена |
 |------------|----------|-----|------|
-| `aivideomaker.credits.50.rustore` | Малый пакет кредитов (50) | Consumable | 149 ₽ |
-| `aivideomaker.credits.200.rustore` | Средний пакет кредитов (200) | Consumable | 449 ₽ |
-| `aivideomaker.credits.600.rustore` | Большой пакет кредитов (600) | Consumable | 999 ₽ |
+| `aivideomaker.credits.40.rustore` | Малый пакет кредитов (40) | Consumable | 149 ₽ |
+| `aivideomaker.credits.150.rustore` | Средний пакет кредитов (150) | Consumable | 449 ₽ |
+| `aivideomaker.credits.400.rustore` | Большой пакет кредитов (400) | Consumable | 999 ₽ |
 
 **Важно:**
 - Product IDs должны **ТОЧНО** совпадать (включая регистр)

@@ -47,17 +47,23 @@ abstract final class ApiBostModelCatalog {
   static bool isVideoModel(String model) =>
       _videoModels.contains(_normalize(model));
 
-  /// Veo принимает только четыре пропорции, тогда как в приложении форматов
-  /// кадра больше (3:4, 4:5, 2:3 и т.д.), поэтому запрошенное значение
-  /// приводится к ближайшему поддерживаемому по соотношению ширины к высоте.
+  /// Veo принимает ровно две пропорции, тогда как в приложении форматов кадра
+  /// больше (3:4, 4:5, 2:3 и т.д.), поэтому запрошенное значение приводится к
+  /// ближайшему поддерживаемому по соотношению ширины к высоте.
+  ///
+  /// На `1:1` и `21:9` Google отвечает `400 Invalid aspect ratio`, поэтому в
+  /// наборе их нет: раньше такие форматы доходили до модели и генерация падала.
   static const Set<String> _videoAspectRatios = {
     '16:9',
     '9:16',
-    '1:1',
-    '21:9',
   };
 
   static const String defaultVideoAspectRatio = '16:9';
+
+  /// Разрешение под каждую пропорцию для поля `size` асинхронного контура
+  /// `/v1/videos`: директивы формата в промпте он игнорирует.
+  static String videoSizeFor(String aspectRatio) =>
+      videoAspectRatioFor(aspectRatio) == '9:16' ? '720x1280' : '1280x720';
 
   /// Максимальная длительность клипа у Veo — 8 секунд.
   static const int maxVideoDurationSeconds = 8;
@@ -65,6 +71,21 @@ abstract final class ApiBostModelCatalog {
   /// Релей ApiBost отвечает 422 `string_too_long`, если поле `prompt` длиннее
   /// 2000 символов. Лимит считается по всей строке, включая директивы формата.
   static const int maxVideoPromptLength = 2000;
+
+  /// Сколько символов лимита занято служебными директивами вида `[9:16] [8s] `.
+  static const int _videoPromptDirectivesBudget = 50;
+
+  /// Предел для текста, который пишет пользователь: остаток лимита после
+  /// директив. Ввод ограничивается этим числом, чтобы промпт уходил в модель
+  /// целиком, а не обрезался перед отправкой.
+  static const int maxVideoPromptTextLength =
+      maxVideoPromptLength - _videoPromptDirectivesBudget;
+
+  /// Цель для промптов, которые пишет LLM. Ниже жёсткого предела, потому что
+  /// модель регулярно промахивается на десяток-другой символов, а после неё
+  /// текст ещё проходит правку под фильтр безопасности, которая его удлиняет.
+  /// Запас позволяет не обрезать результат из-за небольшого перелёта.
+  static const int videoPromptGenerationTarget = 1700;
 
   static String videoAspectRatioFor(String aspectRatio) {
     final requested = aspectRatio.trim();

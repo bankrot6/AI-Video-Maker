@@ -111,13 +111,16 @@ class RuStoreBillingService {
 
   // Продукты RuStore - токены
   static const Map<String, String> _rustoreTokenIds = {
-    'small': 'aivideomaker.credits.50.rustore',
-    'medium': 'aivideomaker.credits.200.rustore',
-    'large': 'aivideomaker.credits.600.rustore',
+    'small': 'aivideomaker.credits.40.rustore',
+    'medium': 'aivideomaker.credits.150.rustore',
+    'large': 'aivideomaker.credits.400.rustore',
   };
 
-  // Легаси идентификаторы токенов (до перехода на .credits.*)
+  // Легаси идентификаторы токенов (старые product ID в RuStore Console)
   static const Set<String> _legacyRuStoreCreditProductIds = {
+    'aivideomaker.credits.50.rustore',
+    'aivideomaker.credits.200.rustore',
+    'aivideomaker.credits.600.rustore',
     'aivideomaker.100k.rustore',
     'aivideomaker.300k.rustore',
     'aivideomaker.800k.rustore',
@@ -1020,12 +1023,15 @@ class RuStoreBillingService {
   /// Получение количества токенов по product ID.
   int getTokenCountFromProductId(String productId) {
     switch (productId) {
+      case 'aivideomaker.credits.40.rustore':
       case 'aivideomaker.credits.50.rustore':
       case 'aivideomaker.100k.rustore':
         return CreditPackageType.small.credits;
+      case 'aivideomaker.credits.150.rustore':
       case 'aivideomaker.credits.200.rustore':
       case 'aivideomaker.300k.rustore':
         return CreditPackageType.medium.credits;
+      case 'aivideomaker.credits.400.rustore':
       case 'aivideomaker.credits.600.rustore':
       case 'aivideomaker.800k.rustore':
         return CreditPackageType.large.credits;

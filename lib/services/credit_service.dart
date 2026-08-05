@@ -252,15 +252,21 @@ class CreditService {
     }
   }
 
+  Future<bool> _hasAccessToTier(AiModelTier tier) async {
+    if (!CreditCost.requiresPaidSubscription(tier)) {
+      return true;
+    }
+    final subscription = await _getCurrentSubscription();
+    return subscription != null && subscription.isPaidUser;
+  }
+
   Future<bool> useGenerationCredits(AiModelTier tier) async {
     final credits = CreditCost.forGeneration(tier);
     try {
       final usage = await getCreditUsage();
 
-      if ((usage.isFreeUser || usage.isTrialUser) &&
-          !CreditCost.isTierAvailableForTrial(tier)) {
-        debugPrint('❌ CREDIT_SERVICE: Модель ${tier.name} недоступна для '
-            '${usage.isFreeUser ? "бесплатного" : "триал"} пользователя');
+      if (!await _hasAccessToTier(tier)) {
+        debugPrint('❌ CREDIT_SERVICE: Модель ${tier.name} недоступна без подписки');
         return false;
       }
 
@@ -286,8 +292,7 @@ class CreditService {
   Future<bool> canGenerate(AiModelTier tier) async {
     await refreshFromServer();
     final usage = await getCreditUsage();
-    if ((usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(tier)) {
+    if (!await _hasAccessToTier(tier)) {
       return false;
     }
     final credits = CreditCost.forGeneration(tier);
@@ -318,8 +323,7 @@ class CreditService {
   Future<CreditReservationResult> reserveGenerationCredits(
       AiModelTier tier) async {
     final usage = await refreshFromServer();
-    if ((usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(tier)) {
+    if (!await _hasAccessToTier(tier)) {
       return CreditReservationResult(
         success: false,
         remainingCredits: usage.remainingCredits,

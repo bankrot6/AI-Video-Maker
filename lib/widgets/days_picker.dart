@@ -64,7 +64,7 @@ class _DaysPickerState extends State<DaysPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = const Color(0xFF007AFF);
+    final accent = Theme.of(context).colorScheme.primary;
     final selectionColor = widget.selectionColor ?? accent.withOpacity(0.08);
     final selectionBorderColor =
         widget.selectionBorderColor ?? accent.withOpacity(0.35);

@@ -3,20 +3,25 @@ import '../models/subscription_model.dart';
 enum AiModelTier { economy, standard, advanced, premium, ultra }
 
 abstract final class CreditCost {
-  // ApiBost цены (внутренний баланс): Flash 2.5 = $0.020, 3.1 Flash = $0.040,
-  // Pro = $0.130, Grok 3 Image = $0.070, GPT Image 1.5 / 2 = $0.160.
-  // Реальная себестоимость (÷1.5, бонус ×1.5 при пополнении до $1000):
-  //   Nano Banana 2.5 Flash: $0.0133 = 1.33 кр.
-  //   Nano Banana 3.1 Flash: $0.0267 = 2.67 кр.
-  //   Grok 3 Image:          $0.0467 = 4.67 кр.
-  //   Nano Banana Pro:       $0.0867 = 8.67 кр.
-  //   GPT Image 1.5 / 2:     $0.1067 = 10.67 кр.
-  // Наценка ×3.5. 1 кредит ≈ $0.01
-  static const int economyGeneration = 5;  // Nano Banana 2.5 Flash  ($0.0133 × 3.5 ≈ 5)
-  static const int standardGeneration = 10; // Nano Banana 3.1 Flash ($0.0267 × 3.5 ≈ 9 → 10)
-  static const int advancedGeneration = 15; // Grok 3 Image          ($0.0467 × 3.5 ≈ 16 → 15)
-  static const int premiumGeneration = 25; // Nano Banana Pro        ($0.0867 × 3.5 ≈ 30 → 25)
-  static const int ultraGeneration = 35; // GPT Image 1.5 / 2        ($0.1067 × 3.5 ≈ 37 → 35)
+  // Цены ApiBost за КЛИП, не за секунду (проверено замером биллинга:
+  // veo3.1-lite списал ровно $0.055 за клип 8 с со звуком). Прайс указан во
+  // внутреннем балансе, который даётся с бонусом +50% при пополнении, поэтому
+  // реальная себестоимость = цена ÷ 1.5:
+  //   veo3.1-lite  $0.055 → $0.0367
+  //   veo3.1-fast  $0.120 → $0.0800
+  //   veo3.1-pro   $0.215 → $0.1433
+  //   fast-preview $0.740 → $0.4933
+  //   pro-4k       $1.740 → $1.1600
+  //
+  // Худший сценарий выкупа кредита — годовая подписка (999 ₽ / 500 кр = 2.00 ₽,
+  // после комиссии магазина 15% остаётся 1.70 ₽). При курсе 78.7 ₽/$ маржа
+  // выходит ≈ 79% на подписках и до 88% на мелком пакете кредитов — то есть на
+  // уровне картинок в Repiin (79-81%).
+  static const int economyGeneration = 10;   // Veo 3.1 Lite
+  static const int standardGeneration = 20;  // Veo 3.1 Fast
+  static const int advancedGeneration = 30;  // Veo 3.1 Pro (только с подпиской)
+  static const int premiumGeneration = 110;  // Veo 3.1 Fast Preview ($0.740 ≈ 110)
+  static const int ultraGeneration = 255;    // Veo 3.1 Pro 4K ($1.740 ≈ 255)
 
   static int forGeneration(AiModelTier tier) {
     switch (tier) {
@@ -51,20 +56,36 @@ abstract final class CreditCost {
   static String tierModelName(AiModelTier tier) {
     switch (tier) {
       case AiModelTier.economy:
-        return 'Nano Banana 2.5 Flash';
+        return 'Veo 3.1 Lite';
       case AiModelTier.standard:
-        return 'Nano Banana 3.1 Flash';
+        return 'Veo 3.1 Fast';
       case AiModelTier.advanced:
-        return 'Grok 3 Image';
+        return 'Veo 3.1 Pro';
       case AiModelTier.premium:
-        return 'Nano Banana Pro';
+        return 'Veo 3.1 Fast Preview';
       case AiModelTier.ultra:
-        return 'GPT Image';
+        return 'Veo 3.1 Pro 4K';
     }
   }
 
+  static bool requiresPaidSubscription(AiModelTier tier) {
+    return tier == AiModelTier.advanced ||
+        tier == AiModelTier.premium ||
+        tier == AiModelTier.ultra;
+  }
+
+  static bool isTierAccessible(
+    AiModelTier tier, {
+    required bool hasPaidSubscription,
+  }) {
+    if (requiresPaidSubscription(tier)) {
+      return hasPaidSubscription;
+    }
+    return true;
+  }
+
   static bool isTierAvailableForTrial(AiModelTier tier) {
-    return tier != AiModelTier.premium && tier != AiModelTier.ultra;
+    return !requiresPaidSubscription(tier);
   }
 
   @Deprecated('Use forGeneration(tier) instead')
@@ -89,32 +110,32 @@ class CreditPlan {
     this.isFreePlan = false,
   });
 
-  // Бесплатный стартовый пул: 10 кредитов (~2 Flash / 1 Standard)
+  // Бесплатный стартовый пул: 10 кредитов (1 видео Lite)
   static const free = CreditPlan(
     totalCredits: 10,
     isFreePlan: true,
-    freeGenerations: 2,
+    freeGenerations: 1,
   );
 
-  // Trial 1 день → 20 кредитов (~4 Flash / 2 Standard)
+  // Trial 1 день → 20 кредитов (2 видео Lite)
   static const trial = CreditPlan(totalCredits: 20);
 
-  // Weekly 99₽ → 40 кредитов (~8 Flash / 4 Standard / 1 Pro)
+  // Weekly 99₽ → 40 кредитов (4 Lite / 2 Fast / 1 Pro)
   static const weekly = CreditPlan(totalCredits: 40);
 
-  // Monthly 299₽ → 140 кредитов (~28 Flash / 14 Standard / 5 Pro)
+  // Monthly 299₽ → 140 кредитов (14 Lite / 7 Fast / 4 Pro)
   static const monthly = CreditPlan(totalCredits: 140);
 
-  // Yearly 999₽ → 500 кредитов (~100 Flash / 50 Standard / 20 Pro)
+  // Yearly 999₽ → 500 кредитов (50 Lite / 25 Fast / 16 Pro)
   static const yearly = CreditPlan(totalCredits: 500);
 
-  int get approximateStandardPhotos =>
+  int get approximateStandardVideos =>
       totalCredits ~/ CreditCost.standardGeneration;
 
-  int get approximatePremiumPhotos =>
-      totalCredits ~/ CreditCost.premiumGeneration;
+  int get approximatePremiumVideos =>
+      totalCredits ~/ CreditCost.advancedGeneration;
 
-  int get approximateEconomyPhotos =>
+  int get approximateEconomyVideos =>
       totalCredits ~/ CreditCost.economyGeneration;
 
   static CreditPlan forSubscription(SubscriptionType type) {
@@ -152,7 +173,7 @@ enum CreditPackageType {
 
   double get pricePerCredit => priceRub / credits;
 
-  int get approximateStandardPhotos =>
+  int get approximateStandardVideos =>
       credits ~/ CreditCost.standardGeneration;
 
   String get savingsLabel {

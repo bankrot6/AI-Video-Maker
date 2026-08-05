@@ -1,9 +1,21 @@
-import { VISUAL_STYLES, MOTIFS, COMPOSITIONS, PALETTES, ATMOSPHERES } from './style_catalog.js';
+import {
+  VISUAL_STYLES,
+  MOTIFS,
+  COMPOSITIONS,
+  PALETTES,
+  ATMOSPHERES,
+  CAMERA_MOVES,
+  MOTION_BEATS,
+} from './style_catalog.js';
 import { getActiveHolidayMotifs } from './holiday_calendar.js';
 
 const HOLIDAY_PICK_CHANCE = 0.3;
-const ASPECT_RATIO = '3:4';
+const ASPECT_RATIO = '9:16';
+const DURATION_SECONDS = 8;
 const TEMPERATURES = [0.7, 0.9, 1.0];
+const VIDEO_TAG = 'видео';
+
+const VIDEO_STYLES = VISUAL_STYLES.filter(s => s.videoSuitable !== false);
 
 function pickOne(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -39,8 +51,8 @@ function pickMotif({ motifs, tagCounts, usedMotifIds, style }) {
 }
 
 function pickStyle(usedStyleIds) {
-  const pool = VISUAL_STYLES.filter(s => !usedStyleIds.has(s.id));
-  return pickOne(pool.length ? pool : VISUAL_STYLES);
+  const pool = VIDEO_STYLES.filter(s => !usedStyleIds.has(s.id));
+  return pickOne(pool.length ? pool : VIDEO_STYLES);
 }
 
 const TITLE_MIN_SCENE_LENGTH = 20;
@@ -61,24 +73,33 @@ function buildTitle(style, scene) {
   return title.length > 110 ? `${title.slice(0, 107)}…` : title;
 }
 
-function buildBrief({ style, motif, scene, composition, palette, atmosphere }) {
+function buildBrief({
+  style, motif, scene, composition, palette, atmosphere, cameraMove, motionBeat,
+}) {
   const lines = [
     `Сюжет: ${scene}.`,
     `Тематика: ${motif.title}.`,
     `Визуальный стиль: ${style.title} — ${style.render}.`,
     `Композиция и ракурс: ${composition}.`,
+    `Движение камеры: ${cameraMove}.`,
+    `Динамика за ${DURATION_SECONDS} секунд: ${motionBeat}.`,
     `Цветовая палитра: ${palette}.`,
     `Атмосфера и свет: ${atmosphere}.`,
+    `Формат: вертикальный ролик ${ASPECT_RATIO}, длительность ${DURATION_SECONDS}с.`,
   ];
   if (style.sceneNote) lines.push(`Особое требование стиля: ${style.sceneNote}`);
   if (motif.isHoliday) {
-    lines.push(`Праздничный повод: «${motif.title}» — изображение должно однозначно читаться как приуроченное к этому празднику.`);
+    lines.push(
+      `Праздничный повод: «${motif.title}» — ролик должен однозначно читаться как приуроченный к этому празднику.`,
+    );
   }
   return lines.join('\n');
 }
 
 function mergeTags(style, motif) {
-  return Array.from(new Set([...(motif.tags || []), ...(style.tags || [])])).slice(0, 6);
+  return Array.from(
+    new Set([VIDEO_TAG, ...(motif.tags || []), ...(style.tags || [])]),
+  ).slice(0, 6);
 }
 
 export function buildIdeas({ count, tagCounts = {}, usedTitles = new Set(), now = new Date() }) {
@@ -102,6 +123,8 @@ export function buildIdeas({ count, tagCounts = {}, usedTitles = new Set(), now 
     const composition = pickOne(COMPOSITIONS);
     const palette = pickOne(PALETTES);
     const atmosphere = pickOne(ATMOSPHERES);
+    const cameraMove = pickOne(CAMERA_MOVES);
+    const motionBeat = pickOne(MOTION_BEATS);
     const title = buildTitle(style, scene);
     if (localUsedTitles.has(title.toLowerCase())) continue;
 
@@ -111,9 +134,17 @@ export function buildIdeas({ count, tagCounts = {}, usedTitles = new Set(), now 
       styleId: style.id,
       motifId: motif.id,
       tags: mergeTags(style, motif),
-      brief: buildBrief({ style, motif, scene, composition, palette, atmosphere }),
+      brief: buildBrief({
+        style, motif, scene, composition, palette, atmosphere, cameraMove, motionBeat,
+      }),
       styleReminder: style.render,
-      params: { aspectRatio: ASPECT_RATIO, temperature: pickOne(TEMPERATURES) },
+      cameraMove,
+      motionBeat,
+      params: {
+        aspectRatio: ASPECT_RATIO,
+        durationSeconds: DURATION_SECONDS,
+        temperature: pickOne(TEMPERATURES),
+      },
     };
 
     ideas.push(idea);

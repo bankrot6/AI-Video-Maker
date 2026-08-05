@@ -295,6 +295,12 @@ case "$FUNC_ID" in
       APPWRITE_DATABASE_ID    "$DATABASE_ID" \
       APPWRITE_PRESETS_COLLECTION_ID "$PRESETS_COLL" \
       APPWRITE_STORAGE_BUCKET_ID     "$BUCKET_ID"
+    # Клиент вызывает функцию для пресетов, у которых обложки не оказалось
+    # после срабатывания события — без публичных прав такой вызов даёт 401.
+    aw_put "functions/generate-thumbnail" \
+      "{\"functionId\":\"generate-thumbnail\",\"name\":\"Generate Preset Thumbnail\",\"runtime\":\"${NODE_RUNTIME}\",\"execute\":[\"any\"],\"events\":$DB_EVENTS,\"schedule\":\"\",\"timeout\":120,\"enabled\":true,\"logging\":true,\"entrypoint\":\"src/index.js\",\"commands\":\"npm install\"}" \
+      > /dev/null
+    echo "  generate-thumbnail execute=[\"any\"] set"
     ;;
   process-preset-rewards)
     deploy_function "process-preset-rewards" "Process Preset Rewards" \
@@ -318,7 +324,7 @@ case "$FUNC_ID" in
       REPAIR_PRESET_PERMISSIONS_PAGE_SIZE "50"
     ;;
   daily-preset-pipeline)
-    deploy_function "daily-preset-pipeline" "Daily Preset Pipeline" \
+    deploy_function "daily-preset-pipeline" "Daily Video Preset Pipeline" \
       "[]" "0 */8 * * *" 900 \
       APPWRITE_ENDPOINT       "$ENDPOINT" \
       APPWRITE_PROJECT_ID     "$PROJECT_ID" \
@@ -333,7 +339,10 @@ case "$FUNC_ID" in
       NL_PROXY_TOKEN          "$NL_PROXY_TOKEN" \
       AI_PROXY_PIAPI_PORT     "$AI_PROXY_PIAPI_PORT" \
       AI_PROXY_DEEPSEEK_PORT  "$AI_PROXY_DEEPSEEK_PORT" \
-      YANDEX_AI_RELAY_BASE_URL "$YANDEX_AI_RELAY_BASE_URL"
+      YANDEX_AI_RELAY_BASE_URL "$YANDEX_AI_RELAY_BASE_URL" \
+      APIBOST_MODEL           "$(get_env "APIBOST_MODEL" "gemini-3-pro-image-preview")" \
+      APIBOST_VIDEO_MODEL     "$(get_env "APIBOST_VIDEO_MODEL" "veo3.1-lite")" \
+      DAILY_PRESET_PIPELINE_COUNT "$(get_env "DAILY_PRESET_PIPELINE_COUNT" "1")"
     ;;
   manage-presets)
     deploy_function "manage-presets" "Manage Presets" \

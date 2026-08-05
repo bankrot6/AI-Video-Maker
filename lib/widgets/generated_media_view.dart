@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../services/generated_media.dart';
 import '../services/proxied_image_service.dart';
+import '../services/video_poster_service.dart';
 import 'generated_video_view.dart';
 import 'magic_shimmer.dart';
 import 'proxied_network_image.dart';
+import 'video_poster_image.dart';
 
 /// Показывает результат генерации, сам выбирая плеер или картинку.
 ///
@@ -54,8 +56,11 @@ class GeneratedMediaView extends StatelessWidget {
   }
 }
 
-/// Превью для сеток и списков: видео не проигрывается, чтобы не держать
-/// несколько декодеров одновременно, — вместо этого рисуется бейдж с иконкой.
+/// Превью для сеток и списков.
+///
+/// Видео здесь не открывается плеером: он тянет файл целиком при каждом
+/// построении списка и занимает декодер. Вместо этого показывается кадр из
+/// [VideoPosterService] — он считается один раз и лежит в кэше на диске.
 class GeneratedMediaThumbnail extends StatelessWidget {
   const GeneratedMediaThumbnail({
     super.key,
@@ -191,17 +196,34 @@ class _MediaSwitcherState extends State<_MediaSwitcher> {
   }
 
   Widget _buildVideo(BuildContext context) {
-    final video = GeneratedVideoView(
-      url: widget.url,
-      fit: widget.fit,
-      autoPlay: widget.autoPlay,
-      loop: widget.loop,
-      controls: widget.videoControls,
-      onFullscreen: widget.onFullscreen,
-      loadingBuilder: widget.loadingBuilder,
-      errorBuilder: widget.errorBuilder,
-      onLoaded: widget.onLoaded,
-    );
+    final Widget video = widget.videoBadge
+        ? VideoPosterImage(
+            source: widget.url,
+            fit: widget.fit,
+            loadingBuilder: widget.loadingBuilder,
+            onLoaded: widget.onLoaded,
+            fallbackBuilder: (context) => GeneratedVideoView(
+              url: widget.url,
+              fit: widget.fit,
+              autoPlay: false,
+              loop: false,
+              controls: VideoControlsMode.none,
+              loadingBuilder: widget.loadingBuilder,
+              errorBuilder: widget.errorBuilder,
+              onLoaded: widget.onLoaded,
+            ),
+          )
+        : GeneratedVideoView(
+            url: widget.url,
+            fit: widget.fit,
+            autoPlay: widget.autoPlay,
+            loop: widget.loop,
+            controls: widget.videoControls,
+            onFullscreen: widget.onFullscreen,
+            loadingBuilder: widget.loadingBuilder,
+            errorBuilder: widget.errorBuilder,
+            onLoaded: widget.onLoaded,
+          );
 
     if (!widget.videoBadge) return video;
 

@@ -478,11 +478,13 @@ class _PhotosessionGenerationScreenState
       steps.add((
         key: _imageAreaKey,
         id: 'generation_image',
-        title: task.isActive ? 'Генерация идёт в фоне' : 'Ваш результат',
+        title: task.isActive ? 'Генерация идёт в фоне' : 'Ваш ролик',
         description: task.isActive
             ? 'Пока видео создаётся, можно спокойно вернуться назад: задача продолжит выполняться в фоне и появится на витрине.'
-            : 'Нажмите на видео, чтобы открыть его крупно и проверить детали кадра, движения и света перед сохранением.',
-        icon: task.isActive ? Icons.hourglass_top_rounded : Icons.photo_rounded,
+            : 'Нажмите на видео, чтобы открыть его крупно и проверить движение, свет и детали сцены перед сохранением.',
+        icon: task.isActive
+            ? Icons.hourglass_top_rounded
+            : Icons.videocam_rounded,
         align: ContentAlign.bottom,
         paddingFocus: 10,
         contentOffset: imageBubbleOffset,
@@ -497,7 +499,7 @@ class _PhotosessionGenerationScreenState
           id: 'generation_save',
           title: 'Сохраните видео',
           description:
-              'Если вариант получился удачным, сохраняйте его в галерею. Так вы сможете вернуться к лучшим клипам позже и сравнить разные генерации.',
+              'Удачный клип сохраняйте в галерею — так проще сравнивать версии и возвращаться к лучшим роликам.',
           icon: Icons.download_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -509,9 +511,9 @@ class _PhotosessionGenerationScreenState
         steps.add((
           key: _shareButtonKey,
           id: 'generation_share',
-          title: 'Поделитесь результатом',
+          title: 'Поделитесь роликом',
           description:
-              'Отправьте видео друзьям, клиенту или в соцсети прямо отсюда. Это удобно, если хотите быстро показать идею и собрать обратную связь.',
+              'Отправьте видео друзьям, клиенту или в соцсети прямо отсюда — удобно быстро показать идею и собрать отзывы.',
           icon: Icons.share_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -526,7 +528,7 @@ class _PhotosessionGenerationScreenState
           id: 'generation_community',
           title: 'Поделитесь с сообществом',
           description:
-              'Откройте видео для сообщества — другие смогут создать своё по этой идее. За каждый лайк вы получите 1 кредит (максимум 50).',
+              'Откройте ролик для сообщества — другие смогут создать своё видео по этой идее. За каждый лайк вы получите 1 кредит (максимум 50).',
           icon: Icons.public_rounded,
           align: ContentAlign.top,
           paddingFocus: 10,
@@ -602,7 +604,7 @@ class _PhotosessionGenerationScreenState
       _animatedToResult = false;
     }
 
-    // Туториал запускается через onLoaded у ProxiedNetworkImage — после отображения фото
+    // Туториал запускается через onLoaded у медиа — после отображения ролика
 
     final String appBarTitle;
     if (task.isActive) {
@@ -1145,7 +1147,7 @@ class _PhotosessionGenerationScreenState
         color: colors.surfaceContainerHighest,
         child: Center(
           child: Icon(
-            Icons.photo_rounded,
+            Icons.videocam_rounded,
             size: 48,
             color: colors.onSurface.withOpacity(0.08),
           ),

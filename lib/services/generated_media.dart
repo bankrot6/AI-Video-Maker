@@ -16,11 +16,23 @@ abstract final class GeneratedMedia {
     final value = url?.trim();
     if (value == null || value.isEmpty) return false;
 
-    final decoded = Uri.decodeFull(value).toLowerCase();
+    final decoded = _tryDecode(value).toLowerCase();
     final withoutQuery = decoded.split('?').first;
     return withoutQuery
         .split('/')
         .any((segment) => _videoExtensions.any(segment.endsWith));
+  }
+
+  /// Ссылка может содержать сырой `%` (локальные пути, имена файлов), из-за
+  /// которого декодирование падает — в таком случае берём строку как есть.
+  static String _tryDecode(String value) {
+    try {
+      return Uri.decodeFull(value);
+    } on ArgumentError {
+      return value;
+    } on FormatException {
+      return value;
+    }
   }
 
   /// Определяет видео по сигнатуре контейнера: MP4/MOV/M4V содержат бокс `ftyp`

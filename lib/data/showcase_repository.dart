@@ -12,6 +12,8 @@ abstract class ShowcaseRepository {
   }
 
   Future<PhotoSessionPreset?> getPresetById(String id);
+  /// [thumbnailUrl] — лёгкая обложка для сетки. Для видео её готовит клиент из
+  /// первого кадра: без неё список тянул бы само видео на каждой плитке.
   Future<PhotoSessionPreset> createPreset({
     required String prompt,
     required String previewImageUrl,
@@ -21,6 +23,7 @@ abstract class ShowcaseRepository {
     String? ownerId,
     String? clientAssignedPresetId,
     String? pairedPreviewImageUrl,
+    String? thumbnailUrl,
   });
 
   Stream<List<PhotoSessionPreset>> watchPresets({int limit = 0});

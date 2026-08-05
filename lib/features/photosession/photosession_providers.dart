@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../config/photosession_backend.dart';
 import '../../data/dual_backend_showcase_repository.dart';
@@ -28,6 +27,7 @@ import '../../services/photosession_dual_upload_service.dart';
 import '../../services/photosession_remote_storage.dart';
 import '../../services/preset_cache_service.dart';
 import '../../services/proxied_image_service.dart';
+import '../../services/prompt_safety_service.dart';
 import '../../services/prompt_translation_service.dart';
 import '../../services/photosession_generation_router.dart';
 import '../../services/ai_image_captioning_service.dart';
@@ -35,7 +35,7 @@ import '../../services/appwrite_apibost_proxy_service.dart';
 import '../../services/apibost_model_catalog.dart';
 import '../../services/client_apibost_images_service.dart';
 import '../../services/client_apibost_proxy_service.dart';
-import '../../services/piapi_qwen_image_service.dart';
+import '../../services/client_apibost_video_service.dart';
 import '../../services/piapi_faceswap_service.dart';
 import '../../services/piapi_image_captioning_service.dart';
 import '../../services/piapi_upload_service.dart';
@@ -184,7 +184,7 @@ final faceSwapPresetProvider = FutureProvider<PhotoSessionPreset?>((ref) async {
 
 final selectedPhotosessionProviderProvider =
     StateProvider<PhotosessionProvider>(
-        (ref) => PhotosessionProvider.googleFlash);
+        (ref) => PhotosessionProvider.veoFast);
 
 /// Единая фабрика ApiBost-сервиса: при включённом [clientSideApiBostEnabled]
 /// генерация идёт напрямую по relay (Yandex → NL) с клиентским резервом
@@ -197,6 +197,8 @@ PhotosessionGenerationService _apiBostService({
     return AppwriteApiBostProxyService(model: model, temperature: temperature);
   }
   switch (ApiBostModelCatalog.transportFor(model)) {
+    case ApiBostTransport.videoChatCompletions:
+      return ClientApiBostVideoService(model: model);
     case ApiBostTransport.openAiImages:
     case ApiBostTransport.openAiChatCompletions:
       return ClientApiBostImagesService(model: model, temperature: temperature);
@@ -205,100 +207,17 @@ PhotosessionGenerationService _apiBostService({
   }
 }
 
-/// Nano Banana 3.1 Flash — gemini-3.1-flash-image-preview via ApiBost proxy.
+/// Сервис генерации для выбранной модели.
 ///
-/// Именно preview-слаг тарифицируется у ApiBost за запрос и реально отдаёт
-/// картинки; GA-слаг `gemini-3.1-flash-image` переведён на token-биллинг и
-/// отвечает ошибками, из-за которых генерация молча откатывалась на 2.5.
-final nanoBananaServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
+/// Раньше на каждую модель существовал отдельный провайдер, и добавление модели
+/// требовало правок и здесь, и в switch-е оркестратора. Family убирает это
+/// дублирование: маршрутизацию целиком определяет [ApiBostModelCatalog].
+final photosessionGenerationServiceProvider =
+    Provider.family<PhotosessionGenerationService, PhotosessionProvider>(
+        (ref, provider) {
   return _apiBostService(
-    model: 'gemini-3.1-flash-image-preview',
+    model: provider.apiBostModel,
     temperature: 0.7,
-  );
-});
-
-/// Оставляем для обратной совместимости (не используется в основном роутинге)
-final googleDirectServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return GoogleDirectPhotosessionService(
-    apiKey: dotenv.env['NANO_BANANA_API_KEY'],
-    projectId: dotenv.env['NANO_BANANA_PROJECT_ID'],
-    location: dotenv.env['NANO_BANANA_LOCATION'],
-    model: dotenv.env['NANO_BANANA_MODEL'] ?? 'gemini-2.5-flash-image',
-  );
-});
-
-/// Nano Banana Pro — gemini-3-pro-image-preview via ApiBost proxy
-final piApiNanaBananaServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: 'gemini-3-pro-image-preview',
-    temperature: 0.9,
-  );
-});
-
-/// Nano Banana 2.5 Flash — gemini-2.5-flash-image via ApiBost proxy
-final nanoBananaFlashServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: 'gemini-2.5-flash-image',
-    temperature: 0.7,
-  );
-});
-
-/// GPT Image 1.5 — gpt-image-1.5 через OpenAI-контур ApiBost
-final gptImage15ServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: ApiBostModelCatalog.gptImage15,
-    temperature: 0.7,
-  );
-});
-
-/// GPT Image 2 — gpt-image-2 через OpenAI-контур ApiBost
-final gptImage2ServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: ApiBostModelCatalog.gptImage2,
-    temperature: 0.7,
-  );
-});
-
-/// Grok 3 Image — grok-3-image через OpenAI-контур ApiBost (только text-to-image)
-final grokImageServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: ApiBostModelCatalog.grokImage,
-    temperature: 0.7,
-  );
-});
-
-final piApiQwenServiceProvider = Provider<PhotosessionGenerationService>((ref) {
-  return PiApiQwenImageService(taskUrl: AiProxyConfig.piApiTaskUrl());
-});
-
-final apiBostProServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: 'gemini-3-pro-image-preview',
-    temperature: 0.9,
-  );
-});
-
-final apiBostStandardServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: 'gemini-3.1-flash-image-preview',
-    temperature: 0.7,
-  );
-});
-
-final apiBostFlashServiceProvider =
-    Provider<PhotosessionGenerationService>((ref) {
-  return _apiBostService(
-    model: 'gemini-2.5-flash-image',
-    temperature: 0.5,
   );
 });
 
@@ -333,6 +252,13 @@ final _deepSeekImagePromptServiceProvider =
 /// Промпт-инженер: короткая идея пользователя → детальный промпт.
 final imagePromptServiceProvider = Provider<ImagePromptService>((ref) {
   return ref.watch(_deepSeekImagePromptServiceProvider);
+});
+
+/// Смягчение формулировок промпта под фильтр безопасности видеомодели.
+final promptSafetyServiceProvider = Provider<PromptSafetyService>((ref) {
+  return DeepSeekPromptSafetyService(
+    client: _makeDeepSeekClient(fastMode: true),
+  );
 });
 
 /// Автоматическая разметка сгенерированных изображений по категориям.

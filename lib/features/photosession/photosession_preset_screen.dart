@@ -14,6 +14,7 @@ import '../../widgets/edit_text/full_screen_text_editor_screen.dart';
 import 'background_generation_provider.dart';
 import '../subscription/paid_feature_gate.dart';
 import '../subscription/purchase_routes.dart';
+import '../subscription/subscription_providers.dart';
 import 'fullscreen_image_viewer.dart';
 import 'photosession_generation_screen.dart';
 import 'photosession_providers.dart';
@@ -382,9 +383,9 @@ class _PhotosessionPresetScreenState
       steps.add((
         key: _usageTipsSectionKey,
         id: 'preset_usage_tips',
-        title: 'Советы для хорошего результата',
+        title: 'Советы для хорошего ролика',
         description:
-            'Здесь собраны рекомендации по работе с описанием сцены и есть кнопка запуска обучения. Если генерация вышла слабой, начните с этого блока.',
+            'Здесь кратко, как получить свой вариант клипа по этой идее, и есть кнопка повторного обучения. Если ролик вышел слабым — начните с этого блока.',
         icon: Icons.question_mark_rounded,
         align: ContentAlign.bottom,
       ));
@@ -394,9 +395,9 @@ class _PhotosessionPresetScreenState
       steps.add((
         key: _settingsSectionKey,
         id: 'preset_prompt',
-        title: 'Исправьте описание сцены',
+        title: 'Настройте описание ролика',
         description:
-            'На вкладке «Промпт» собраны все блоки сцены: можно быстро поменять фон, образ, настроение и детали кадра, не переписывая описание целиком.',
+            'На вкладке «Промпт» собраны блоки сцены: фон, действие, настроение, движение камеры и детали. Можно править по частям, не переписывая всё целиком.',
         icon: Icons.tune_rounded,
         align: ContentAlign.bottom,
       ));
@@ -406,10 +407,10 @@ class _PhotosessionPresetScreenState
       steps.add((
         key: _samplePhotoKey,
         id: 'preset_reference',
-        title: 'Ориентир для результата',
+        title: 'Пример готового клипа',
         description:
-            'Это образец сцены. Нажмите на него, чтобы рассмотреть детали: позу, стиль, одежду и атмосферу — именно это приложение будет стараться воссоздать.',
-        icon: Icons.style_rounded,
+            'Это образец ролика по пресету. Откройте его, чтобы понять атмосферу, стиль и движение — именно к такому результату будет стремиться генерация.',
+        icon: Icons.movie_outlined,
         align: ContentAlign.bottom,
       ));
     }
@@ -418,9 +419,9 @@ class _PhotosessionPresetScreenState
       steps.add((
         key: _modelSelectorKey,
         id: 'preset_model',
-        title: 'Выберите модель генерации',
+        title: 'Выберите модель видео',
         description:
-            'Для первых тестов удобно начать с Veo 3.1 Lite: она быстрее и дешевле. Если нужно более детальное и качественное видео, выбирайте Veo 3.1 Fast или Pro.',
+            'Для первых тестов удобно Veo 3.1 Lite — быстрее и дешевле. Для более детального и плавного ролика берите Veo 3.1 Fast или Pro.',
         icon: Icons.auto_awesome_mosaic_rounded,
         align: ContentAlign.top,
       ));
@@ -432,7 +433,7 @@ class _PhotosessionPresetScreenState
         id: 'preset_publicity',
         title: 'Сделайте пресет публичным',
         description:
-            'Если пресет получился удачным, откройте его для сообщества. Публичные пресеты собирают лайки, а вы получаете кредиты за популярные работы.',
+            'Если ролик получился удачным, откройте идею для сообщества. Публичные пресеты собирают лайки, а вы получаете кредиты за популярные работы.',
         icon: Icons.public_rounded,
         align: ContentAlign.top,
       ));
@@ -442,10 +443,10 @@ class _PhotosessionPresetScreenState
       steps.add((
         key: _generateButtonKey,
         id: 'preset_generate',
-        title: 'Запустите генерацию',
+        title: 'Создайте видео',
         description:
-            'Когда описание сцены вам нравится, запускайте генерацию. Потом можно сделать ещё версии с другой моделью или обновлённым описанием сцены.',
-        icon: Icons.auto_awesome_rounded,
+            'Когда описание сцены устраивает — запускайте генерацию ролика. Потом можно сделать ещё версии с другой моделью или обновлённым промптом.',
+        icon: Icons.videocam_rounded,
         align: ContentAlign.top,
       ));
     }
@@ -609,7 +610,7 @@ class _PhotosessionPresetScreenState
   Widget _buildUsageTipsSection(ColorScheme colors) {
     return _buildExpandableSection(
       colors: colors,
-      title: 'Как получить свой вариант этой сцены',
+      title: 'Как получить свой вариант этого ролика',
       expanded: _usageTipsExpanded,
       onToggle: () => setState(() => _usageTipsExpanded = !_usageTipsExpanded),
       leading: Tooltip(
@@ -636,22 +637,22 @@ class _PhotosessionPresetScreenState
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Нажмите на образец, чтобы открыть его в полном размере.',
+                'Откройте образец ролика, чтобы понять стиль, атмосферу и движение сцены.',
           ),
           _buildUsageTipItem(
             colors: colors,
             text:
-                'В «Настройках сцены» отредактируйте описание — отдельные блоки или всё целиком.',
+                'В «Настройках сцены» правьте описание ролика — отдельные блоки или всё целиком.',
           ),
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Меняйте по одному блоку за раз, чтобы понять, что влияет на результат.',
+                'Меняйте по одному блоку за раз, чтобы понять, что влияет на движение и кадр.',
           ),
           _buildUsageTipItem(
             colors: colors,
             text:
-                'Каждый запуск создаёт новый вариант — генерируйте сцену несколько раз, пока не понравится.',
+                'Каждый запуск создаёт новый клип — генерируйте несколько раз, пока не понравится.',
           ),
           _buildUsageTipItem(
             colors: colors,
@@ -1132,9 +1133,12 @@ class _PhotosessionPresetScreenState
   Widget _buildBottomBar(ColorScheme colors) {
     final palette = PhotosessionPalette.of(context);
     final usage = ref.watch(creditUsageNotifierProvider).valueOrNull;
-    final isTierLocked = usage != null &&
-        (usage.isFreeUser || usage.isTrialUser) &&
-        !CreditCost.isTierAvailableForTrial(_selectedProvider.creditTier);
+    final hasPaidSubscription =
+        ref.watch(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
+    final isTierLocked = !CreditCost.isTierAccessible(
+      _selectedProvider.creditTier,
+      hasPaidSubscription: hasPaidSubscription,
+    );
     final hasEnoughCredits =
         usage == null || usage.hasEnoughCredits(_selectedProvider.creditCost);
     final canGenerate = !isTierLocked && hasEnoughCredits;
@@ -1290,11 +1294,13 @@ class _PhotosessionPresetScreenState
                           .where((p) => p.isAvailable)
                           .map((p) {
                         final isSelected = _selectedProvider == p;
-                        final usage =
-                            ref.read(creditUsageNotifierProvider).valueOrNull;
-                        final isLocked = usage != null &&
-                            (usage.isFreeUser || usage.isTrialUser) &&
-                            !CreditCost.isTierAvailableForTrial(p.creditTier);
+                        final hasPaidSubscription =
+                            ref.read(subscriptionProvider).valueOrNull?.isPaidUser ??
+                                false;
+                        final isLocked = !CreditCost.isTierAccessible(
+                          p.creditTier,
+                          hasPaidSubscription: hasPaidSubscription,
+                        );
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: Material(

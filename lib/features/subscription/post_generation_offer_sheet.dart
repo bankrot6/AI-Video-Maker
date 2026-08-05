@@ -468,7 +468,7 @@ class _PostGenerationOfferSheetState
             context,
             icon: Icons.auto_awesome_rounded,
             title: 'Безлимитные генерации',
-            description: 'Создавайте сколько угодно AI-фотосессий',
+            description: 'Создавайте сколько угодно AI-видео',
           ),
           const SizedBox(height: 12),
           _buildBenefit(

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AI Video Maker</string>
+    <string name="app_name">ИИ Видео генератор</string>
 
     <!-- RuStore Pay SDK -->
     <string name="CONSOLE_APPLICATION_ID">2063737207</string>

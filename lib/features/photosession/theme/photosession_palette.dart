@@ -10,6 +10,7 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
     required this.surfaceHigh,
     required this.accent,
     required this.accentMuted,
+    required this.onAccent,
     required this.textPrimary,
     required this.textSecondary,
     required this.depth,
@@ -32,6 +33,9 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
   final Color accent;
   final Color accentMuted;
 
+  /// Контрастная пара к [accent]: подписи и иконки поверх акцентных заливок.
+  final Color onAccent;
+
   final Color textPrimary;
   final Color textSecondary;
 
@@ -50,40 +54,42 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
 
   static const PhotosessionPalette dark = PhotosessionPalette(
     brightness: Brightness.dark,
-    background: Color(0xFF3A0F13),
-    backgroundElevated: Color(0xFF4A171C),
-    surface: Color(0xFF4C4A3A),
-    surfaceHigh: Color(0xFF5A5845),
-    accent: Color(0xFFB8976A),
-    accentMuted: Color(0xFF8C7150),
-    textPrimary: Color(0xFFE8DCC4),
-    textSecondary: Color(0xFFC4B79C),
-    depth: Color(0xFF1A1A1A),
-    outline: Color(0xFF7A6A55),
-    backgroundScrim: Color(0xCC3A0F13),
-    depthScrim: Color(0x8C1A1A1A),
-    danger: Color(0xFFC25A45),
-    success: Color(0xFF8A9A6B),
-    warning: Color(0xFFD6A75C),
+    background: Color(0xFF0F1520),
+    backgroundElevated: Color(0xFF1A2333),
+    surface: Color(0xFF1A2333),
+    surfaceHigh: Color(0xFF243044),
+    accent: Color(0xFF0077CC),
+    accentMuted: Color(0xFF2E4058),
+    onAccent: Color(0xFFFFFFFF),
+    textPrimary: Color(0xFFF4F7FC),
+    textSecondary: Color(0xFF8A9BB0),
+    depth: Color(0xFF060A12),
+    outline: Color(0xFF2E4058),
+    backgroundScrim: Color(0xCC0F1520),
+    depthScrim: Color(0x8C060A12),
+    danger: Color(0xFFFF453A),
+    success: Color(0xFF34C759),
+    warning: Color(0xFFF5A623),
   );
 
   static const PhotosessionPalette light = PhotosessionPalette(
     brightness: Brightness.light,
-    background: Color(0xFFFFFFFF),
+    background: Color(0xFFF4F7FC),
     backgroundElevated: Color(0xFFFFFFFF),
-    surface: Color(0xFFF5F2EE),
-    surfaceHigh: Color(0xFFEAE5DE),
-    accent: Color(0xFF5A5A3C),
-    accentMuted: Color(0xFF7C7C5A),
-    textPrimary: Color(0xFF2C2C2C),
-    textSecondary: Color(0xFF6B6B6B),
-    depth: Color(0xFF2C2C2C),
-    outline: Color(0xFFD9D3CA),
-    backgroundScrim: Color(0xCCFFFFFF),
-    depthScrim: Color(0x8C2C2C2C),
-    danger: Color(0xFF9E3B3B),
-    success: Color(0xFF5A5A3C),
-    warning: Color(0xFFB07D2B),
+    surface: Color(0xFFFFFFFF),
+    surfaceHigh: Color(0xFFE8EEF6),
+    accent: Color(0xFF0077CC),
+    accentMuted: Color(0xFF9FC4E4),
+    onAccent: Color(0xFFFFFFFF),
+    textPrimary: Color(0xFF1A2333),
+    textSecondary: Color(0xFF5A6B7C),
+    depth: Color(0xFF1A2333),
+    outline: Color(0xFFD0DAE8),
+    backgroundScrim: Color(0xCCF4F7FC),
+    depthScrim: Color(0x8C1A2333),
+    danger: Color(0xFFFF3B30),
+    success: Color(0xFF34C759),
+    warning: Color(0xFFF5A623),
   );
 
   static PhotosessionPalette forBrightness(Brightness brightness) {
@@ -103,6 +109,7 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
     Color? surfaceHigh,
     Color? accent,
     Color? accentMuted,
+    Color? onAccent,
     Color? textPrimary,
     Color? textSecondary,
     Color? depth,
@@ -121,6 +128,7 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
       surfaceHigh: surfaceHigh ?? this.surfaceHigh,
       accent: accent ?? this.accent,
       accentMuted: accentMuted ?? this.accentMuted,
+      onAccent: onAccent ?? this.onAccent,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       depth: depth ?? this.depth,
@@ -148,6 +156,7 @@ class PhotosessionPalette extends ThemeExtension<PhotosessionPalette> {
       surfaceHigh: Color.lerp(surfaceHigh, other.surfaceHigh, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
       accentMuted: Color.lerp(accentMuted, other.accentMuted, t)!,
+      onAccent: Color.lerp(onAccent, other.onAccent, t)!,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       depth: Color.lerp(depth, other.depth, t)!,

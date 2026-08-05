@@ -46,6 +46,7 @@ class _TravelPlanDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final plans = ref.watch(travelPlansProvider);
     final plan = plans.firstWhere(
       (p) => p.id == widget.plan.id,
@@ -53,7 +54,7 @@ class _TravelPlanDetailsScreenState
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(plan.placeLabel),
       ),
@@ -63,7 +64,7 @@ class _TravelPlanDetailsScreenState
         child: CupertinoTabBar(
           currentIndex: _selectedTabIndex,
           onTap: (index) => setState(() => _selectedTabIndex = index),
-          activeColor: const Color(0xFF007AFF),
+          activeColor: colorScheme.primary,
           items: [
             for (final item in _tabItems)
               BottomNavigationBarItem(
@@ -325,6 +326,7 @@ class _PlanHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return LiquidGlassCard(
       padding: const EdgeInsets.all(16),
@@ -355,12 +357,12 @@ class _PlanHeader extends StatelessWidget {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF007AFF).withOpacity(0.12),
+                        color: colorScheme.primary.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.location_city,
-                        color: Color(0xFF007AFF),
+                        color: colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -668,6 +670,7 @@ class _StopTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final dividerColor = Colors.black.withOpacity(0.06);
 
     return Column(
@@ -704,8 +707,8 @@ class _StopTile extends StatelessWidget {
                               _Pill(
                                 text: place.categoryRu,
                                 background:
-                                    const Color(0xFF007AFF).withOpacity(0.10),
-                                foreground: const Color(0xFF007AFF),
+                                    colorScheme.primary.withOpacity(0.10),
+                                foreground: colorScheme.primary,
                               ),
                           ],
                         ),
@@ -727,7 +730,7 @@ class _StopTile extends StatelessWidget {
                     onPressed: onOpenNavigator,
                     tooltip: 'В навигатор',
                     icon: const Icon(Icons.navigation_rounded),
-                    color: const Color(0xFF007AFF),
+                    color: colorScheme.primary,
                   ),
                 ],
               ),
@@ -999,6 +1002,7 @@ class _AttractionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return LiquidGlassCard(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1028,8 +1032,8 @@ class _AttractionCard extends StatelessWidget {
                     if (place.category.trim().isNotEmpty)
                       _Pill(
                         text: place.categoryRu,
-                        background: const Color(0xFF007AFF).withOpacity(0.10),
-                        foreground: const Color(0xFF007AFF),
+                        background: colorScheme.primary.withOpacity(0.10),
+                        foreground: colorScheme.primary,
                       ),
                   ],
                 ),
@@ -1065,7 +1069,7 @@ class _AttractionCard extends StatelessWidget {
                 onPressed: onOpenNavigator,
                 tooltip: 'В навигатор',
                 icon: const Icon(Icons.navigation_rounded),
-                color: const Color(0xFF007AFF),
+                color: colorScheme.primary,
               ),
               Icon(
                 Icons.chevron_right,

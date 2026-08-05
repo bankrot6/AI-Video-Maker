@@ -18,6 +18,10 @@ const MYTRACKER_S2S_APP_ID = String(process.env.MYTRACKER_S2S_APP_ID ?? '1055317
 const MYTRACKER_S2S_BASE = 'https://tracker-s2s.my.com/v1';
 
 const PRODUCT_CREDITS = new Map([
+  ['aivideomaker.credits.40.rustore', 40],
+  ['aivideomaker.credits.150.rustore', 150],
+  ['aivideomaker.credits.400.rustore', 400],
+  // legacy product IDs (до переименования в RuStore Console)
   ['aivideomaker.credits.50.rustore', 40],
   ['aivideomaker.credits.200.rustore', 150],
   ['aivideomaker.credits.600.rustore', 400],

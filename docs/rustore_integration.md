@@ -42,9 +42,9 @@ enum PaymentProvider {
 - `aivideomaker.yearly.rustore`
 
 ### Product IDs (разовые пакеты кредитов RuStore):
-- `aivideomaker.credits.50.rustore` — 50 кредитов
-- `aivideomaker.credits.200.rustore` — 200 кредитов
-- `aivideomaker.credits.600.rustore` — 600 кредитов
+- `aivideomaker.credits.40.rustore` — 40 кредитов
+- `aivideomaker.credits.150.rustore` — 150 кредитов
+- `aivideomaker.credits.400.rustore` — 400 кредитов
 
 ## Файлы изменений
 

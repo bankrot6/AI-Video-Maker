@@ -2215,7 +2215,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
           productId.contains('monthly') ||
           productId.contains('weekly')) {
         subscriptions.add(purchase);
-      } else if (productId.contains('.credits.50.') ||
+      } else if (productId.contains('.credits.40.') ||
+          productId.contains('.credits.150.') ||
+          productId.contains('.credits.400.') ||
+          productId.contains('.credits.50.') ||
           productId.contains('.credits.200.') ||
           productId.contains('.credits.600.') ||
           productId.contains('.100k.') ||
@@ -2544,10 +2547,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         plan = CreditPlan.weekly;
         break;
     }
-    final premium = plan.approximatePremiumPhotos;
-    final standard = plan.approximateStandardPhotos;
-    final economy = plan.approximateEconomyPhotos;
-    return '${plan.totalCredits} кредитов: ~$economy эконом / ~$standard стандарт / ~$premium премиум фото';
+    final premium = plan.approximatePremiumVideos;
+    final standard = plan.approximateStandardVideos;
+    final economy = plan.approximateEconomyVideos;
+    return '${plan.totalCredits} кредитов: ~$economy эконом / ~$standard стандарт / ~$premium премиум видео';
   }
 
   SubscriptionType _getSelectedSubscriptionType() {

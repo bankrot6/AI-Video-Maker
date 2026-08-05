@@ -48,33 +48,37 @@ final themeModeProvider =
 });
 
 class AppTheme {
-  static const Color _blue = Color(0xFF007AFF);
+  static const Color _accent = Color(0xFF0077CC);
+  static const Color _accentSecondary = Color(0xFFF5A623);
   static const Color _green = Color(0xFF34C759);
-  static const Color _orange = Color(0xFFFF9500);
 
-  static const Color _lightBackground = Color(0xFFF2F2F7);
-  static const Color _lightSurface = Colors.white;
-  static const Color _lightSurfaceVariant = Color(0xFFF1F1F5);
-  static const Color _lightOutline = Color(0xFFE1E1E6);
+  static const Color _lightBackground = Color(0xFFF4F7FC);
+  static const Color _lightSurface = Color(0xFFFFFFFF);
+  static const Color _lightTextPrimary = Color(0xFF1A2333);
+  static const Color _lightTextSecondary = Color(0xFF5A6B7C);
+  static const Color _lightSurfaceVariant = Color(0xFFE8EEF6);
+  static const Color _lightOutline = Color(0xFFD0DAE8);
 
-  static const Color _darkBackground = Color(0xFF0D0E11);
-  static const Color _darkSurface = Color(0xFF1C1C1E);
-  static const Color _darkSurfaceVariant = Color(0xFF2C2C2E);
-  static const Color _darkOutline = Color(0xFF3A3A3C);
+  static const Color _darkBackground = Color(0xFF0F1520);
+  static const Color _darkSurface = Color(0xFF1A2333);
+  static const Color _darkTextPrimary = Color(0xFFF4F7FC);
+  static const Color _darkTextSecondary = Color(0xFF8A9BB0);
+  static const Color _darkSurfaceVariant = Color(0xFF243044);
+  static const Color _darkOutline = Color(0xFF2E4058);
 
   static ThemeData light() {
     final scheme = const ColorScheme.light(
-      primary: _blue,
+      primary: _accent,
       secondary: _green,
-      tertiary: _orange,
+      tertiary: _accentSecondary,
       surface: _lightSurface,
       surfaceContainerHighest: _lightSurfaceVariant,
       outline: _lightOutline,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onTertiary: Colors.white,
-      onSurface: Color(0xFF1C1C1E),
-      onSurfaceVariant: Color(0xFF3A3A3C),
+      onTertiary: _lightTextPrimary,
+      onSurface: _lightTextPrimary,
+      onSurfaceVariant: _lightTextSecondary,
       error: Color(0xFFFF3B30),
       onError: Colors.white,
     );
@@ -83,20 +87,34 @@ class AppTheme {
       brightness: Brightness.light,
       colorScheme: scheme,
       scaffoldBackgroundColor: _lightBackground,
+      canvasColor: _lightBackground,
       fontFamily: 'Roboto',
       shadowColor: Colors.black.withOpacity(0.14),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: Color(0xFF1C1C1E),
+        foregroundColor: _lightTextPrimary,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       iconTheme: IconThemeData(
-        color: scheme.onSurface.withOpacity(0.7),
+        color: _lightTextSecondary,
         size: 24,
       ),
+      cardTheme: const CardThemeData(
+        color: _lightSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: _lightSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: _lightSurface,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: _lightSurface,
+      ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: _blue,
+        backgroundColor: _accent,
         foregroundColor: Colors.white,
       ),
       dividerColor: _lightOutline,
@@ -115,17 +133,17 @@ class AppTheme {
 
   static ThemeData dark() {
     final scheme = const ColorScheme.dark(
-      primary: _blue,
+      primary: _accent,
       secondary: _green,
-      tertiary: _orange,
+      tertiary: _accentSecondary,
       surface: _darkSurface,
       surfaceContainerHighest: _darkSurfaceVariant,
       outline: _darkOutline,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onTertiary: Colors.white,
-      onSurface: Colors.white,
-      onSurfaceVariant: Colors.white70,
+      onTertiary: _darkTextPrimary,
+      onSurface: _darkTextPrimary,
+      onSurfaceVariant: _darkTextSecondary,
       error: Color(0xFFFF453A),
       onError: Colors.white,
     );
@@ -134,20 +152,34 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: scheme,
       scaffoldBackgroundColor: _darkBackground,
+      canvasColor: _darkBackground,
       fontFamily: 'Roboto',
       shadowColor: Colors.black.withOpacity(0.4),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: _darkTextPrimary,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       iconTheme: IconThemeData(
-        color: scheme.onSurface.withOpacity(0.7),
+        color: _darkTextSecondary,
         size: 24,
       ),
+      cardTheme: const CardThemeData(
+        color: _darkSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: _darkSurfaceVariant,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: _darkSurfaceVariant,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: _darkSurfaceVariant,
+      ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: _blue,
+        backgroundColor: _accent,
         foregroundColor: Colors.white,
       ),
       dividerColor: _darkOutline,

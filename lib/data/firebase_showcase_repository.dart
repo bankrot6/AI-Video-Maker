@@ -167,6 +167,7 @@ class FirebaseShowcaseRepository implements ShowcaseRepository {
     String? ownerId,
     String? clientAssignedPresetId,
     String? pairedPreviewImageUrl,
+    String? thumbnailUrl,
   }) async {
     assert(
       pairedPreviewImageUrl == null ||
@@ -186,6 +187,10 @@ class FirebaseShowcaseRepository implements ShowcaseRepository {
       final data = {
         'prompt': prompt,
         'previewImageUrl': previewImageUrl,
+        if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) ...{
+          'thumbnailUrl': thumbnailUrl,
+          'thumbnailSourceUrl': previewImageUrl,
+        },
         if (title != null && title.isNotEmpty) 'title': title,
         if (tagList.isNotEmpty) 'tags': tagList,
         if (imageStyle != null && imageStyle.isNotEmpty) 'imageStyle': imageStyle,
@@ -206,6 +211,7 @@ class FirebaseShowcaseRepository implements ShowcaseRepository {
         id: docRef.id,
         prompt: prompt,
         previewImageUrl: previewImageUrl,
+        thumbnailUrl: thumbnailUrl,
         title: title,
         tags: tagList,
         imageStyle: imageStyle,

@@ -32,7 +32,7 @@ async function runPipeline({ log, error, count }) {
   const storage   = new Storage(client);
 
   try {
-    log(`Starting daily preset pipeline (count=${count})…`);
+    log(`Starting daily video preset pipeline (count=${count})…`);
     const summary = await runPresetPipeline({
       databases,
       storage,
@@ -45,7 +45,7 @@ async function runPipeline({ log, error, count }) {
       endpoint:    ENDPOINT,
       projectId:   PROJECT_ID,
     });
-    log(`Pipeline done: ${JSON.stringify(summary)}`);
+    log(`Video pipeline done: ${JSON.stringify(summary)}`);
     return summary;
   } catch (err) {
     error(`Pipeline error: ${err.message}`);

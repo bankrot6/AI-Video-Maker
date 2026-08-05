@@ -33,6 +33,22 @@ String normalizePhotosessionErrorMessage(String? errorMessage) {
   return 'Что-то пошло не так. Попробуйте ещё раз.';
 }
 
+/// Причина, по которой сервер не смог зарезервировать кредиты под генерацию.
+String creditReservationFailureMessage(String? reason) {
+  switch (reason) {
+    case 'server_unconfigured':
+      return 'Сервис кредитов не настроен в этой сборке';
+    case 'device_not_registered':
+      return 'Устройство не зарегистрировано на сервере. '
+          'Проверьте интернет и перезапустите приложение';
+    case 'server_unavailable':
+      return 'Сервер кредитов недоступен. Проверьте интернет '
+          'и попробуйте ещё раз';
+    default:
+      return 'Не удалось подготовить списание кредитов';
+  }
+}
+
 String buildPhotosessionSupportAdvice() {
   return 'Попробуйте ещё раз, используя другую сеть или Wi-Fi. '
       'Если ошибка повторится, напишите нам на почту '

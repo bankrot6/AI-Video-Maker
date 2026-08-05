@@ -17,11 +17,11 @@ class TokenStoreConfig {
   static const String _largeTokensAndroid = 'aivideomaker.tokens.large.android';
 
   // RuStore — разовые пакеты кредитов (совпадают с CreditPackageType.credits)
-  static const String _smallTokensRuStore = 'aivideomaker.credits.50.rustore';
+  static const String _smallTokensRuStore = 'aivideomaker.credits.40.rustore';
   static const String _mediumTokensRuStore =
-      'aivideomaker.credits.200.rustore';
+      'aivideomaker.credits.150.rustore';
   static const String _largeTokensRuStore =
-      'aivideomaker.credits.600.rustore';
+      'aivideomaker.credits.400.rustore';
 
   // ЮMoney идентификаторы для токенов (для веб-платежей)
   static const String _smallTokensYooMoney = 'aivideomaker.tokens.small.yoomoney';
@@ -182,13 +182,16 @@ class TokenStoreConfig {
 
   /// Получает количество токенов по ID продукта
   static int? getTokenCountFromProductId(String productId) {
-    if (productId == _smallTokensRuStore) {
+    if (productId == _smallTokensRuStore ||
+        productId == 'aivideomaker.credits.50.rustore') {
       return CreditPackageType.small.credits;
     }
-    if (productId == _mediumTokensRuStore) {
+    if (productId == _mediumTokensRuStore ||
+        productId == 'aivideomaker.credits.200.rustore') {
       return CreditPackageType.medium.credits;
     }
-    if (productId == _largeTokensRuStore) {
+    if (productId == _largeTokensRuStore ||
+        productId == 'aivideomaker.credits.600.rustore') {
       return CreditPackageType.large.credits;
     }
     if (productId == 'aivideomaker.100k.rustore') {

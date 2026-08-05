@@ -158,9 +158,19 @@ enum ImageFormat {
   story,
   landscape,
   wide,
+  cinema,
 }
 
 extension ImageFormatX on ImageFormat {
+  /// Veo принимает только 9:16 и 16:9 — на квадрат и кинокадр Google отвечает
+  /// `400 Invalid aspect ratio`, поэтому выбор сведён к двум рабочим форматам.
+  /// Остальные значения остаются в enum, чтобы сохранённые ранее пресеты
+  /// продолжали читаться.
+  static const List<ImageFormat> videoFormats = [
+    ImageFormat.story,
+    ImageFormat.wide,
+  ];
+
   String get label {
     switch (this) {
       case ImageFormat.square:
@@ -168,11 +178,13 @@ extension ImageFormatX on ImageFormat {
       case ImageFormat.portrait:
         return 'Портрет';
       case ImageFormat.story:
-        return 'Сторис';
+        return 'Вертикальное';
       case ImageFormat.landscape:
         return 'Альбом';
       case ImageFormat.wide:
-        return 'Широкий';
+        return 'Горизонтальное';
+      case ImageFormat.cinema:
+        return 'Кинокадр';
     }
   }
 
@@ -188,6 +200,8 @@ extension ImageFormatX on ImageFormat {
         return '4:3';
       case ImageFormat.wide:
         return '16:9';
+      case ImageFormat.cinema:
+        return '21:9';
     }
   }
 
@@ -195,7 +209,9 @@ extension ImageFormatX on ImageFormat {
       this == ImageFormat.portrait || this == ImageFormat.story;
 
   bool get isHorizontal =>
-      this == ImageFormat.landscape || this == ImageFormat.wide;
+      this == ImageFormat.landscape ||
+      this == ImageFormat.wide ||
+      this == ImageFormat.cinema;
 }
 
 /// Настроение и цветовая подача кадра.
@@ -305,7 +321,7 @@ class ImageGenerationRequest {
     this.referenceUsage = ReferenceUsage.keepSubject,
   });
 
-  /// Что нарисовать — свободное описание пользователя.
+  /// Что снять — свободное описание пользователя.
   final String idea;
   final ImageStyle style;
   final ImageFormat format;
@@ -349,7 +365,7 @@ class ImageGenerationRequest {
   /// Короткое название для карточки в галерее.
   String get title {
     final normalized = idea.trim().replaceAll(RegExp(r'\s+'), ' ');
-    if (normalized.isEmpty) return 'Изображение';
+    if (normalized.isEmpty) return 'Видео';
     const maxLength = 50;
     if (normalized.length <= maxLength) return normalized;
     final cut = normalized.substring(0, maxLength);

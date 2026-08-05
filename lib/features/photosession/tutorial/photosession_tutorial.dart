@@ -20,7 +20,36 @@ bool photosessionLifecycleAllowsSyncFrames() {
 Future<void> preparePhotosessionCoachMarkShow(BuildContext context) async {
   if (!context.mounted) return;
   if (!photosessionLifecycleAllowsSyncFrames()) return;
+  await _awaitRouteTransition(context);
+  if (!context.mounted) return;
   await Future<void>.delayed(const Duration(milliseconds: 150));
+}
+
+/// Пока маршрут едет в переходе, содержимое экрана нарисовано со сдвигом:
+/// `localToGlobal` вернёт координаты промежуточного кадра анимации, и вырез
+/// подсветки останется в этом месте после её завершения. Сдвиг каждый раз
+/// разный, потому что момент показа приходится на случайную фазу перехода.
+Future<void> _awaitRouteTransition(BuildContext context) async {
+  final animation = ModalRoute.of(context)?.animation;
+  if (animation == null || animation.isCompleted) return;
+
+  final settled = Completer<void>();
+  void onStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed ||
+        status == AnimationStatus.dismissed) {
+      if (!settled.isCompleted) settled.complete();
+    }
+  }
+
+  animation.addStatusListener(onStatus);
+  try {
+    await Future.any<void>([
+      settled.future,
+      Future<void>.delayed(const Duration(milliseconds: 900)),
+    ]);
+  } finally {
+    animation.removeStatusListener(onStatus);
+  }
 }
 
 Future<void> settleLayoutForPhotosessionTutorial({
@@ -76,19 +105,22 @@ enum PhotosessionTutorialScenario {
   customCreationResult,
   faceSwap,
   generation,
+  creationMode,
 }
 
 extension PhotosessionTutorialScenarioX on PhotosessionTutorialScenario {
   int get storageVersion {
     switch (this) {
       case PhotosessionTutorialScenario.showcase:
-        return 2;
+        return 3;
       case PhotosessionTutorialScenario.showcaseFeed:
       case PhotosessionTutorialScenario.preset:
       case PhotosessionTutorialScenario.customCreation:
       case PhotosessionTutorialScenario.customCreationResult:
       case PhotosessionTutorialScenario.faceSwap:
       case PhotosessionTutorialScenario.generation:
+        return 2;
+      case PhotosessionTutorialScenario.creationMode:
         return 1;
     }
   }

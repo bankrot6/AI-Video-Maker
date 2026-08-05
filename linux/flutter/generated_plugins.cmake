@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   awesome_notifications
   desktop_webview_window
   device_region
+  fc_native_video_thumbnail
   file_selector_linux
   record_linux
   url_launcher_linux

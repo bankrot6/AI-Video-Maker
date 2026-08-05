@@ -168,7 +168,7 @@ class _TokenPurchaseScreenState extends ConsumerState<TokenPurchaseScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Кредиты расходуются на генерацию фотосессий',
+            'Кредиты расходуются на генерацию видео',
             style: TextStyle(
               color: colors.onSurface.withOpacity(0.6),
               fontSize: subtitleFontSize,
@@ -859,10 +859,10 @@ class _TokenPurchaseScreenState extends ConsumerState<TokenPurchaseScreen>
   }
 
   String _getDescription(CreditPackageType type) {
-    final premium = type.credits ~/ CreditCost.premiumGeneration;
+    final premium = type.credits ~/ CreditCost.advancedGeneration;
     final standard = type.credits ~/ CreditCost.standardGeneration;
     final economy = type.credits ~/ CreditCost.economyGeneration;
-    return '~$economy эконом · $standard стандарт · $premium премиум фото';
+    return '~$economy эконом · $standard стандарт · $premium премиум видео';
   }
 
   String _formatNumber(int number) {

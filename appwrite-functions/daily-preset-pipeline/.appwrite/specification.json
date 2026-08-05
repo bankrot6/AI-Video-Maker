@@ -1,10 +1,10 @@
 {
   "$id": "daily-preset-pipeline",
-  "name": "Daily Preset Pipeline",
+  "name": "Daily Video Preset Pipeline",
   "runtime": "node-18.0",
   "execute": [],
   "events": [],
-  "schedule": "0 */4 * * *",
+  "schedule": "0 */8 * * *",
   "timeout": 900,
   "enabled": true,
   "logging": true,

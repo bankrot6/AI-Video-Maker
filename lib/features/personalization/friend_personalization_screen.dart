@@ -130,7 +130,7 @@ class _FriendPersonalizationScreenState
     final personaAsync = ref.watch(friendPersonaProvider(widget.contactId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('Персонализация ${widget.contactName}'),
         actions: [

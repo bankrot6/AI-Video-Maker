@@ -103,6 +103,7 @@ class AppwriteFailoverShowcaseRepository implements ShowcaseRepository {
     String? ownerId,
     String? clientAssignedPresetId,
     String? pairedPreviewImageUrl,
+    String? thumbnailUrl,
   }) async {
     if (_gate.shouldPreferFirebase) {
       return _firebase.createPreset(
@@ -114,6 +115,7 @@ class AppwriteFailoverShowcaseRepository implements ShowcaseRepository {
         ownerId: ownerId,
         clientAssignedPresetId: clientAssignedPresetId,
         pairedPreviewImageUrl: pairedPreviewImageUrl,
+        thumbnailUrl: thumbnailUrl,
       );
     }
     try {
@@ -127,6 +129,7 @@ class AppwriteFailoverShowcaseRepository implements ShowcaseRepository {
             ownerId: ownerId,
             clientAssignedPresetId: clientAssignedPresetId,
             pairedPreviewImageUrl: pairedPreviewImageUrl,
+            thumbnailUrl: thumbnailUrl,
           )
           .timeout(AppwriteFailoverGate.readTimeout);
       _gate.noteSuccess();
@@ -144,6 +147,7 @@ class AppwriteFailoverShowcaseRepository implements ShowcaseRepository {
         ownerId: ownerId,
         clientAssignedPresetId: clientAssignedPresetId,
         pairedPreviewImageUrl: pairedPreviewImageUrl,
+        thumbnailUrl: thumbnailUrl,
       );
     }
   }

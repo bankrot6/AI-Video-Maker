@@ -39,8 +39,28 @@ function makeClient() {
   return new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 }
 
+// Тарифы видео повторяют CreditCost в lib/config/credit_config.dart.
+// Порядок проверок важен: pro-4k и fast-preview должны срабатывать раньше
+// более общих `-pro` и `-fast`.
+const VIDEO_MODEL_CREDITS = [
+  ['veo3.1-pro-4k', 255],
+  ['veo-3.1-fast-generate-preview', 110],
+  ['veo-3.1-generate-preview', 255],
+  ['veo3.1-pro', 32],
+  ['veo3.1-fast', 18],
+  ['veo3.1-lite', 8],
+];
+
+function isVideoModel(model) {
+  const normalized = String(model || '').trim().toLowerCase();
+  return normalized.startsWith('veo');
+}
+
 function creditsForModel(model) {
   const normalized = String(model || '').toLowerCase();
+  for (const [prefix, credits] of VIDEO_MODEL_CREDITS) {
+    if (normalized.startsWith(prefix)) return credits;
+  }
   if (normalized.startsWith('gpt-image-')) return 35;
   if (normalized.startsWith('grok-3-image')) return 15;
   if (normalized.includes('3-pro-image-preview')) return 25;
@@ -441,6 +461,14 @@ export default async ({ req, res, log, error }) => {
   if (!prompt) {
     await writeJobResult(storage, jobResultFileId, { status: 'failed', error: 'prompt обязателен' });
     return res.json({ error: 'prompt обязателен' }, 400);
+  }
+  // Генерация видео идёт клиентским контуром (USE_CLIENT_SIDE_APIBOST): эта
+  // функция умеет только выгружать картинки в сторадж. Отказываем явно, иначе
+  // MP4 был бы сохранён как .jpg и результат не открылся бы в приложении.
+  if (isVideoModel(model)) {
+    const message = `Модель ${model} доступна только в клиентском контуре генерации.`;
+    await writeJobResult(storage, jobResultFileId, { status: 'failed', error: message });
+    return res.json({ error: message }, 400);
   }
   if (!['generate_with_face', 'generate_image'].includes(action)) {
     await writeJobResult(storage, jobResultFileId, {

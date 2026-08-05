@@ -57,7 +57,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: Scaffold(
-          backgroundColor: const Color(0xFFF2F2F7),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: Column(
               children: [
@@ -212,6 +212,7 @@ class _TravelPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return LiquidGlassCard(
       margin: const EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.zero,
@@ -310,7 +311,7 @@ class _TravelPlanCard extends StatelessWidget {
                           _StatusPill(
                             text: 'Создаётся',
                             background: Colors.blue.withValues(alpha: 0.12),
-                            foreground: const Color(0xFF007AFF),
+                            foreground: colorScheme.primary,
                             icon: Icons.hourglass_top_rounded,
                           ),
                         if (plan.isLoading && (plan.isPartial || plan.hasError))
@@ -456,6 +457,7 @@ class _OpenPlanRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -467,7 +469,7 @@ class _OpenPlanRow extends StatelessWidget {
             children: [
               Icon(
                 Icons.explore_rounded,
-                color: enabled ? const Color(0xFF007AFF) : Colors.black26,
+                color: enabled ? primary : Colors.black26,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -509,6 +511,7 @@ class _MetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
           color: Colors.black87,
@@ -522,7 +525,7 @@ class _MetaRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(leftIcon, color: const Color(0xFF007AFF)),
+          Icon(leftIcon, color: colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(child: Text(leftText, style: textStyle)),
           Icon(rightIcon, color: const Color(0xFF34C759)),
@@ -579,6 +582,7 @@ class _LoadingFirstPlan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: LiquidGlassCard(
@@ -608,11 +612,11 @@ class _LoadingFirstPlan extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   Icons.location_on_outlined,
                   size: 28,
-                  color: Color(0xFF007AFF),
+                  color: primary,
                 ),
               ),
             ),

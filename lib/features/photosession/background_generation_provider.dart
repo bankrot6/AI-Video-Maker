@@ -10,6 +10,7 @@ import '../../config/photosession_backend.dart';
 import '../../config/credit_config.dart';
 import '../../services/generation_migration_service.dart';
 import '../../services/local_generation_storage.dart';
+import '../../services/client_apibost_video_service.dart';
 import '../../services/photosession_dual_upload_service.dart';
 import '../../models/generation_task.dart';
 import '../../models/photo_session_preset.dart';
@@ -17,11 +18,16 @@ import '../../models/photosession_provider.dart';
 import '../../models/preset_tag.dart';
 import '../../providers/credit_providers.dart';
 import '../../services/localization/app_localization_service.dart';
+import '../../services/apibost_model_catalog.dart';
 import '../../services/appwrite_apibost_proxy_service.dart';
+import '../../services/generated_media.dart';
+import '../../services/video_poster_service.dart';
 import '../../services/photosession_generation_router.dart';
 import '../../services/piapi_upload_service.dart';
 import '../../services/post_photosession_review_service.dart';
 import '../../services/credit_service.dart';
+import '../../services/pending_credit_reservation_store.dart';
+import '../subscription/subscription_providers.dart';
 import 'photosession_providers.dart';
 
 /// Данные для публикации сгенерированного изображения в галерее.
@@ -67,7 +73,9 @@ final backgroundGenerationProvider =
 });
 
 class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
-  BackgroundGenerationNotifier(this._ref) : super([]);
+  BackgroundGenerationNotifier(this._ref) : super([]) {
+    unawaited(_refundOrphanReservations());
+  }
 
   final Ref _ref;
   final Set<String> _observedTaskIds = {};
@@ -75,6 +83,13 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
   final Map<String, GeneratedImageData> _generatedImageData = {};
   final Map<String, int> _creditCostOverrides = {};
   final Map<String, CreditReservation> _reservations = {};
+  final PendingCreditReservationStore _reservationStore =
+      PendingCreditReservationStore();
+
+  /// Промпт после обработки санитайзером: держим отдельно от задачи, чтобы
+  /// повторные попытки не гоняли LLM заново и уходили с тем же текстом.
+  final Map<String, String> _safePrompts = {};
+  final Set<String> _relaxedTaskIds = {};
 
   static const int _maxAutoRetries = 2;
 
@@ -102,11 +117,10 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
         lower.contains('remaining balance') ||
         lower.contains('remaining credit') ||
         lower.contains('quota is not enough') ||
+        lower.contains('слишком длинное') ||
         lower.contains('не настроен') ||
         lower.contains('больше не доступно') ||
-        lower.contains('prohibited') ||
-        lower.contains('политику безопасности') ||
-        lower.contains('заблокировал') ||
+        _isBlockedContentError(errorMessage) ||
         lower.contains('файл пользователя не найден') ||
         lower.contains('не найдено референсное изображение') ||
         lower.contains('пресет') ||
@@ -156,7 +170,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     required PhotoSessionPreset preset,
     File? userPhoto,
     required String prompt,
-    PhotosessionProvider provider = PhotosessionProvider.googleFlash,
+    PhotosessionProvider provider = PhotosessionProvider.veoFast,
     GenerationTaskType taskType = GenerationTaskType.preset,
     GeneratedImageData? generatedImageData,
     String aspectRatio = '3:4',
@@ -168,6 +182,8 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       taskId: taskId,
       provider: provider,
       taskType: taskType,
+      presetId: preset.id,
+      userPhotoPath: userPhoto?.path ?? '',
     );
     if (!startResult.isSuccess) {
       return startResult;
@@ -185,7 +201,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
         presetTitle: preset.title,
         presetPreviewUrl: preset.displayImageUrl,
         status: GenerationStatus.generating,
-        statusMessage: 'Генерируем изображение (1-2 минуты)...',
+        statusMessage: 'Генерируем видео (1-3 минуты)...',
         userPhotoPath: userPhoto?.path ?? '',
         prompt: prompt,
         createdAt: DateTime.now(),
@@ -206,7 +222,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     String? referenceImageUrl,
     required File userPhoto,
     required FaceSwapMode faceSwapMode,
-    PhotosessionProvider provider = PhotosessionProvider.piapi,
+    PhotosessionProvider provider = PhotosessionProvider.veoPro,
     int? creditCostOverride,
     String? presetId,
   }) async {
@@ -251,7 +267,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
         presetTitle: 'Замена лица',
         presetPreviewUrl: refUrl,
         status: GenerationStatus.generating,
-        statusMessage: 'Генерируем изображение (1-2 минуты)...',
+        statusMessage: 'Генерируем видео (1-3 минуты)...',
         userPhotoPath: userPhoto.path,
         prompt: '',
         createdAt: DateTime.now(),
@@ -271,6 +287,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     final task = _findTask(taskId);
     if (task == null) return;
     _autoRetryAttempts.remove(taskId);
+    _relaxedTaskIds.remove(taskId);
 
     if (task.userPhotoPath.isNotEmpty &&
         !File(task.userPhotoPath).existsSync()) {
@@ -320,7 +337,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     _setTaskState(
       taskId,
       status: GenerationStatus.generating,
-      statusMessage: 'Генерируем изображение (1-2 минуты)...',
+      statusMessage: 'Генерируем видео (1-3 минуты)...',
     );
 
     if (task.taskType == GenerationTaskType.faceSwap) {
@@ -334,7 +351,9 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     state = state.where((t) => t.id != taskId).toList();
     _autoRetryAttempts.remove(taskId);
     _creditCostOverrides.remove(taskId);
-    _reservations.remove(taskId);
+    _forgetReservation(taskId);
+    _safePrompts.remove(taskId);
+    _relaxedTaskIds.remove(taskId);
   }
 
   GenerationTask? _findTask(String taskId) {
@@ -354,24 +373,19 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
   /// провайдеров кредиты спишутся дважды (verify-trial + apibost-proxy).
   ///
   /// Не self-charging (нужен клиентский reserve через verify-trial):
-  ///  - faceswap в режиме [FaceSwapMode.exact] → PiAPI faceswap;
-  ///  - qwen в обычной генерации → PiAPI Qwen.
+  ///  - faceswap в режиме [FaceSwapMode.exact] → PiAPI faceswap.
   bool _serverChargesCredits({
     required GenerationTaskType taskType,
-    required PhotosessionProvider provider,
     FaceSwapMode? faceSwapMode,
   }) {
     // При клиентской генерации ApiBost серверная функция apibost-proxy не
     // вызывается, поэтому кредиты не списываются сервером — их резервирует
     // клиент через verify-trial (reserve_credits). Значит все провайдеры идут
-    // по ветке клиентского резерва (qwen и exact-faceswap и так были там).
+    // по ветке клиентского резерва (exact-faceswap и так был там).
     if (clientSideApiBostEnabled()) return false;
     if (taskType == GenerationTaskType.faceSwap) {
       // Style-transfer faceswap идёт через ApiBost, exact — через PiAPI faceswap.
       return faceSwapMode != FaceSwapMode.exact;
-    }
-    if (provider == PhotosessionProvider.qwen) {
-      return false;
     }
     return true;
   }
@@ -382,17 +396,22 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     required GenerationTaskType taskType,
     FaceSwapMode? faceSwapMode,
     int? creditCostOverride,
+    String? presetId,
+    String? userPhotoPath,
   }) async {
     final creditNotifier = _ref.read(creditUsageNotifierProvider.notifier);
 
     if (_serverChargesCredits(
       taskType: taskType,
-      provider: provider,
       faceSwapMode: faceSwapMode,
     )) {
       final usage = await creditNotifier.refreshFromServer();
-      if ((usage.isFreeUser || usage.isTrialUser) &&
-          !CreditCost.isTierAvailableForTrial(provider.creditTier)) {
+      final hasPaidSubscription =
+          _ref.read(subscriptionProvider).valueOrNull?.isPaidUser ?? false;
+      if (!CreditCost.isTierAccessible(
+        provider.creditTier,
+        hasPaidSubscription: hasPaidSubscription,
+      )) {
         return GenerationStartResult.failure(
           reason: 'tier_locked',
           remainingCredits: usage.remainingCredits,
@@ -424,19 +443,110 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     }
 
     _reservations[taskId] = reservation.reservation!;
+    await _reservationStore.add(
+      PendingCreditReservation(
+        taskId: taskId,
+        reservation: reservation.reservation!,
+        providerName: provider.name,
+        presetId: presetId,
+        userPhotoPath: userPhotoPath,
+      ),
+    );
     return const GenerationStartResult.success('');
+  }
+
+  /// Снимает резерв без возврата: запрос к модели уже оплачен.
+  void _forgetReservation(String taskId) {
+    _reservations.remove(taskId);
+    unawaited(_reservationStore.remove(taskId));
+  }
+
+  /// Процесс мог умереть между списанием кредитов и результатом (обрыв связи на
+  /// мобильной сети, выгрузка приложения из памяти). Задачи живут только в
+  /// памяти, поэтому всё, что осталось на диске к моменту запуска, — потерянные
+  /// генерации.
+  ///
+  /// Видео за это время дорендерилось и уже оплачено провайдеру, поэтому сначала
+  /// делается попытка забрать результат в историю пользователя. Кредиты
+  /// возвращаются только если результата действительно нет: задача провалилась,
+  /// ссылка истекла (у ApiBost это примерно два часа) или контур вообще не умеет
+  /// возвращаться к задачам.
+  Future<void> _refundOrphanReservations() async {
+    final orphans = await _reservationStore.drain();
+    if (orphans.isEmpty) return;
+    final creditNotifier = _ref.read(creditUsageNotifierProvider.notifier);
+    for (final orphan in orphans) {
+      if (await _recoverOrphanResult(orphan)) continue;
+      debugPrint('🎬 BackgroundGen: возврат потерянного резерва '
+          '${orphan.reservation.amount} кредитов (${orphan.taskId})');
+      await creditNotifier.rollbackReservation(orphan.reservation);
+    }
+  }
+
+  /// Догружает оплаченное видео потерянной генерации и пишет его в историю.
+  /// `true` — результат доставлен, кредиты возвращать не нужно.
+  Future<bool> _recoverOrphanResult(PendingCreditReservation orphan) async {
+    final providerTaskId = orphan.providerTaskId;
+    final provider = _providerByName(orphan.providerName);
+    if (providerTaskId == null || provider == null) return false;
+
+    try {
+      final service = _ref.read(photosessionGenerationServiceProvider(provider));
+      if (service is! ClientApiBostVideoService) return false;
+
+      final result = await service.resumeTask(providerTaskId);
+      if (!result.isSuccess || result.imageUrl == null) {
+        debugPrint('🎬 BackgroundGen: задача $providerTaskId не догрузилась: '
+            '${result.errorMessage}');
+        return false;
+      }
+
+      final (resultImageUrl, dualResultUrls) =
+          await _persistResultImageWithDual(result.imageUrl!);
+      final deviceId = await _ref.read(deviceIdProvider.future);
+      await _ref.read(userGenerationRepositoryProvider).createGeneration(
+            presetId: orphan.presetId ?? '',
+            userImageUrl: orphan.userPhotoPath ?? '',
+            resultImageUrl: resultImageUrl,
+            deviceId: deviceId,
+            clientAssignedDocumentId: clientDualBackendMirrorEnabled()
+                ? 'gen_${DateTime.now().millisecondsSinceEpoch}'
+                : null,
+            pairedUserImageUrl: null,
+            pairedResultImageUrl:
+                dualResultUrls?.pairedHttpRelativeTo(resultImageUrl),
+            pairedReferenceImageUrl: null,
+          );
+      debugPrint('🎬 BackgroundGen: оплаченное видео восстановлено в историю: '
+          '$resultImageUrl');
+      return true;
+    } catch (e) {
+      debugPrint('🎬 BackgroundGen: восстановление $providerTaskId не удалось: $e');
+      return false;
+    }
+  }
+
+  PhotosessionProvider? _providerByName(String? name) {
+    if (name == null) return null;
+    for (final provider in PhotosessionProvider.values) {
+      if (provider.name == name) return provider;
+    }
+    return null;
   }
 
   /// Контент заблокирован модерацией: запрос к ApiBost выполнен (и оплачен),
   /// поэтому кредиты НЕ возвращаются — это повторяет анти-абьюз логику серверной
   /// функции apibost-proxy и не даёт фармить запрещённый контент бесплатно.
+  /// Проверка идёт по корням слов: формулировки сообщений меняются по падежам
+  /// («политикой безопасности», «правилам безопасности», «заблокирован»).
   bool _isBlockedContentError(String? errorMessage) {
     if (errorMessage == null) return false;
     final lower = errorMessage.toLowerCase();
-    return lower.contains('политику безопасности') ||
-        lower.contains('политикой безопасности') ||
+    return lower.contains('безопасност') ||
+        lower.contains('заблокирова') ||
+        lower.contains('отклонила промпт') ||
         lower.contains('prohibited') ||
-        lower.contains('заблокировал');
+        lower.contains('rai_policy');
   }
 
   Future<void> _rollbackReservationIfNeeded(
@@ -445,10 +555,11 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
   }) async {
     if (_isBlockedContentError(errorMessage)) {
       // Списание оставляем, лишь убираем локальный хэндл резерва.
-      _reservations.remove(taskId);
+      _forgetReservation(taskId);
       return;
     }
     final reservation = _reservations.remove(taskId);
+    await _reservationStore.remove(taskId);
     if (reservation == null) return;
     await _ref
         .read(creditUsageNotifierProvider.notifier)
@@ -459,6 +570,60 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     await _ref.read(creditUsageNotifierProvider.notifier).refreshFromServer();
   }
 
+  /// Фильтр Responsible AI у видеомодели отклоняет безобидные сцены из-за
+  /// формулировок (человек без указанного возраста, ракурс «вид сзади»),
+  /// поэтому текст нормализуется до первой отправки, а не только после отказа.
+  Future<String> _safePrompt(String taskId, String prompt) async {
+    final cached = _safePrompts[taskId];
+    if (cached != null) return cached;
+
+    String? normalized;
+    try {
+      normalized = await _ref.read(promptSafetyServiceProvider).normalize(
+            prompt,
+            maxLength: ApiBostModelCatalog.maxVideoPromptTextLength,
+          );
+    } catch (e) {
+      debugPrint('🎬 BackgroundGen: нормализация промпта не удалась: $e');
+    }
+    final result = normalized ?? prompt;
+    _safePrompts[taskId] = result;
+    return result;
+  }
+
+  /// Повторять отклонённый текст без изменений бессмысленно, но переписанный
+  /// консервативнее — как правило проходит. Даём ровно одну такую попытку.
+  Future<bool> _tryRelaxAndRetry(String taskId, String? errorMessage) async {
+    if (!_isBlockedContentError(errorMessage)) return false;
+    if (!_relaxedTaskIds.add(taskId)) return false;
+
+    final current = _safePrompts[taskId] ?? _findTask(taskId)?.prompt;
+    if (current == null || current.isEmpty) return false;
+
+    _setTaskState(
+      taskId,
+      status: GenerationStatus.generating,
+      statusMessage: 'Корректируем описание под правила модели...',
+    );
+
+    String? relaxed;
+    try {
+      relaxed = await _ref.read(promptSafetyServiceProvider).relax(
+            current,
+            maxLength: ApiBostModelCatalog.maxVideoPromptTextLength,
+          );
+    } catch (e) {
+      debugPrint('🎬 BackgroundGen: смягчение промпта не удалось: $e');
+    }
+    if (relaxed == null || relaxed.isEmpty || _findTask(taskId) == null) {
+      return false;
+    }
+
+    _safePrompts[taskId] = relaxed;
+    await _runGeneration(taskId);
+    return true;
+  }
+
   Future<void> _runGeneration(String taskId) async {
     final task = _findTask(taskId);
     if (task == null) return;
@@ -467,24 +632,18 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       _setTaskState(
         taskId,
         status: GenerationStatus.generating,
-        statusMessage: 'Генерируем изображение (1-2 минуты)...',
+        statusMessage: 'Генерируем видео (1-3 минуты)...',
       );
 
-      final service = switch (task.provider) {
-        PhotosessionProvider.piapi => _ref.read(piApiNanaBananaServiceProvider),
-        PhotosessionProvider.googleFlash =>
-          _ref.read(nanoBananaServiceProvider),
-        PhotosessionProvider.flash => _ref.read(nanoBananaFlashServiceProvider),
-        PhotosessionProvider.qwen => _ref.read(piApiQwenServiceProvider),
-        PhotosessionProvider.gptImage15 => _ref.read(gptImage15ServiceProvider),
-        PhotosessionProvider.gptImage2 => _ref.read(gptImage2ServiceProvider),
-        PhotosessionProvider.grokImage => _ref.read(grokImageServiceProvider),
-        PhotosessionProvider.apibostPro => _ref.read(apiBostProServiceProvider),
-        PhotosessionProvider.apibostStandard =>
-          _ref.read(apiBostStandardServiceProvider),
-        PhotosessionProvider.apibostFlash =>
-          _ref.read(apiBostFlashServiceProvider),
-      };
+      var service =
+          _ref.read(photosessionGenerationServiceProvider(task.provider));
+      if (service is ClientApiBostVideoService) {
+        service = service.withTaskListener(
+          (providerTaskId) => unawaited(
+            _reservationStore.attachProviderTask(taskId, providerTaskId),
+          ),
+        );
+      }
 
       debugPrint(
         '🎬 BackgroundGen: taskId=$taskId '
@@ -496,6 +655,9 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
           ? task.referenceImageUrl
           : null;
 
+      final prompt = await _safePrompt(taskId, task.prompt);
+      if (_findTask(taskId) == null) return;
+
       final PhotosessionGenerationResult result;
       if (referenceImageUrl != null && referenceImageUrl.isNotEmpty) {
         debugPrint('🎬 BackgroundGen: генерация по референсу пользователя');
@@ -503,27 +665,27 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
             ? await (service as ReferenceImageGenerationService)
                 .generateFromReference(
                 referenceImageUrl: referenceImageUrl,
-                prompt: task.prompt,
+                prompt: prompt,
                 resolution: '2K',
                 aspectRatio: task.aspectRatio,
               )
             : await service.generateWithFace(
                 userImageUrl: referenceImageUrl,
-                scenePrompt: task.prompt,
+                scenePrompt: prompt,
                 resolution: '2K',
                 aspectRatio: task.aspectRatio,
               );
       } else if (task.userPhotoPath.isEmpty) {
         debugPrint('🎬 BackgroundGen: text-to-image (без фото пользователя)');
         result = await service.generateImage(
-          prompt: task.prompt,
+          prompt: prompt,
           resolution: '2K',
           aspectRatio: task.aspectRatio,
         );
       } else {
         result = await service.generateWithFace(
           userImageUrl: task.userPhotoPath,
-          scenePrompt: task.prompt,
+          scenePrompt: prompt,
           resolution: '2K',
           aspectRatio: task.aspectRatio,
         );
@@ -532,9 +694,10 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       if (_findTask(taskId) == null) return;
 
       if (!result.isSuccess || result.imageUrl == null) {
-        final errMsg = result.errorMessage ?? 'Не удалось создать изображение.';
+        final errMsg = result.errorMessage ?? 'Не удалось создать видео.';
 
-        final retried = await _tryAutoRetry(taskId, errMsg, _runGeneration);
+        final retried = await _tryRelaxAndRetry(taskId, errMsg) ||
+            await _tryAutoRetry(taskId, errMsg, _runGeneration);
         if (!retried) {
           await _rollbackReservationIfNeeded(taskId, errorMessage: errMsg);
           if (service is AppwriteApiBostProxyService) {
@@ -549,7 +712,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
         }
         return;
       }
-      _reservations.remove(taskId);
+      _forgetReservation(taskId);
       if (service is AppwriteApiBostProxyService) {
         await _refreshCreditsFromServer();
       }
@@ -638,6 +801,8 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
 
           pairedPreviewUrl = _httpUrlOrNull(pairedPreviewUrl);
 
+          final thumbnailUrl = await _uploadPresetThumbnail(result.imageUrl!);
+
           final repo = _ref.read(showcaseRepositoryProvider);
           final created = await repo.createPreset(
             prompt: presetData.prompt,
@@ -647,6 +812,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
             imageStyle: presetData.imageStyle,
             ownerId: deviceId,
             pairedPreviewImageUrl: pairedPreviewUrl,
+            thumbnailUrl: thumbnailUrl,
           );
           try {
             await _ref
@@ -701,7 +867,6 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
           await _rollbackReservationIfNeeded(taskId, errorMessage: errMsg);
           if (_serverChargesCredits(
             taskType: catchTask.taskType,
-            provider: catchTask.provider,
           )) {
             await _refreshCreditsFromServer();
           }
@@ -724,7 +889,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       _setTaskState(
         taskId,
         status: GenerationStatus.generating,
-        statusMessage: 'Генерируем изображение (1-2 минуты)...',
+        statusMessage: 'Генерируем видео (1-3 минуты)...',
       );
 
       final referenceUrl = task.referenceImageUrl;
@@ -818,30 +983,15 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       } else {
         // Воссоздание стиля — ApiBost с двумя изображениями.
         // Каптирование и маскирование лица не нужны: Gemini видит оба изображения напрямую.
-        final service = switch (task.provider) {
-          PhotosessionProvider.piapi ||
-          PhotosessionProvider.apibostPro =>
-            _ref.read(apiBostProServiceProvider),
-          PhotosessionProvider.googleFlash ||
-          PhotosessionProvider.apibostStandard =>
-            _ref.read(apiBostStandardServiceProvider),
-          PhotosessionProvider.gptImage15 =>
-            _ref.read(gptImage15ServiceProvider),
-          PhotosessionProvider.gptImage2 => _ref.read(gptImage2ServiceProvider),
-          PhotosessionProvider.grokImage =>
-            _ref.read(grokImageServiceProvider),
-          PhotosessionProvider.flash ||
-          PhotosessionProvider.qwen ||
-          PhotosessionProvider.apibostFlash =>
-            _ref.read(apiBostFlashServiceProvider),
-        };
+        final service =
+            _ref.read(photosessionGenerationServiceProvider(task.provider));
 
         if (_findTask(taskId) == null) return;
 
         _setTaskState(
           taskId,
           status: GenerationStatus.generating,
-          statusMessage: 'Генерируем изображение (1-2 минуты)...',
+          statusMessage: 'Генерируем видео (1-3 минуты)...',
         );
 
         debugPrint(
@@ -876,7 +1026,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
 
         if (!result.isSuccess || result.imageUrl == null) {
           final errMsg =
-              result.errorMessage ?? 'Не удалось создать изображение.';
+              result.errorMessage ?? 'Не удалось создать видео.';
           final retried =
               await _tryAutoRetry(taskId, errMsg, _runFaceSwapGeneration);
           if (!retried) {
@@ -898,7 +1048,7 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
       }
 
       if (_findTask(taskId) == null) return;
-      _reservations.remove(taskId);
+      _forgetReservation(taskId);
       if (chargedOnServer) {
         await _refreshCreditsFromServer();
       }
@@ -960,7 +1110,6 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
           if (task != null &&
               _serverChargesCredits(
                 taskType: task.taskType,
-                provider: task.provider,
                 faceSwapMode: task.faceSwapMode,
               )) {
             await _refreshCreditsFromServer();
@@ -1112,6 +1261,41 @@ class BackgroundGenerationNotifier extends StateNotifier<List<GenerationTask>> {
     } catch (e) {
       debugPrint('BackgroundGeneration: ошибка загрузки референса: $e');
       return referenceUrl;
+    }
+  }
+
+  /// Обложка пресета для сетки: из видео берётся первый кадр, потому что
+  /// показывать в списке само видео дорого. Неудача не критична — пресет
+  /// создастся без обложки, а карточка построит кадр локально.
+  Future<String?> _uploadPresetThumbnail(String localResultPath) async {
+    if (!GeneratedMedia.isVideo(localResultPath)) return null;
+
+    File? poster;
+    try {
+      final bytes = await VideoPosterService().extractFrame(localResultPath);
+      if (bytes == null) return null;
+
+      final directory = await getTemporaryDirectory();
+      poster = File(path.join(
+        directory.path,
+        'preset_poster_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ));
+      await poster.writeAsBytes(bytes, flush: true);
+
+      final dual = _ref.read(photosessionDualUploadServiceProvider);
+      if (dual != null) {
+        final urls = await dual.uploadPresetPreview(poster);
+        return _httpUrlOrNull(urls.firstHttpPrimaryOrMirror());
+      }
+      final storage = _ref.read(photosessionRemoteStorageProvider);
+      return _httpUrlOrNull(await storage.uploadPresetPreview(poster));
+    } catch (e) {
+      debugPrint('BackgroundGeneration: обложка пресета не создана: $e');
+      return null;
+    } finally {
+      try {
+        if (poster != null && await poster.exists()) await poster.delete();
+      } catch (_) {}
     }
   }
 
