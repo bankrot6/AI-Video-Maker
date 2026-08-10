@@ -48,16 +48,13 @@ class _CustomPresetCreationScreenState
       );
 
   final _ideaController = TextEditingController();
-  final _textOnImageController = TextEditingController();
   final _detailsController = TextEditingController();
   final _scrollController = ScrollController();
 
   final _ideaFocus = FocusNode();
-  final _textOnImageFocus = FocusNode();
   final _detailsFocus = FocusNode();
 
   final _ideaKey = GlobalKey();
-  final _textOnImageKey = GlobalKey();
   final _detailsKey = GlobalKey();
   final _descriptionButtonKey = GlobalKey();
   final _segmentedTabsKey = GlobalKey();
@@ -79,14 +76,18 @@ class _CustomPresetCreationScreenState
   bool _didTryAutoTutorial = false;
   bool _didTryResultTutorial = false;
   bool _customAutoTutorialChain = false;
-  static const _shimmerSectionTitles = [
+  int _promptGenToken = 0;
+  static const _expectedSectionTitles = [
     'Главный объект',
+    'Действие и движение',
     'Окружение и фон',
-    'Композиция',
+    'Камера',
     'Свет',
     'Цвет и стиль',
     'Детали',
+    'Звук',
     'Технические параметры',
+    'Избегать',
   ];
 
   @override
@@ -99,18 +100,12 @@ class _CustomPresetCreationScreenState
     _ideaFocus
       ..addListener(onDescriptionFocusChanged)
       ..addListener(() => _scrollToFieldOnFocus(_ideaFocus, _ideaKey));
-    _textOnImageFocus
-      ..addListener(onDescriptionFocusChanged)
-      ..addListener(
-        () => _scrollToFieldOnFocus(_textOnImageFocus, _textOnImageKey),
-      );
     _detailsFocus
       ..addListener(onDescriptionFocusChanged)
       ..addListener(() => _scrollToFieldOnFocus(_detailsFocus, _detailsKey));
 
     for (final controller in [
       _ideaController,
-      _textOnImageController,
       _detailsController,
     ]) {
       controller.addListener(_handleDescriptionInputChanged);
@@ -168,12 +163,11 @@ class _CustomPresetCreationScreenState
 
   @override
   void dispose() {
+    _promptGenToken++;
     _ideaController.dispose();
-    _textOnImageController.dispose();
     _detailsController.dispose();
     _scrollController.dispose();
     _ideaFocus.dispose();
-    _textOnImageFocus.dispose();
     _detailsFocus.dispose();
     super.dispose();
   }
@@ -183,9 +177,7 @@ class _CustomPresetCreationScreenState
         style: _selectedStyle,
         format: _selectedFormat,
         mood: _selectedMood,
-        textOnImage: _textOnImageController.text.trim().isEmpty
-            ? null
-            : _textOnImageController.text.trim(),
+        textOnImage: null,
         details: _detailsController.text.trim().isEmpty
             ? null
             : _detailsController.text.trim(),
@@ -218,42 +210,56 @@ class _CustomPresetCreationScreenState
       return;
     }
 
+    final token = ++_promptGenToken;
     setState(() {
       _loading = true;
       _error = null;
       _selectedTab = 1;
+      _generatedPrompt = null;
+      _editedSections.clear();
       _revealedSectionCount = 0;
     });
 
     try {
       final service = ref.read(imagePromptServiceProvider);
-      final prompt = await service.buildPrompt(request);
+      await for (final partial in service.buildPromptStream(request)) {
+        if (!mounted || token != _promptGenToken) return;
+        final sections = _parsePromptSections(partial, streaming: true);
+        setState(() {
+          _generatedPrompt = partial;
+          _revealedSectionCount = sections.length;
+        });
+      }
 
-      if (!mounted) return;
+      if (!mounted || token != _promptGenToken) return;
 
-      if (prompt == null || prompt.isEmpty) {
+      final finalized = await service.finalizePrompt(_generatedPrompt ?? '');
+      if (!mounted || token != _promptGenToken) return;
+
+      if (finalized == null || finalized.isEmpty) {
         setState(() {
           _error = 'Не удалось создать описание ролика';
           _loading = false;
+          _generatedPrompt = null;
+          _revealedSectionCount = 0;
         });
         return;
       }
 
+      final sections = _parsePromptSections(finalized);
       setState(() {
-        _generatedPrompt = prompt;
+        _generatedPrompt = finalized;
         _loading = false;
+        _revealedSectionCount = sections.length;
       });
-
-      if (mounted) {
-        _revealSectionsProgressively();
-      }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = normalizePhotosessionErrorMessage(e.toString());
-          _loading = false;
-        });
-      }
+      if (!mounted || token != _promptGenToken) return;
+      setState(() {
+        _error = normalizePhotosessionErrorMessage(e.toString());
+        _loading = false;
+        _generatedPrompt = null;
+        _revealedSectionCount = 0;
+      });
     }
   }
 
@@ -264,16 +270,6 @@ class _CustomPresetCreationScreenState
     );
     if (selected != null && mounted) {
       setState(() => _selectedProvider = selected);
-    }
-  }
-
-  Future<void> _revealSectionsProgressively() async {
-    final sections = _parsePromptSections(_generatedPrompt!);
-    final count = sections.length;
-    for (int i = 0; i < count; i++) {
-      await Future.delayed(const Duration(milliseconds: 120));
-      if (!mounted) return;
-      setState(() => _revealedSectionCount = i + 1);
     }
   }
 
@@ -351,8 +347,14 @@ class _CustomPresetCreationScreenState
   }
 
   /// Разбирает промпт на блоки по заголовкам вида «ГЛАВНЫЙ ОБЪЕКТ:».
-  Map<String, String> _parsePromptSections(String prompt) {
-    final sections = PromptSections.parse(prompt);
+  Map<String, String> _parsePromptSections(
+    String prompt, {
+    bool streaming = false,
+  }) {
+    final sections = PromptSections.parse(
+      prompt,
+      keepIncomplete: streaming,
+    );
     return {
       for (final key in sections.keys)
         PromptSections.displayTitle(key): sections[key] ?? '',
@@ -485,17 +487,6 @@ class _CustomPresetCreationScreenState
               'Напишите, что должно происходить в видео — хватит нескольких слов: «кот-астронавт на Марсе», «танцующий робот в неоне». Остальное AI додумает сам.',
           icon: Icons.lightbulb_outline_rounded,
           align: ContentAlign.bottom,
-        ));
-      }
-      if (_textOnImageKey.currentContext != null) {
-        steps.add((
-          key: _textOnImageKey,
-          id: 'custom_text_on_image',
-          title: 'Добавьте надпись',
-          description:
-              'Если в ролике нужен текст — поздравление, название, слоган — впишите его здесь дословно, и он появится в кадре.',
-          icon: Icons.title_rounded,
-          align: ContentAlign.top,
         ));
       }
       if (_descriptionButtonKey.currentContext != null) {
@@ -763,12 +754,9 @@ class _CustomPresetCreationScreenState
     final compactInputMode = _descriptionCompactInputMode(context);
     final ideaFocused = _ideaFocus.hasFocus;
     final detailsFocused = _detailsFocus.hasFocus;
-    final textOnImageFocused = _textOnImageFocus.hasFocus;
-    final showIdea = !compactInputMode ||
-        ideaFocused ||
-        (!detailsFocused && !textOnImageFocused);
+    final showIdea =
+        !compactInputMode || ideaFocused || !detailsFocused;
     final showDetails = !compactInputMode || detailsFocused;
-    final showTextOnImage = !compactInputMode || textOnImageFocused;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -808,8 +796,7 @@ class _CustomPresetCreationScreenState
                       colors: colors,
                     ),
                   ),
-                if (showIdea && (showDetails || showTextOnImage))
-                  const SizedBox(height: 12),
+                if (showIdea && showDetails) const SizedBox(height: 12),
                 if (showDetails)
                   Expanded(
                     child: _buildInputField(
@@ -829,36 +816,6 @@ class _CustomPresetCreationScreenState
                       colors: colors,
                     ),
                   ),
-                if (showDetails && showTextOnImage) const SizedBox(height: 12),
-                if (showTextOnImage)
-                  compactInputMode
-                      ? Expanded(
-                          child: _buildInputField(
-                            controller: _textOnImageController,
-                            focusNode: _textOnImageFocus,
-                            fieldKey: _textOnImageKey,
-                            label: 'Надпись в кадре',
-                            hint: 'Например: С днём рождения!',
-                            icon: Icons.title_rounded,
-                            required: false,
-                            minLines: 1,
-                            maxLines: 4,
-                            expands: true,
-                            theme: theme,
-                            colors: colors,
-                          ),
-                        )
-                      : _buildInputField(
-                          controller: _textOnImageController,
-                          focusNode: _textOnImageFocus,
-                          fieldKey: _textOnImageKey,
-                          label: 'Надпись в кадре',
-                          hint: 'Например: С днём рождения!',
-                          icon: Icons.title_rounded,
-                          required: false,
-                          theme: theme,
-                          colors: colors,
-                        ),
                 if (_error != null && !compactInputMode) ...[
                   const SizedBox(height: 12),
                   _buildDescriptionErrorBox(colors),
@@ -1139,62 +1096,22 @@ class _CustomPresetCreationScreenState
       );
     }
 
-    if (_loading) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: colors.primaryContainer.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colors.primary.withOpacity(0.2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Генерируем описание сцены...',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: colors.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ...List.generate(_shimmerSectionTitles.length, (_) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ShimmerSectionCard(colors: colors),
-              );
-            }),
-            const SizedBox(height: 20),
-          ],
-        ),
-      );
-    }
-
-    final sections = _parsePromptSections(_generatedPrompt!);
+    final sections = _generatedPrompt == null
+        ? <String, String>{}
+        : _parsePromptSections(
+            _generatedPrompt!,
+            streaming: _loading,
+          );
     final sectionList = sections.entries.toList();
-    final visibleCount = _revealedSectionCount.clamp(0, sectionList.length);
-    final showButton = visibleCount >= sectionList.length;
+    final visibleCount = _loading
+        ? sectionList.length
+        : _revealedSectionCount.clamp(0, sectionList.length);
+    final shimmerCount = _loading
+        ? (_expectedSectionTitles.length - sectionList.length)
+            .clamp(0, _expectedSectionTitles.length)
+        : 0;
+    final showButton =
+        !_loading && sectionList.isNotEmpty && visibleCount >= sectionList.length;
 
     return Stack(
       children: [
@@ -1203,7 +1120,45 @@ class _CustomPresetCreationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_editedSections.isNotEmpty) ...[
+              if (_loading) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colors.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          sectionList.isEmpty
+                              ? 'Генерируем описание сцены...'
+                              : 'Заполняем блоки описания...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (!_loading && _editedSections.isNotEmpty) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -1251,15 +1206,25 @@ class _CustomPresetCreationScreenState
                     key: index == 0 ? _promptCardKey : null,
                     child: _PromptSectionCard(
                       title: sectionName,
-                      content: sectionContent,
+                      content: sectionContent.isEmpty && _loading
+                          ? '…'
+                          : sectionContent,
                       isEdited: isEdited,
-                      onTap: () => _editSection(sectionName, sectionContent),
+                      onTap: _loading
+                          ? () {}
+                          : () => _editSection(sectionName, sectionContent),
                       colors: colors,
                     ),
                   ),
                 );
               }),
-              if (_editedSections.isNotEmpty) ...[
+              ...List.generate(shimmerCount, (_) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _ShimmerSectionCard(colors: colors),
+                );
+              }),
+              if (!_loading && _editedSections.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -1278,6 +1243,7 @@ class _CustomPresetCreationScreenState
                 ),
               ],
               if (showButton) const SizedBox(height: 170),
+              if (_loading) const SizedBox(height: 20),
             ],
           ),
         ),

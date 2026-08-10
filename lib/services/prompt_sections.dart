@@ -5,7 +5,10 @@
 class PromptSections {
   const PromptSections._(this._order, this._values);
 
-  factory PromptSections.parse(String prompt) {
+  factory PromptSections.parse(
+    String prompt, {
+    bool keepIncomplete = false,
+  }) {
     final order = <String>[];
     final values = <String, String>{};
     final buffer = StringBuffer();
@@ -38,11 +41,25 @@ class PromptSections {
     }
     flush();
 
-    values.removeWhere((_, value) => value.isEmpty);
-    order.removeWhere((key) => !values.containsKey(key));
+    if (keepIncomplete) {
+      final last = order.isEmpty ? null : order.last;
+      values.removeWhere((key, value) => value.isEmpty && key != last);
+      order.removeWhere((key) => !values.containsKey(key));
+      if (last != null) {
+        values.putIfAbsent(last, () => '');
+        if (!order.contains(last)) order.add(last);
+      }
+    } else {
+      values.removeWhere((_, value) => value.isEmpty);
+      order.removeWhere((key) => !values.containsKey(key));
+    }
 
     if (order.isEmpty) {
-      return PromptSections._([introKey], {introKey: prompt.trim()});
+      final trimmed = prompt.trim();
+      if (trimmed.isEmpty) {
+        return const PromptSections._([], {});
+      }
+      return PromptSections._([introKey], {introKey: trimmed});
     }
     return PromptSections._(order, values);
   }

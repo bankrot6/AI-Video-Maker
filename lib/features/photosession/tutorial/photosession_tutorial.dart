@@ -52,11 +52,12 @@ Future<void> _awaitRouteTransition(BuildContext context) async {
   }
 }
 
+const double _kPhotosessionTutorialMinBubbleSpace = 240;
+
 Future<void> settleLayoutForPhotosessionTutorial({
   bool forFirstStep = false,
   bool hasImages = false,
 }) async {
-  if (!forFirstStep) return;
   if (!photosessionLifecycleAllowsSyncFrames()) return;
 
   final binding = WidgetsBinding.instance;
@@ -74,7 +75,7 @@ Future<void> settleLayoutForPhotosessionTutorial({
     ]);
   }
 
-  if (hasImages) {
+  if (forFirstStep && hasImages) {
     for (var i = 0; i < 8; i++) {
       await waitFrame();
     }
@@ -86,15 +87,115 @@ Future<void> settleLayoutForPhotosessionTutorial({
   }
 }
 
+Future<void> ensurePhotosessionTutorialTargetVisible(TargetFocus target) async {
+  final ctx = target.keyTarget?.currentContext;
+  if (ctx == null || !ctx.mounted) return;
+  if (!photosessionLifecycleAllowsSyncFrames()) return;
+
+  final contentAlign = target.contents?.isNotEmpty == true
+      ? target.contents!.first.align
+      : ContentAlign.bottom;
+
+  final alignment = switch (contentAlign) {
+    ContentAlign.bottom => 0.18,
+    ContentAlign.top => 0.72,
+    ContentAlign.custom => 0.35,
+    ContentAlign.left || ContentAlign.right => 0.35,
+  };
+
+  try {
+    await Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: alignment,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    );
+  } catch (_) {}
+
+  if (!photosessionLifecycleAllowsSyncFrames()) return;
+  final frame = Completer<void>();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!frame.isCompleted) frame.complete();
+  });
+  await Future.any<void>([
+    frame.future,
+    Future<void>.delayed(const Duration(milliseconds: 320)),
+  ]);
+}
+
 Future<void> Function(TargetFocus) photosessionTutorialBeforeFocus(
   List<TargetFocus> targets, {
   bool hasImages = false,
 }) {
   final firstId = targets.first.identify;
-  return (TargetFocus t) => settleLayoutForPhotosessionTutorial(
-        forFirstStep: t.identify == firstId,
-        hasImages: hasImages,
-      );
+  return (TargetFocus t) async {
+    await ensurePhotosessionTutorialTargetVisible(t);
+    await settleLayoutForPhotosessionTutorial(
+      forFirstStep: t.identify == firstId,
+      hasImages: hasImages,
+    );
+  };
+}
+
+({ContentAlign align, CustomTargetContentPosition? customPosition})
+    resolvePhotosessionTutorialContentPlacement({
+  required BuildContext context,
+  required GlobalKey key,
+  required ContentAlign preferred,
+  double paddingFocus = 12,
+}) {
+  final targetContext = key.currentContext;
+  if (targetContext == null) {
+    return (align: preferred, customPosition: null);
+  }
+
+  final box = targetContext.findRenderObject() as RenderBox?;
+  if (box == null || !box.hasSize) {
+    return (align: preferred, customPosition: null);
+  }
+
+  final media = MediaQuery.of(context);
+  final screenH = media.size.height;
+  final safeTop = media.padding.top;
+  final safeBottom = media.padding.bottom;
+  final offset = box.localToGlobal(Offset.zero);
+  final height = box.size.height;
+  final centerY = offset.dy + height / 2;
+  final halo = height * 0.6 + paddingFocus;
+
+  final spaceBelowIfBottomAlign =
+      screenH - (centerY + halo) - safeBottom;
+  final spaceAboveIfTopAlign = (centerY - halo) - safeTop;
+
+  bool fits(double space) => space >= _kPhotosessionTutorialMinBubbleSpace;
+
+  if (preferred == ContentAlign.bottom && fits(spaceBelowIfBottomAlign)) {
+    return (align: ContentAlign.bottom, customPosition: null);
+  }
+  if (preferred == ContentAlign.top && fits(spaceAboveIfTopAlign)) {
+    return (align: ContentAlign.top, customPosition: null);
+  }
+  if (fits(spaceBelowIfBottomAlign)) {
+    return (align: ContentAlign.bottom, customPosition: null);
+  }
+  if (fits(spaceAboveIfTopAlign)) {
+    return (align: ContentAlign.top, customPosition: null);
+  }
+
+  final freeAbove = offset.dy - safeTop;
+  final freeBelow = screenH - safeBottom - (offset.dy + height);
+  final pinTop = freeAbove >= freeBelow;
+
+  return (
+    align: ContentAlign.custom,
+    customPosition: CustomTargetContentPosition(
+      left: 0,
+      right: 0,
+      top: pinTop ? safeTop + 8 : null,
+      bottom: pinTop ? null : safeBottom + 8,
+    ),
+  );
 }
 
 enum PhotosessionTutorialScenario {
@@ -192,7 +293,7 @@ void runPhotosessionAutoTutorialChain({
           return;
         }
 
-        final targets = buildTargets();
+        var targets = buildTargets();
         if (targets.isEmpty && !force && attempt < maxLayoutRetries) {
           step(attempt + 1);
           return;
@@ -209,6 +310,15 @@ void runPhotosessionAutoTutorialChain({
 
         await preparePhotosessionCoachMarkShow(context);
         if (!context.mounted) return;
+
+        await ensurePhotosessionTutorialTargetVisible(targets.first);
+        if (!context.mounted) return;
+        targets = buildTargets();
+        if (targets.isEmpty) {
+          if (!force) setChainActive(false);
+          return;
+        }
+
         onShow(targets);
       }());
     });
@@ -294,6 +404,12 @@ TargetFocus buildPhotosessionTutorialTarget({
       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 }) {
   final colors = Theme.of(context).colorScheme;
+  final placement = resolvePhotosessionTutorialContentPlacement(
+    context: context,
+    key: key,
+    preferred: align,
+    paddingFocus: paddingFocus,
+  );
 
   return TargetFocus(
     identify: id,
@@ -308,7 +424,8 @@ TargetFocus buildPhotosessionTutorialTarget({
     color: colors.primary.withOpacity(0.14),
     contents: [
       TargetContent(
-        align: align,
+        align: placement.align,
+        customPosition: placement.customPosition,
         padding: contentPadding,
         builder: (overlayContext, controller) {
           Widget bubble = _PhotosessionTutorialBubble(
@@ -358,108 +475,123 @@ class _PhotosessionTutorialBubble extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isLast = step == total;
+    final maxBubbleHeight = MediaQuery.sizeOf(context).height * 0.46;
+    final maxDescriptionHeight = (maxBubbleHeight - 148).clamp(72.0, 240.0);
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 340),
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: colors.primary.withOpacity(0.18),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: PhotosessionPalette.of(context)
-                    .depth
-                    .withValues(alpha: 0.45),
-                blurRadius: 28,
-                offset: const Offset(0, 10),
+    return Align(
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 340,
+          maxHeight: maxBubbleHeight,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: colors.primary.withOpacity(0.18),
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: colors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colors.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: colors.tertiary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '$step/$total',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colors.tertiary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                description,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurface.withOpacity(0.78),
-                  height: 1.45,
+              boxShadow: [
+                BoxShadow(
+                  color: PhotosessionPalette.of(context)
+                      .depth
+                      .withValues(alpha: 0.45),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: onSkip,
-                    child: const Text('Пропустить'),
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: onNext,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                      child: Icon(
+                        icon,
+                        size: 20,
+                        color: colors.primary,
                       ),
                     ),
-                    child: Text(isLast ? 'Готово' : 'Дальше'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.tertiary.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '$step/$total',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colors.tertiary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxDescriptionHeight),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      description,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurface.withOpacity(0.78),
+                        height: 1.45,
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: onSkip,
+                      child: const Text('Пропустить'),
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: onNext,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(isLast ? 'Готово' : 'Дальше'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -469,9 +601,15 @@ class _PhotosessionTutorialBubble extends StatelessWidget {
 
 extension PhotosessionTutorialCoachMarkX on TutorialCoachMark {
   void showForPhotosession(BuildContext context) {
+    final route = ModalRoute.of(context);
     show(
       context: context,
       rootOverlay: true,
     );
+    route?.completed.whenComplete(() {
+      if (isShowing) {
+        finish();
+      }
+    });
   }
 }

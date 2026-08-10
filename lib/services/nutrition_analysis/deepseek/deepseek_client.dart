@@ -397,9 +397,14 @@ class DeepSeekClient {
       String buffer = '';
       bool firstContentSeen = false;
 
-      await for (final chunk in stream) {
-        // Преобразуем chunk в строку
-        final chunkString = utf8.decode(chunk);
+      final textStream = stream.map<List<int>>((chunk) {
+        if (chunk is List<int>) return chunk;
+        throw FormatException(
+          'Unexpected SSE chunk type: ${chunk.runtimeType}',
+        );
+      }).transform(utf8.decoder);
+
+      await for (final chunkString in textStream) {
         buffer += chunkString;
 
         // Обрабатываем все полные строки в буфере

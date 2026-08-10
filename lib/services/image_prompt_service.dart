@@ -9,6 +9,12 @@ import 'prompt_length_guard.dart';
 /// Превращает короткую идею пользователя в детальный промпт для генератора.
 abstract class ImagePromptService {
   Future<String?> buildPrompt(ImageGenerationRequest request);
+
+  /// Накопленный текст промпта по мере SSE-дельт (без length-guard).
+  Stream<String> buildPromptStream(ImageGenerationRequest request);
+
+  /// Финальная очистка и укладка в лимит после завершения стрима.
+  Future<String?> finalizePrompt(String rawPrompt);
 }
 
 /// Определяет категории галереи по готовому промпту.
@@ -93,12 +99,35 @@ class DeepSeekImagePromptService
 
   @override
   Future<String?> buildPrompt(ImageGenerationRequest request) async {
-    final userPrompt = _buildUserMessage(request);
-
     try {
-      final response = await _client.generateText('$_systemPrompt\n\n$userPrompt');
-      final cleaned = _stripWrappers(response.trim());
-      if (cleaned.isEmpty) return null;
+      String? last;
+      await for (final partial in buildPromptStream(request)) {
+        last = partial;
+      }
+      if (last == null || last.isEmpty) return null;
+      return finalizePrompt(last);
+    } catch (e) {
+      debugPrint('ImagePromptService: $e');
+      return null;
+    }
+  }
+
+  @override
+  Stream<String> buildPromptStream(ImageGenerationRequest request) async* {
+    final userPrompt = _buildUserMessage(request);
+    final buffer = StringBuffer();
+    await for (final chunk
+        in _client.generateTextStream('$_systemPrompt\n\n$userPrompt')) {
+      buffer.write(chunk);
+      yield _stripWrappers(buffer.toString());
+    }
+  }
+
+  @override
+  Future<String?> finalizePrompt(String rawPrompt) async {
+    final cleaned = _stripWrappers(rawPrompt.trim());
+    if (cleaned.isEmpty) return null;
+    try {
       return PromptLengthGuard.enforce(
         cleaned,
         limit: _promptLimit,
@@ -106,7 +135,7 @@ class DeepSeekImagePromptService
         tag: 'ImagePromptService',
       );
     } catch (e) {
-      debugPrint('ImagePromptService: $e');
+      debugPrint('ImagePromptService finalize: $e');
       return null;
     }
   }
