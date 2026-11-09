@@ -1,0 +1,9 @@
+Paused by owner request on 2026-11-09.
+
+All 13 Appwrite functions in project 6a6992ce000eae598752 are disabled.
+Schedules and database event triggers were removed; runtime containers stopped.
+Data, function source and shared infrastructure are preserved.
+
+Do not remove this marker or redeploy until the owner explicitly resumes the project.
+Restore schedules/events only from reviewed pre-stop metadata, not inferred defaults.
+Backup: AIplate/server/cloud-function-auth/2026-11-09/video-stop/

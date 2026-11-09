@@ -4,6 +4,13 @@
 //
 // Запуск: PROJECT=... KEY=... node scripts/activate_appwrite_deployments.mjs
 
+import { existsSync } from 'node:fs';
+
+if (existsSync(new URL('../PROJECT_PAUSED', import.meta.url))) {
+  console.error('AI-Video-Maker is paused. See PROJECT_PAUSED before activating deployments.');
+  process.exit(1);
+}
+
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'http://158.160.254.66/v1';
 const PROJECT = process.env.PROJECT;
 const KEY = process.env.KEY;

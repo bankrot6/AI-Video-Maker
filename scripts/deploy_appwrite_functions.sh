@@ -10,6 +10,11 @@ set -uo pipefail   # -u: fail on unset vars; -o pipefail — NO -e (we handle er
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [[ -f "$PROJECT_ROOT/PROJECT_PAUSED" ]]; then
+  echo "AI-Video-Maker is paused. See PROJECT_PAUSED before deploying." >&2
+  exit 1
+fi
 ENV_FILE="$PROJECT_ROOT/.env"
 DEPLOY_SECRETS_FILE="${DEPLOY_SECRETS_FILE:-$PROJECT_ROOT/.env.deploy}"
 FUNCTIONS_DIR="$PROJECT_ROOT/appwrite-functions"
@@ -409,7 +414,7 @@ deploy_function "process-preset-rewards" "Process Preset Rewards" \
   APPWRITE_EARNINGS_COLLECTION_ID "preset_earnings"
 
 deploy_function "repair-preset-permissions" "Repair Preset Permissions" \
-  "$DB_EVENTS" "*/5 * * * *" 300 \
+  "[]" "*/20 0-2,22-23 * * *" 300 \
   APPWRITE_ENDPOINT       "$ENDPOINT" \
   APPWRITE_PROJECT_ID     "$PROJECT_ID" \
   APPWRITE_API_KEY        "$API_KEY" \
@@ -419,7 +424,7 @@ deploy_function "repair-preset-permissions" "Repair Preset Permissions" \
   REPAIR_PRESET_PERMISSIONS_PAGE_SIZE "50"
 
 deploy_function "daily-preset-pipeline" "Daily Video Preset Pipeline" \
-  "[]" "0 */8 * * *" 900 \
+  "[]" "40 0 * * *" 900 \
   APPWRITE_ENDPOINT       "$ENDPOINT" \
   APPWRITE_PROJECT_ID     "$PROJECT_ID" \
   APPWRITE_API_KEY        "$API_KEY" \

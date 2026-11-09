@@ -9,6 +9,11 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [[ -f "$PROJECT_ROOT/PROJECT_PAUSED" ]]; then
+  echo "AI-Video-Maker is paused. See PROJECT_PAUSED before deploying." >&2
+  exit 1
+fi
 FUNC_ID="${1:-}"
 
 if [[ -z "$FUNC_ID" ]]; then
@@ -314,7 +319,7 @@ case "$FUNC_ID" in
     ;;
   repair-preset-permissions)
     deploy_function "repair-preset-permissions" "Repair Preset Permissions" \
-      "$DB_EVENTS" "*/5 * * * *" 300 \
+      "[]" "*/20 0-2,22-23 * * *" 300 \
       APPWRITE_ENDPOINT       "$ENDPOINT" \
       APPWRITE_PROJECT_ID     "$PROJECT_ID" \
       APPWRITE_API_KEY        "$API_KEY" \
@@ -325,7 +330,7 @@ case "$FUNC_ID" in
     ;;
   daily-preset-pipeline)
     deploy_function "daily-preset-pipeline" "Daily Video Preset Pipeline" \
-      "[]" "0 */8 * * *" 900 \
+      "[]" "40 0 * * *" 900 \
       APPWRITE_ENDPOINT       "$ENDPOINT" \
       APPWRITE_PROJECT_ID     "$PROJECT_ID" \
       APPWRITE_API_KEY        "$API_KEY" \
